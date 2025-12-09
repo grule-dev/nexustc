@@ -1,0 +1,46 @@
+{
+  "name": "ntc-cf",
+  "private": true,
+  "type": "module",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "hono": "^4.8.2",
+      "@orpc/server": "^1.10.0",
+      "@orpc/openapi": "^1.10.0",
+      "@orpc/zod": "^1.10.0",
+      "better-auth": "^1.4.5",
+      "dotenv": "^17.2.2",
+      "zod": "^4.1.13",
+      "@orpc/client": "^1.10.0",
+      "@libsql/client": "^0.14.0",
+      "libsql": "^0.5.22"
+    }
+  },
+  "scripts": {
+    "check": "biome check --write .",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:native": "turbo -F native dev",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F server dev",
+    "db:push": "turbo -F @ntc-cf/db db:push",
+    "db:generate": "turbo -F @ntc-cf/db db:generate"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "@biomejs/biome": "2.3.8",
+    "ultracite": "6.3.10",
+    "@types/node": "^22.13.11",
+    "@cloudflare/workers-types": "^4.20250822.0"
+  },
+  "packageManager": "bun@1.3.0"
+}
