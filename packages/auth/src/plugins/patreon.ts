@@ -12,6 +12,16 @@ type PatreonUserResponse = {
   };
 };
 
+const scopes = [
+  "identity",
+  "identity[email]",
+  "identity.memberships",
+  "campaigns",
+  "campaigns.members[email]",
+  "campaigns.members.address",
+  "campaigns.posts",
+];
+
 export const patreonPlugin = () =>
   genericOAuth({
     config: [
@@ -45,7 +55,7 @@ export const patreonPlugin = () =>
         clientId: env.PATREON_CLIENT_ID,
         clientSecret: env.PATREON_CLIENT_SECRET,
         responseType: "code",
-        scopes: env.PATREON_SCOPE.split(","),
+        scopes,
       },
     ],
   });
