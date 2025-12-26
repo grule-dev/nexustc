@@ -1,0 +1,21 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { orpcClient } from "@/utils/orpc";
+import { columns } from "../../../components/admin/posts/columns";
+import { DataTable } from "../../../components/admin/posts/data-table";
+
+export const Route = createFileRoute("/admin/comics/")({
+  component: RouteComponent,
+  loader: () => orpcClient.comic.admin.getDashboardList(),
+  gcTime: 0,
+});
+
+function RouteComponent() {
+  const data = Route.useLoaderData();
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <h1 className="font-bold text-3xl">Cómics</h1>
+      <DataTable columns={columns} data={data} />
+    </div>
+  );
+}

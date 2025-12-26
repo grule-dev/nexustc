@@ -1,5 +1,6 @@
 {
-  "extends": "@ntc-cf/config/tsconfig.base.json",
+  "extends": "@repo/config/tsconfig.base.json",
+  "include": ["src/**/*"],
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,

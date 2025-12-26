@@ -1,5 +1,5 @@
 {
-  "name": "@ntc-cf/auth",
+  "name": "@repo/auth",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -11,7 +11,7 @@
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@ntc-cf/config": "workspace:*"
+    "@repo/config": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -20,6 +20,8 @@
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:",
-    "@ntc-cf/db": "workspace:*"
+    "@repo/db": "workspace:*",
+    "@repo/env": "workspace:*",
+    "@repo/shared": "workspace:*"
   }
 }

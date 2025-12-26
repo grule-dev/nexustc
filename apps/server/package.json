@@ -3,12 +3,10 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
+    "dev": "bun src/index.ts --watch --port=3000",
     "build": "tsdown",
-    "check-types": "tsc -b",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "alchemy dev",
-    "deploy": "alchemy deploy",
-    "destroy": "alchemy destroy"
+    "check-types": "tsc --noEmit",
+    "compile": "bun build ./src/index.ts --outfile ./dist/index.js --target browser --format esm --minify --sourcemap --external cloudflare:workers"
   },
   "dependencies": {
     "hono": "catalog:",
@@ -18,17 +16,19 @@
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:",
-    "@ntc-cf/api": "workspace:*",
-    "@ntc-cf/auth": "workspace:*",
-    "@ntc-cf/db": "workspace:*"
+    "@repo/api": "workspace:*",
+    "@repo/auth": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/env": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.8.2",
-    "tsdown": "^0.16.5",
-    "@ntc-cf/config": "workspace:*",
-    "alchemy": "^0.77.0",
-    "wrangler": "^4.40.3",
+    "@cloudflare/workers-types": "^4.20250822.0",
+    "@repo/config": "workspace:*",
     "@types/node": "^22.13.11",
-    "@cloudflare/workers-types": "^4.20250822.0"
+    "alchemy": "^0.77.0",
+    "tsdown": "^0.16.5",
+    "typescript": "^5.8.2",
+    "vite": "^7.3.0",
+    "wrangler": "^4.40.3"
   }
 }
