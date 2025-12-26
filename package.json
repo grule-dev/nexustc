@@ -29,6 +29,10 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
+    "web:build": "turbo -F web build",
+    "web:start": "turbo -F web start",
+    "server:build": "turbo -F server build",
+    "server:start": "turbo -F server start",
     "db:push": "turbo -F @repo/db db:push",
     "db:generate": "turbo -F @repo/db db:generate"
   },
