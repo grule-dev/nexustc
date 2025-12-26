@@ -36,7 +36,10 @@ export const user = pgTable(
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index("user_email_idx").on(table.email)]
+  (table) => [
+    index("user_email_idx").on(table.email),
+    index("user_created_at_idx").on(table.createdAt),
+  ]
 );
 
 export const session = pgTable(
@@ -172,7 +175,10 @@ export const termPostRelation = pgTable(
       .notNull()
       .references(() => post.id, { onDelete: "cascade" }),
   },
-  (table) => [primaryKey({ columns: [table.termId, table.postId] })]
+  (table) => [
+    primaryKey({ columns: [table.termId, table.postId] }),
+    index("term_post_relation_post_id_idx").on(table.postId),
+  ]
 );
 
 export const postBookmark = pgTable(
@@ -185,7 +191,10 @@ export const postBookmark = pgTable(
       .references(() => post.id, { onDelete: "cascade" })
       .notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.postId] })]
+  (table) => [
+    primaryKey({ columns: [table.userId, table.postId] }),
+    index("post_bookmark_post_id_idx").on(table.postId),
+  ]
 );
 
 export const postLikes = pgTable(
@@ -198,7 +207,10 @@ export const postLikes = pgTable(
       .references(() => post.id, { onDelete: "cascade" })
       .notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.postId] })]
+  (table) => [
+    primaryKey({ columns: [table.userId, table.postId] }),
+    index("post_like_post_id_idx").on(table.postId),
+  ]
 );
 
 export const tutorials = pgTable("tutorial", {

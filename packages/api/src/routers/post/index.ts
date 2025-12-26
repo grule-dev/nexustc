@@ -20,6 +20,43 @@ export default {
     //   return JSON.parse(kv) as typeof posts;
     // }
 
+    const likesAgg = db
+      .select({
+        postId: postLikes.postId,
+        count: sql<number>`COUNT(*)`.as("likes_count"),
+      })
+      .from(postLikes)
+      .groupBy(postLikes.postId)
+      .as("likes_agg");
+
+    const favoritesAgg = db
+      .select({
+        postId: postBookmark.postId,
+        count: sql<number>`COUNT(*)`.as("favorites_count"),
+      })
+      .from(postBookmark)
+      .groupBy(postBookmark.postId)
+      .as("favorites_agg");
+
+    const termsAgg = db
+      .select({
+        postId: termPostRelation.postId,
+        terms: sql`
+      json_agg(
+        json_build_object(
+          'id', ${term.id},
+          'name', ${term.name},
+          'taxonomy', ${term.taxonomy},
+          'color', ${term.color}
+        )
+      )
+    `.as("terms"),
+      })
+      .from(termPostRelation)
+      .innerJoin(term, eq(term.id, termPostRelation.termId))
+      .groupBy(termPostRelation.postId)
+      .as("terms_agg");
+
     const posts = await db
       .select({
         id: post.id,
@@ -31,25 +68,19 @@ export default {
         imageObjectKeys: post.imageObjectKeys,
         adsLinks: post.adsLinks,
         authorContent: post.authorContent,
-        favorites:
-          sql<number>`(SELECT COUNT(*) FROM ${postBookmark} WHERE ${postBookmark.postId} = ${post.id})`.as(
-            "favorites"
-          ),
-        likes:
-          sql<number>`(SELECT COUNT(*) FROM ${postLikes} WHERE ${postLikes.postId} = ${post.id})`.as(
-            "likes"
-          ),
-        terms:
-          sql<string>`json_group_array(json_object('id', ${term.id},'name', ${term.name},'taxonomy', ${term.taxonomy},'color', ${term.color}))`.as(
-            "terms"
-          ),
+
+        favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+        likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+
+        terms: sql<string>`COALESCE(${termsAgg.terms}, '[]'::json)`,
+
         createdAt: post.createdAt,
       })
       .from(post)
-      .leftJoin(termPostRelation, eq(post.id, termPostRelation.postId))
-      .leftJoin(term, eq(term.id, termPostRelation.termId))
-      .where(eq(post.status, "publish"))
-      .groupBy(post.id);
+      .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+      .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+      .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+      .where(eq(post.status, "publish"));
 
     const u = context.session?.user;
     if (u) {

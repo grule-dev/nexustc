@@ -13,8 +13,6 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
-import { Route as LoginIgnoreRouteImport } from './routes/login.ignore'
-import { Route as IndexIgnoreRouteImport } from './routes/index.ignore'
 import { Route as MainTutorialsRouteImport } from './routes/_main/tutorials'
 import { Route as MainTermsRouteImport } from './routes/_main/terms'
 import { Route as MainResetPasswordRouteImport } from './routes/_main/reset-password'
@@ -59,16 +57,6 @@ const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRouteRoute,
-} as any)
-const LoginIgnoreRoute = LoginIgnoreRouteImport.update({
-  id: '/login/ignore',
-  path: '/login/ignore',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexIgnoreRoute = IndexIgnoreRouteImport.update({
-  id: '/index/ignore',
-  path: '/index/ignore',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const MainTutorialsRoute = MainTutorialsRouteImport.update({
   id: '/tutorials',
@@ -210,8 +198,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof MainResetPasswordRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
-  '/index/ignore': typeof IndexIgnoreRoute
-  '/login/ignore': typeof LoginIgnoreRoute
   '/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
@@ -241,8 +227,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof MainResetPasswordRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
-  '/index/ignore': typeof IndexIgnoreRoute
-  '/login/ignore': typeof LoginIgnoreRoute
   '/': typeof MainIndexRoute
   '/admin': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
@@ -275,8 +259,6 @@ export interface FileRoutesById {
   '/_main/reset-password': typeof MainResetPasswordRoute
   '/_main/terms': typeof MainTermsRoute
   '/_main/tutorials': typeof MainTutorialsRoute
-  '/index/ignore': typeof IndexIgnoreRoute
-  '/login/ignore': typeof LoginIgnoreRoute
   '/_main/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/_main/comic/$id': typeof MainComicIdRoute
@@ -309,8 +291,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/tutorials'
-    | '/index/ignore'
-    | '/login/ignore'
     | '/'
     | '/admin/'
     | '/comic/$id'
@@ -340,8 +320,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/tutorials'
-    | '/index/ignore'
-    | '/login/ignore'
     | '/'
     | '/admin'
     | '/comic/$id'
@@ -373,8 +351,6 @@ export interface FileRouteTypes {
     | '/_main/reset-password'
     | '/_main/terms'
     | '/_main/tutorials'
-    | '/index/ignore'
-    | '/login/ignore'
     | '/_main/'
     | '/admin/'
     | '/_main/comic/$id'
@@ -395,8 +371,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRouteRoute: typeof MainRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
-  IndexIgnoreRoute: typeof IndexIgnoreRoute
-  LoginIgnoreRoute: typeof LoginIgnoreRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -428,20 +402,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRouteRoute
-    }
-    '/login/ignore': {
-      id: '/login/ignore'
-      path: '/login/ignore'
-      fullPath: '/login/ignore'
-      preLoaderRoute: typeof LoginIgnoreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/index/ignore': {
-      id: '/index/ignore'
-      path: '/index/ignore'
-      fullPath: '/index/ignore'
-      preLoaderRoute: typeof IndexIgnoreRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_main/tutorials': {
       id: '/_main/tutorials'
@@ -698,8 +658,6 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   MainRouteRoute: MainRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
-  IndexIgnoreRoute: IndexIgnoreRoute,
-  LoginIgnoreRoute: LoginIgnoreRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

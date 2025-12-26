@@ -190,22 +190,36 @@ export default {
   }).handler(async () => {
     const registeredLastWeekPromise = db
       .select({
-        time: sql<string>`strftime('%Y-%m-%d %H:00:00', ${user.createdAt}, 'unixepoch')`,
+        time: sql<string>`hour`,
         count: sql<number>`count(*)`,
       })
-      .from(user)
-      .where(sql`${user.createdAt} >= strftime('%s', 'now', '-7 days')`)
-      .groupBy(sql`strftime('%Y-%m-%d %H', ${user.createdAt}, 'unixepoch')`)
-      .orderBy(sql`strftime('%Y-%m-%d %H', ${user.createdAt}, 'unixepoch')`);
+      .from(
+        db
+          .select({
+            hour: sql`date_trunc('hour', ${user.createdAt} AT TIME ZONE 'UTC')`,
+          })
+          .from(user)
+          .where(sql`${user.createdAt} >= now() - interval '7 days'`)
+          .as("t")
+      )
+      .groupBy(sql`hour`)
+      .orderBy(sql`hour`);
 
     const registeredAllTimePromise = db
       .select({
-        time: sql<string>`date(${user.createdAt}, 'unixepoch')`,
+        time: sql<string>`day`,
         count: sql<number>`count(*)`,
       })
-      .from(user)
-      .groupBy(sql`date(${user.createdAt}, 'unixepoch')`)
-      .orderBy(sql`date(${user.createdAt}, 'unixepoch')`);
+      .from(
+        db
+          .select({
+            day: sql`date(${user.createdAt} AT TIME ZONE 'UTC')`,
+          })
+          .from(user)
+          .as("t")
+      )
+      .groupBy(sql`day`)
+      .orderBy(sql`day`);
 
     const userCountPromise = db
       .select({
