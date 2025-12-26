@@ -3,10 +3,13 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
+    "start": "bun ./dist/index.mjs",
     "dev": "bun src/index.ts --watch --port=3000",
     "build": "tsdown",
+    "pre-deploy": "bun run db:push",
     "check-types": "tsc --noEmit",
-    "compile": "bun build ./src/index.ts --outfile ./dist/index.js --target browser --format esm --minify --sourcemap --external cloudflare:workers"
+    "compile": "bun build ./src/index.ts --outfile ./dist/index.js --target browser --format esm --minify --sourcemap --external cloudflare:workers",
+    "db:push": "cd ../../packages/db && bun run db:push"
   },
   "dependencies": {
     "hono": "catalog:",

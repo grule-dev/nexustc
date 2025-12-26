@@ -8,10 +8,9 @@ dotenv.config({
 export default defineConfig({
   schema: "./src/schema",
   out: "./src/migrations",
-  // DOCS: https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
-  dialect: "sqlite",
+  dialect: "postgresql",
   dbCredentials: {
-    // biome-ignore lint/style/noNonNullAssertion: shut up biome
+    // biome-ignore lint/style/noNonNullAssertion: it will be defined at runtime
     url: process.env.DATABASE_URL!,
   },
 });
