@@ -14,6 +14,7 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: z.string(),
     R2_SECRET_ACCESS_KEY: z.string(),
     R2_ASSETS_BUCKET_NAME: z.string(),
+    RESEND_API_KEY: z.string(),
     DATABASE_URL: z.string(),
     REDIS_URL: z.string(),
   },
