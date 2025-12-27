@@ -1,10 +1,11 @@
-import { db } from "@repo/db";
 import { tutorials } from "@repo/db/schema/app";
 import z from "zod";
 import { permissionProcedure, publicProcedure } from "../index";
 
 export default {
-  getTutorials: publicProcedure.handler(() => db.query.tutorials.findMany()),
+  getTutorials: publicProcedure.handler(({ context: { db } }) =>
+    db.query.tutorials.findMany()
+  ),
 
   createTutorial: permissionProcedure({
     posts: ["create"],
@@ -16,5 +17,7 @@ export default {
         embedUrl: z.url(),
       })
     )
-    .handler(async ({ input }) => db.insert(tutorials).values(input)),
+    .handler(async ({ context: { db }, input }) =>
+      db.insert(tutorials).values(input)
+    ),
 };

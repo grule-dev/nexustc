@@ -1,5 +1,4 @@
 import type { RouterClient } from "@orpc/server";
-import { publicProcedure } from "..";
 import comic from "./comic";
 import extras from "./extras";
 import file from "./file";
@@ -8,7 +7,6 @@ import term from "./term";
 import user from "./user";
 
 export const appRouter = {
-  healthCheck: publicProcedure.handler(() => "OK"),
   comic,
   post,
   term,

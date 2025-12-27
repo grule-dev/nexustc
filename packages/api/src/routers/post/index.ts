@@ -1,4 +1,4 @@
-import { and, db, eq, sql } from "@repo/db";
+import { and, eq, sql } from "@repo/db";
 import {
   comment,
   post,
@@ -13,35 +13,36 @@ import { protectedProcedure, publicProcedure } from "../../index";
 import admin from "./admin";
 
 export default {
-  getAll: publicProcedure.handler(async ({ context }) => {
-    // const kv = await env.KV_STORE.get("all-posts");
+  getAll: publicProcedure.handler(
+    async ({ context: { db, session, cache } }) => {
+      const cached = await cache.get("all-posts");
 
-    // if (kv) {
-    //   return JSON.parse(kv) as typeof posts;
-    // }
+      if (cached) {
+        return JSON.parse(cached) as typeof posts;
+      }
 
-    const likesAgg = db
-      .select({
-        postId: postLikes.postId,
-        count: sql<number>`COUNT(*)`.as("likes_count"),
-      })
-      .from(postLikes)
-      .groupBy(postLikes.postId)
-      .as("likes_agg");
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
 
-    const favoritesAgg = db
-      .select({
-        postId: postBookmark.postId,
-        count: sql<number>`COUNT(*)`.as("favorites_count"),
-      })
-      .from(postBookmark)
-      .groupBy(postBookmark.postId)
-      .as("favorites_agg");
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
 
-    const termsAgg = db
-      .select({
-        postId: termPostRelation.postId,
-        terms: sql`
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
       json_agg(
         json_build_object(
           'id', ${term.id},
@@ -51,72 +52,71 @@ export default {
         )
       )
     `.as("terms"),
-      })
-      .from(termPostRelation)
-      .innerJoin(term, eq(term.id, termPostRelation.termId))
-      .groupBy(termPostRelation.postId)
-      .as("terms_agg");
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
 
-    const posts = await db
-      .select({
-        id: post.id,
-        title: post.title,
-        type: post.type,
-        version: post.version,
-        content: post.content,
-        isWeekly: post.isWeekly,
-        imageObjectKeys: post.imageObjectKeys,
-        adsLinks: post.adsLinks,
-        authorContent: post.authorContent,
+      const posts = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          version: post.version,
+          content: post.content,
+          isWeekly: post.isWeekly,
+          imageObjectKeys: post.imageObjectKeys,
+          adsLinks: post.adsLinks,
+          authorContent: post.authorContent,
 
-        favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
-        likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
 
-        terms: sql<string>`COALESCE(${termsAgg.terms}, '[]'::json)`,
+          terms: sql<string>`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
-        createdAt: post.createdAt,
-      })
-      .from(post)
-      .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
-      .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
-      .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
-      .where(eq(post.status, "publish"));
+          createdAt: post.createdAt,
+        })
+        .from(post)
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .where(eq(post.status, "publish"));
 
-    const u = context.session?.user;
-    if (u) {
-      await db
-        .update(user)
-        .set({ lastSeenAt: new Date() })
-        .where(eq(user.id, u.id));
+      const u = session?.user;
+      if (u) {
+        await db
+          .update(user)
+          .set({ lastSeenAt: new Date() })
+          .where(eq(user.id, u.id));
+      }
+
+      await cache.setex("all-posts", 5 * 60, JSON.stringify(posts));
+
+      return posts;
     }
+  ),
 
-    // waitUntil(
-    //   env.KV_STORE.put("all-posts", JSON.stringify(posts), {
-    //     expirationTtl: 60 * 60, // 1 hour
-    //   })
-    // );
-
-    return posts;
-  }),
-
-  getLikes: publicProcedure.input(z.string()).handler(async ({ input }) => {
-    const likes = await db
-      .select()
-      .from(postLikes)
-      .where(eq(postLikes.postId, input));
-    return likes.length;
-  }),
+  getLikes: publicProcedure
+    .input(z.string())
+    .handler(async ({ context: { db }, input }) => {
+      const likes = await db
+        .select()
+        .from(postLikes)
+        .where(eq(postLikes.postId, input));
+      return likes.length;
+    }),
 
   likePost: protectedProcedure
     .input(z.string())
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input }) => {
       const existing = await db
         .select()
         .from(postLikes)
         .where(
           and(
             eq(postLikes.postId, input),
-            eq(postLikes.userId, context.session.user.id)
+            eq(postLikes.userId, session.user.id)
           )
         )
         .limit(1);
@@ -128,19 +128,19 @@ export default {
 
       await db.insert(postLikes).values({
         postId: input,
-        userId: context.session.user.id,
+        userId: session.user.id,
       });
     }),
 
   unlikePost: protectedProcedure
     .input(z.string())
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input }) => {
       await db
         .delete(postLikes)
         .where(
           and(
             eq(postLikes.postId, input),
-            eq(postLikes.userId, context.session.user.id)
+            eq(postLikes.userId, session.user.id)
           )
         );
     }),
@@ -152,13 +152,13 @@ export default {
         liked: z.boolean(),
       })
     )
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input }) => {
       if (input.liked) {
         await db
           .insert(postLikes)
           .values({
             postId: input.postId,
-            userId: context.session.user.id,
+            userId: session.user.id,
           })
           .onConflictDoNothing();
       } else {
@@ -167,7 +167,7 @@ export default {
           .where(
             and(
               eq(postLikes.postId, input.postId),
-              eq(postLikes.userId, context.session.user.id)
+              eq(postLikes.userId, session.user.id)
             )
           );
       }
@@ -180,17 +180,17 @@ export default {
         content: z.string().min(10).max(2048),
       })
     )
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input }) => {
       await db.insert(comment).values({
         postId: input.postId,
-        authorId: context.session.user.id,
+        authorId: session.user.id,
         content: input.content,
       });
     }),
 
   getComments: publicProcedure
     .input(z.object({ postId: z.string() }))
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       const comments = await db.query.comment.findMany({
         orderBy: (c, { desc: descSql }) => [descSql(c.createdAt)],
         where: (c, { eq: equals }) => equals(c.postId, input.postId),

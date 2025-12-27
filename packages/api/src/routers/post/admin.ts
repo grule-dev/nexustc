@@ -1,6 +1,6 @@
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import { ORPCError } from "@orpc/server";
-import { db, eq, inArray } from "@repo/db";
+import { eq, inArray } from "@repo/db";
 import { post, termPostRelation } from "@repo/db/schema/app";
 import { env } from "@repo/env";
 import { postCreateSchema } from "@repo/shared/schemas";
@@ -22,7 +22,7 @@ export default {
     posts: ["update"],
   })
     .input(z.string())
-    .handler(({ input }) =>
+    .handler(({ context: { db }, input }) =>
       db.query.post.findFirst({
         where: eq(post.id, input),
         with: {
@@ -37,7 +37,7 @@ export default {
 
   getDashboardList: permissionProcedure({
     posts: ["list"],
-  }).handler(() =>
+  }).handler(({ context: { db } }) =>
     db.query.post.findMany({
       columns: {
         id: true,
@@ -58,7 +58,7 @@ export default {
 
   createPostPrerequisites: permissionProcedure({
     posts: ["list"],
-  }).handler(async () => {
+  }).handler(async ({ context: { db } }) => {
     const terms = await db.query.term.findMany();
     return {
       terms,
@@ -69,7 +69,7 @@ export default {
     posts: ["create"],
   })
     .input(postCreateSchema)
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input }) => {
       const [postData] = await db
         .insert(post)
         .values({
@@ -78,7 +78,7 @@ export default {
           adsLinks: input.adsLinks,
           premiumLinks: input.premiumLinks,
           version: input.version,
-          authorId: context.session.user?.id,
+          authorId: session.user?.id,
           status: input.documentStatus,
         })
         .returning({ postId: post.id });
@@ -111,7 +111,7 @@ export default {
     posts: ["update"],
   })
     .input(postCreateSchema.extend({ id: z.string() }))
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       const [postData] = await db
         .update(post)
         .set({
@@ -159,7 +159,7 @@ export default {
     posts: ["delete"],
   })
     .input(z.string())
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       const currentPost = await db.query.post.findFirst({
         where: (p, { eq: equals }) => equals(p.id, input),
       });
@@ -191,7 +191,7 @@ export default {
         images: z.array(z.string()),
       })
     )
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       await db
         .update(post)
         .set({
@@ -206,7 +206,7 @@ export default {
     posts: ["create"],
   })
     .input(z.array(z.string()))
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       await db
         .update(post)
         .set({ isWeekly: false })
