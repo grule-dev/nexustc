@@ -1,5 +1,5 @@
 import { and, eq, sql } from "@repo/db";
-import { postBookmark, user } from "@repo/db/schema/app";
+import { postBookmark, postLikes, user } from "@repo/db/schema/app";
 import * as z from "zod";
 import {
   permissionProcedure,
@@ -64,11 +64,11 @@ export default {
           .onConflictDoNothing();
       } else {
         await db
-          .delete(postBookmark)
+          .delete(postLikes)
           .where(
             and(
               eq(postLikes.postId, input.postId),
-              eq(postBookmark.userId, session.user.id)
+              eq(postLikes.userId, session.user.id)
             )
           );
       }
