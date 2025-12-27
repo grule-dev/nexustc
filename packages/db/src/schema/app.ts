@@ -1,10 +1,11 @@
-import { TAXONOMIES } from "@repo/shared/constants";
+import { DOCUMENT_STATUSES, TAXONOMIES } from "@repo/shared/constants";
 import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -120,13 +121,14 @@ export const accountRelations = relations(account, ({ one }) => ({
 
 /** -------------------------------------------------------- */
 
+export const postTypeEnum = pgEnum("post_type", ["post", "comic"]);
+export const documentStatusEnum = pgEnum("document_status", DOCUMENT_STATUSES);
+
 export const term = pgTable("term", {
   id: text("id").primaryKey().$defaultFn(generateId),
   name: text("name").notNull(),
   color: text("color"),
-  taxonomy: text("taxonomy", {
-    enum: TAXONOMIES,
-  }).notNull(),
+  taxonomy: text("taxonomy", { enum: TAXONOMIES }).notNull(),
   ...timestamps,
 });
 
@@ -134,15 +136,11 @@ export const post = pgTable("post", {
   id: text("id").primaryKey().$defaultFn(generateId),
   title: text("title").notNull(),
   content: text("content").notNull().default(""),
-  type: text("type", { enum: ["post", "comic"] })
-    .notNull()
-    .default("post"),
+  type: postTypeEnum("type").notNull().default("post"),
   isWeekly: boolean("is_weekly").notNull().default(false),
   authorId: text("author_id").notNull(),
   authorContent: text("author_content").notNull().default(""),
-  status: text("status", { enum: ["publish", "draft", "pending", "trash"] })
-    .notNull()
-    .default("draft"),
+  status: documentStatusEnum("status").notNull().default("draft"),
   version: text("version"),
   adsLinks: text("ads_links"),
   premiumLinks: text("premium_links"),

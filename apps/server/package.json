@@ -25,10 +25,7 @@
   "devDependencies": {
     "@repo/config": "workspace:*",
     "@types/node": "^22.13.11",
-    "alchemy": "^0.77.0",
     "tsdown": "^0.16.5",
-    "typescript": "^5.8.2",
-    "vite": "^7.3.0",
-    "wrangler": "^4.40.3"
+    "typescript": "^5.8.2"
   }
 }
