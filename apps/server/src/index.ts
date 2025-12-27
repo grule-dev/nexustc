@@ -71,6 +71,6 @@ app.use("/*", async (c, next) => {
   await next();
 });
 
-app.get("/", (c) => c.text("OK"));
+app.get("/health", (c) => c.text("OK"));
 
 export default app;

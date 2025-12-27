@@ -10,9 +10,4 @@ export default defineConfig({
 
   platform: "node",
   target: "node22",
-
-  env: {
-    NODE_ENV: "production",
-    SKIP_ENV_VALIDATION: true,
-  },
 });

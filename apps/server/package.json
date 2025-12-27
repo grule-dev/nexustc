@@ -7,7 +7,7 @@
     "dev": "bun src/index.ts --watch --port=3000",
     "build": "tsdown",
     "check-types": "tsc --noEmit",
-    "compile": "bun build ./src/index.ts --outfile ./dist/index.js --target browser --format esm --minify --sourcemap --external cloudflare:workers"
+    "compile": "bun build ./src/index.ts --outfile ./dist/index.js --target browser --format esm --minify --sourcemap"
   },
   "dependencies": {
     "hono": "catalog:",
@@ -23,7 +23,6 @@
     "@repo/env": "workspace:*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250822.0",
     "@repo/config": "workspace:*",
     "@types/node": "^22.13.11",
     "alchemy": "^0.77.0",
