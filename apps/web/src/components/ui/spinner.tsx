@@ -1,4 +1,4 @@
-import { Loading03Icon } from "@hugeicons/core-free-icons";
+import { Loading02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
 import { cn } from "@/lib/utils";
 
@@ -7,10 +7,11 @@ function Spinner({ className, ...props }: Omit<HugeiconsIconProps, "icon">) {
     <HugeiconsIcon
       aria-label="Loading"
       className={cn("size-4 animate-spin", className)}
+      fill="currentColor"
       role="status"
-      strokeWidth={2}
+      strokeWidth={0}
       {...props}
-      icon={Loading03Icon}
+      icon={Loading02Icon}
     />
   );
 }

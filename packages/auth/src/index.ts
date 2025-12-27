@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { env } from "@repo/env";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { resend } from "./email";
 import { adminPlugin } from "./plugins/admin";
 import { patreonPlugin } from "./plugins/patreon";
 import { turnstilePlugin } from "./plugins/turnstile";
@@ -11,9 +12,32 @@ export const auth = betterAuth({
     provider: "pg",
   }),
   trustedOrigins: [env.CORS_ORIGIN],
+
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
+
+  emailVerification: {
+    autoSignInAfterVerification: true,
+    sendOnSignIn: true,
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await resend.emails.send({
+        from: "NeXusTC <verification@accounts.nexustc18.com>",
+        to: user.email,
+        template: { id: "confirm-email", variables: { VERIFICATION_URL: url } },
+      });
+    },
+  },
+
+  account: {
+    accountLinking: {
+      enabled: true,
+      allowDifferentEmails: true,
+    },
+  },
+
   // uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
   // session: {
   //   cookieCache: {

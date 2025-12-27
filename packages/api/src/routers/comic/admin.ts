@@ -1,5 +1,4 @@
-import { ORPCError } from "@orpc/server";
-import { db, eq } from "@repo/db";
+import { eq } from "@repo/db";
 import { post, termPostRelation } from "@repo/db/schema/app";
 import { comicCreateSchema } from "@repo/shared/schemas";
 import z from "zod";
@@ -8,7 +7,7 @@ import { permissionProcedure } from "../../index";
 export default {
   getDashboardList: permissionProcedure({
     comics: ["list"],
-  }).handler(() =>
+  }).handler(({ context: { db } }) =>
     db.query.post.findMany({
       columns: {
         id: true,
@@ -31,7 +30,7 @@ export default {
     comics: ["update"],
   })
     .input(z.string())
-    .handler(({ input }) =>
+    .handler(({ context: { db }, input }) =>
       db.query.post.findFirst({
         where: (p, { eq: equals }) => equals(p.id, input),
         with: {
@@ -46,7 +45,7 @@ export default {
 
   createComicPrerequisites: permissionProcedure({
     comics: ["create"],
-  }).handler(async () => {
+  }).handler(async ({ context: { db } }) => {
     const terms = await db.query.term.findMany();
     return {
       terms,
@@ -57,12 +56,12 @@ export default {
     comics: ["create"],
   })
     .input(comicCreateSchema)
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input, errors }) => {
       const [postData] = await db
         .insert(post)
         .values({
           title: input.title,
-          authorId: context.session.user.id,
+          authorId: session.user.id,
           status: input.documentStatus,
           type: "comic",
         })
@@ -71,7 +70,7 @@ export default {
         });
 
       if (!postData) {
-        throw new ORPCError("NOT_FOUND");
+        throw errors.NOT_FOUND();
       }
 
       const termIds = input.tags
@@ -98,7 +97,7 @@ export default {
         images: z.array(z.string()),
       })
     )
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       await db
         .update(post)
         .set({

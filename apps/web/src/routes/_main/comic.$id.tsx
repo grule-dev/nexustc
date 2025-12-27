@@ -6,7 +6,6 @@ import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import "react-medium-image-zoom/dist/styles.css";
-import { eq, useLiveQuery } from "@tanstack/react-db";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -25,25 +24,23 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { postCollection } from "@/db/collections";
 import type { PostType } from "@/lib/types";
+import { orpcClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_main/comic/$id")({
   component: RouteComponent,
+  loader: async ({ params }) => orpcClient.post.getPostById(params.id),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: `NeXusTC - ${loaderData ? loaderData.title : "Cómic"}`,
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {
-  const params = Route.useParams();
-  const {
-    data: [comic],
-    isLoading,
-  } = useLiveQuery((q) =>
-    q.from({ post: postCollection }).where(({ post: p }) => eq(p.id, params.id))
-  );
-
-  if (isLoading) {
-    return <div>Cargando...</div>;
-  }
+  const comic = Route.useLoaderData();
 
   if (!comic) {
     throw notFound();

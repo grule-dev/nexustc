@@ -1,5 +1,5 @@
-import { and, db, eq, sql } from "@repo/db";
-import { postBookmark, user } from "@repo/db/schema/app";
+import { and, eq, sql } from "@repo/db";
+import { postBookmark, postLikes, user } from "@repo/db/schema/app";
 import * as z from "zod";
 import {
   permissionProcedure,
@@ -10,9 +10,9 @@ import {
 const RECENT_USERS_CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
 
 export default {
-  getBookmarks: protectedProcedure.handler(({ context }) =>
+  getBookmarks: protectedProcedure.handler(({ context: { db, session } }) =>
     db.query.postBookmark.findMany({
-      where: (b, { eq: equals }) => equals(b.userId, context.session.user.id),
+      where: (b, { eq: equals }) => equals(b.userId, session.user.id),
       columns: {
         postId: true,
       },
@@ -21,13 +21,13 @@ export default {
 
   toggleBookmark: protectedProcedure
     .input(z.object({ bookmarked: z.boolean(), postId: z.string() }))
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input }) => {
       if (input.bookmarked) {
         await db
           .insert(postBookmark)
           .values({
             postId: input.postId,
-            userId: context.session.user.id,
+            userId: session.user.id,
           })
           .onConflictDoNothing();
       } else {
@@ -36,15 +36,15 @@ export default {
           .where(
             and(
               eq(postBookmark.postId, input.postId),
-              eq(postBookmark.userId, context.session.user.id)
+              eq(postBookmark.userId, session.user.id)
             )
           );
       }
     }),
 
-  getLikes: protectedProcedure.handler(({ context }) =>
+  getLikes: protectedProcedure.handler(({ context: { db, session } }) =>
     db.query.postLikes.findMany({
-      where: (b, { eq: equals }) => equals(b.userId, context.session.user.id),
+      where: (b, { eq: equals }) => equals(b.userId, session.user.id),
       columns: {
         postId: true,
       },
@@ -53,22 +53,22 @@ export default {
 
   toggleLike: protectedProcedure
     .input(z.object({ liked: z.boolean(), postId: z.string() }))
-    .handler(async ({ context, input }) => {
+    .handler(async ({ context: { db, session }, input }) => {
       if (input.liked) {
         await db
-          .insert(postBookmark)
+          .insert(postLikes)
           .values({
             postId: input.postId,
-            userId: context.session.user.id,
+            userId: session.user.id,
           })
           .onConflictDoNothing();
       } else {
         await db
-          .delete(postBookmark)
+          .delete(postLikes)
           .where(
             and(
-              eq(postBookmark.postId, input.postId),
-              eq(postBookmark.userId, context.session.user.id)
+              eq(postLikes.postId, input.postId),
+              eq(postLikes.userId, session.user.id)
             )
           );
       }
@@ -76,11 +76,8 @@ export default {
 
   // Cache recent users in KV to avoid hitting the database too often
   // This is a best-effort cache, so we don't need to be super strict about it
-  // We just want to avoid hitting the database too often
   // The list is not guaranteed to be perfectly up-to-date
   // We use a cutoff window to avoid caching users that are no longer active
-  // This means that if a user was active more than RECENT_USERS_CACHE_TTL_SECONDS * 2 ago, they won't be included in the list
-  // But that's okay, because they are not "recent" anymore
   // We double the cutoff window to account for the fact that the cache might be stale
   // So we want to make sure we don't miss any users that are still considered "recent"
   // This is a trade-off between freshness and performance
@@ -90,7 +87,7 @@ export default {
 
   getRecentUsers: publicProcedure.handler(
     async ({
-      context,
+      context: { cache, db, session },
     }): Promise<
       {
         id: string;
@@ -99,9 +96,9 @@ export default {
         role: string;
       }[]
     > => {
-      // const list = await env.KV_STORE.get<typeof users>("recent-users", "json");
+      const cachedList = await cache.get("recent-users");
 
-      const currentUser = context.session?.user;
+      const currentUser = session?.user;
 
       if (currentUser) {
         // If the user is authenticated, update their lastSeenAt
@@ -111,18 +108,25 @@ export default {
           .where(eq(user.id, currentUser.id));
       }
 
-      // if (list) {
-      //   if (currentUser && !list.find((u) => u.id === currentUser.id)) {
-      //     // If the user is not in the cached list, add them
-      //     list.push({
-      //       id: currentUser.id,
-      //       name: currentUser.name,
-      //       role: currentUser.role ?? "user",
-      //       image: currentUser.image ?? null,
-      //     });
-      //   }
-      //   return list;
-      // }
+      try {
+        if (cachedList) {
+          const list: typeof users = JSON.parse(cachedList);
+
+          if (currentUser && !list.find((u) => u.id === currentUser.id)) {
+            // If the user is not in the cached list, add them
+            list.push({
+              id: currentUser.id,
+              name: currentUser.name,
+              role: currentUser.role ?? "user",
+              image: currentUser.image ?? null,
+            });
+          }
+
+          return list;
+        }
+      } catch (e) {
+        console.error("Error parsing cached list", e);
+      }
 
       const users = await db.query.user.findMany({
         where: (u, { gte }) =>
@@ -138,11 +142,11 @@ export default {
         },
       });
 
-      // waitUntil(
-      //   env.KV_STORE.put("recent-users", JSON.stringify(users), {
-      //     expirationTtl: RECENT_USERS_CACHE_TTL_SECONDS,
-      //   })
-      // );
+      await cache.setex(
+        "recent-users",
+        RECENT_USERS_CACHE_TTL_SECONDS,
+        JSON.stringify(users)
+      );
 
       return users;
     }
@@ -150,7 +154,7 @@ export default {
 
   getUser: publicProcedure
     .input(z.object({ id: z.string() }))
-    .handler(({ input }) =>
+    .handler(({ context: { db }, input }) =>
       db.query.user.findFirst({
         where: (u, { eq: equals }) => equals(u.id, input.id),
         columns: {
@@ -165,7 +169,7 @@ export default {
 
   isUsernameAvailable: publicProcedure
     .input(z.string())
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       const found = await db.query.user.findFirst({
         where: (u, { eq: equals }) => equals(u.name, input),
         columns: {},
@@ -175,7 +179,7 @@ export default {
 
   getDashboardList: permissionProcedure({
     user: ["list"],
-  }).handler(() =>
+  }).handler(({ context: { db } }) =>
     db.query.user.findMany({
       columns: {
         id: true,
@@ -187,7 +191,7 @@ export default {
 
   getDashboard: permissionProcedure({
     user: ["list"],
-  }).handler(async () => {
+  }).handler(async ({ context: { db } }) => {
     const registeredLastWeekPromise = db
       .select({
         time: sql<string>`hour`,

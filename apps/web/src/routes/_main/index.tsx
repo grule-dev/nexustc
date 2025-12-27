@@ -15,6 +15,13 @@ export const Route = createFileRoute("/_main/")({
 
     return recentUsers;
   },
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Principal",
+      },
+    ],
+  }),
 });
 
 function HomeComponent() {

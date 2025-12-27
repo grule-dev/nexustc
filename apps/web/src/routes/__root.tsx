@@ -26,11 +26,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        title: "ntc-cf",
+        title: "NeXusTC",
       },
       {
         name: "description",
-        content: "ntc-cf is a web application",
+        content: "NeXusTC - Traducciones",
       },
     ],
     links: [

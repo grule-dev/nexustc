@@ -2,6 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_main/legal")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Aviso Legal",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

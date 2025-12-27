@@ -5,6 +5,13 @@ import { Header } from "@/components/landing/header";
 export const Route = createFileRoute("/_main")({
   component: MainLayout,
   errorComponent: ErrorComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Principal",
+      },
+    ],
+  }),
 });
 
 function ErrorComponent({ error }: { error: Error }) {

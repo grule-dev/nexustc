@@ -18,6 +18,13 @@ export const Route = createFileRoute("/_main/user/$id")({
 
     return { user };
   },
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: `NeXusTC - Usuario${loaderData ? `: ${loaderData.user.name}` : ""}`,
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

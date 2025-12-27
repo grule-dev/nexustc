@@ -21,6 +21,13 @@ import { UserLabel } from "@/components/users/user-label";
 
 export const Route = createFileRoute("/_main/profile")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Perfil",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {
@@ -139,6 +146,7 @@ function AccountsSection() {
         );
       })}
       <Button
+        loading
         onClick={async () => {
           authClient.signOut();
           await queryClient.invalidateQueries({ queryKey: ["session"] });

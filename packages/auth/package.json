@@ -17,11 +17,12 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "better-auth": "catalog:",
-    "dotenv": "catalog:",
-    "zod": "catalog:",
     "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
-    "@repo/shared": "workspace:*"
+    "@repo/shared": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "resend": "^6.6.0",
+    "zod": "catalog:"
   }
 }

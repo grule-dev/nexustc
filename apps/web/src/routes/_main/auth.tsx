@@ -13,6 +13,13 @@ import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_main/auth")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Autenticación",
+      },
+    ],
+  }),
 });
 
 const loginSchema = z.object({
@@ -78,6 +85,7 @@ function RouteComponent() {
         const { error: authError } = await authClient.signIn.email({
           email: value.email,
           password: value.password,
+          callbackURL: window.location.origin,
           fetchOptions: {
             headers: {
               "x-captcha-response": value.turnstileToken,
@@ -132,6 +140,7 @@ function RouteComponent() {
           name: value.name,
           email: value.email,
           password: value.password,
+          callbackURL: "/",
           fetchOptions: {
             headers: {
               "x-captcha-response": value.turnstileToken,

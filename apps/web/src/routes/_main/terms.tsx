@@ -2,6 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_main/terms")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Términos y Condiciones",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

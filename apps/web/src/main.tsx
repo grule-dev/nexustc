@@ -1,14 +1,14 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
-import Loader from "./components/loader";
+import { LoadingSpinner } from "./components/loading-spinner";
 import { routeTree } from "./routeTree.gen";
 import { orpc, queryClient } from "./utils/orpc";
 
 const router = createRouter({
   routeTree,
   defaultPreload: false,
-  defaultPendingComponent: () => <Loader />,
+  defaultPendingComponent: () => <LoadingSpinner />,
   context: { orpc, queryClient },
   Wrap({ children }: { children: React.ReactNode }) {
     return (

@@ -34,6 +34,13 @@ export const Route = createFileRoute("/admin")({
       });
     }
   },
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Admin",
+      },
+    ],
+  }),
 });
 
 const nav = {

@@ -17,7 +17,8 @@
     "@repo/config": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/shared": "workspace:*",
-    "drizzle-kit": "^0.31.8"
+    "drizzle-kit": "^0.31.8",
+    "pg": "^8.16.3"
   },
   "peerDependencies": {
     "typescript": "^5"

@@ -1,12 +1,11 @@
-import { ORPCError } from "@orpc/server";
-import { db, eq } from "@repo/db";
+import { eq } from "@repo/db";
 import { term } from "@repo/db/schema/app";
 import { TAXONOMIES } from "@repo/shared/constants";
 import z from "zod";
 import { permissionProcedure, publicProcedure } from "../index";
 
 export default {
-  getAll: publicProcedure.handler(() =>
+  getAll: publicProcedure.handler(({ context: { db } }) =>
     db.query.term.findMany({
       columns: {
         id: true,
@@ -30,7 +29,7 @@ export default {
         taxonomy: z.enum(TAXONOMIES),
       })
     )
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input, errors }) => {
       try {
         if (input.color === "") {
           await db.insert(term).values({
@@ -42,7 +41,7 @@ export default {
           await db.insert(term).values(input);
         }
       } catch (error) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        throw errors.INTERNAL_SERVER_ERROR({
           message: `Error desconocido. Info: ${error}`,
         });
       }
@@ -61,17 +60,17 @@ export default {
         color: z.string().trim(),
       })
     )
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       await db.update(term).set(input).where(eq(term.id, input.id));
     }),
 
-  getDashboardList: permissionProcedure({ terms: ["list"] }).handler(() =>
-    db.query.term.findMany()
+  getDashboardList: permissionProcedure({ terms: ["list"] }).handler(
+    ({ context: { db } }) => db.query.term.findMany()
   ),
 
   delete: permissionProcedure({ terms: ["delete"] })
     .input(z.object({ id: z.string() }))
-    .handler(async ({ input }) => {
+    .handler(async ({ context: { db }, input }) => {
       await db.delete(term).where(eq(term.id, input.id));
     }),
 };
