@@ -2,6 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_main/privacy")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Política de Privacidad",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

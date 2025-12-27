@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { eq } from "@repo/db";
 import { term } from "@repo/db/schema/app";
 import { TAXONOMIES } from "@repo/shared/constants";
@@ -30,7 +29,7 @@ export default {
         taxonomy: z.enum(TAXONOMIES),
       })
     )
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db }, input, errors }) => {
       try {
         if (input.color === "") {
           await db.insert(term).values({
@@ -42,7 +41,7 @@ export default {
           await db.insert(term).values(input);
         }
       } catch (error) {
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        throw errors.INTERNAL_SERVER_ERROR({
           message: `Error desconocido. Info: ${error}`,
         });
       }

@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server";
 import { eq } from "@repo/db";
 import { post, termPostRelation } from "@repo/db/schema/app";
 import { comicCreateSchema } from "@repo/shared/schemas";
@@ -57,7 +56,7 @@ export default {
     comics: ["create"],
   })
     .input(comicCreateSchema)
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session }, input, errors }) => {
       const [postData] = await db
         .insert(post)
         .values({
@@ -71,7 +70,7 @@ export default {
         });
 
       if (!postData) {
-        throw new ORPCError("NOT_FOUND");
+        throw errors.NOT_FOUND();
       }
 
       const termIds = input.tags

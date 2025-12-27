@@ -1,5 +1,4 @@
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
-import { ORPCError } from "@orpc/server";
 import { eq, inArray } from "@repo/db";
 import { post, termPostRelation } from "@repo/db/schema/app";
 import { env } from "@repo/env";
@@ -69,7 +68,7 @@ export default {
     posts: ["create"],
   })
     .input(postCreateSchema)
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session }, input, errors }) => {
       const [postData] = await db
         .insert(post)
         .values({
@@ -84,7 +83,7 @@ export default {
         .returning({ postId: post.id });
 
       if (!postData) {
-        throw new ORPCError("NOT_FOUND");
+        throw errors.NOT_FOUND();
       }
 
       const termIds = input.platforms
@@ -111,7 +110,7 @@ export default {
     posts: ["update"],
   })
     .input(postCreateSchema.extend({ id: z.string() }))
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db }, input, errors }) => {
       const [postData] = await db
         .update(post)
         .set({
@@ -126,7 +125,7 @@ export default {
         .returning({ postId: post.id });
 
       if (!postData) {
-        throw new ORPCError("NOT_FOUND");
+        throw errors.NOT_FOUND();
       }
 
       await db

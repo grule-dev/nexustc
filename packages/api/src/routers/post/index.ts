@@ -97,6 +97,65 @@ export default {
     }
   ),
 
+  getPostById: publicProcedure
+    .input(z.string())
+    .handler(async ({ context: { db }, input }) => {
+      const result = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          version: post.version,
+          content: post.content,
+          isWeekly: post.isWeekly,
+          imageObjectKeys: post.imageObjectKeys,
+          adsLinks: post.adsLinks,
+          authorContent: post.authorContent,
+          createdAt: post.createdAt,
+
+          favorites: sql<number>`
+            (
+              SELECT COUNT(*)
+              FROM ${postBookmark}
+              WHERE ${postBookmark.postId} = ${post.id}
+            )`,
+
+          likes: sql<number>`
+            (
+              SELECT COUNT(*)
+              FROM ${postLikes}
+              WHERE ${postLikes.postId} = ${post.id}
+            )`,
+
+          terms: sql<
+            { id: string; name: string; taxonomy: string; color: string }[]
+          >`
+            COALESCE(
+              (
+                SELECT json_agg(
+                  json_build_object(
+                    'id', ${term.id},
+                    'name', ${term.name},
+                    'taxonomy', ${term.taxonomy},
+                    'color', ${term.color}
+                  )
+                )
+              )
+              FROM ${termPostRelation}
+              JOIN ${term}
+                ON ${term.id} = ${termPostRelation.termId}
+              WHERE ${termPostRelation.postId} = ${post.id}
+            ),
+            '[]'::json
+          )`,
+        })
+        .from(post)
+        .where(and(eq(post.status, "publish"), eq(post.id, input)))
+        .limit(1);
+
+      return result[0];
+    }),
+
   getLikes: publicProcedure
     .input(z.string())
     .handler(async ({ context: { db }, input }) => {

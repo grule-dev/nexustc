@@ -14,6 +14,13 @@ import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_main/forgot-password")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Olvidé mi Contraseña",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

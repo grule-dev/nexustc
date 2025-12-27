@@ -11,6 +11,13 @@ export const Route = createFileRoute("/_main/reset-password")({
   validateSearch: zodValidator(
     z.object({ token: z.string().nullish(), error: z.string().nullish() })
   ),
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Restablecer Contraseña",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

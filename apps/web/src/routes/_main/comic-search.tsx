@@ -26,6 +26,13 @@ export const Route = createFileRoute("/_main/comic-search")({
   validateSearch: z.object({
     tag: z.string().optional(),
   }),
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Buscar Cómics",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

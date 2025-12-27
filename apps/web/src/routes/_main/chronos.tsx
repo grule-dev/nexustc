@@ -8,6 +8,13 @@ import {
 
 export const Route = createFileRoute("/_main/chronos")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "TheChronos",
+      },
+    ],
+  }),
 });
 
 const images = [

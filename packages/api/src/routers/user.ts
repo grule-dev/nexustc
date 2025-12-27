@@ -96,9 +96,7 @@ export default {
         role: string;
       }[]
     > => {
-      const list: typeof users = JSON.parse(
-        (await cache.get("recent-users")) ?? "[]"
-      );
+      const cachedList = await cache.get("recent-users");
 
       const currentUser = session?.user;
 
@@ -110,17 +108,24 @@ export default {
           .where(eq(user.id, currentUser.id));
       }
 
-      if (list) {
-        if (currentUser && !list.find((u) => u.id === currentUser.id)) {
-          // If the user is not in the cached list, add them
-          list.push({
-            id: currentUser.id,
-            name: currentUser.name,
-            role: currentUser.role ?? "user",
-            image: currentUser.image ?? null,
-          });
+      try {
+        if (cachedList) {
+          const list: typeof users = JSON.parse(cachedList);
+
+          if (currentUser && !list.find((u) => u.id === currentUser.id)) {
+            // If the user is not in the cached list, add them
+            list.push({
+              id: currentUser.id,
+              name: currentUser.name,
+              role: currentUser.role ?? "user",
+              image: currentUser.image ?? null,
+            });
+          }
+
+          return list;
         }
-        return list;
+      } catch (e) {
+        console.error("Error parsing cached list", e);
       }
 
       const users = await db.query.user.findMany({

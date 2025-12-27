@@ -5,6 +5,13 @@ import { orpcClient } from "@/utils/orpc";
 export const Route = createFileRoute("/_main/tutorials")({
   component: RouteComponent,
   loader: () => orpcClient.extras.getTutorials(),
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Tutoriales",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

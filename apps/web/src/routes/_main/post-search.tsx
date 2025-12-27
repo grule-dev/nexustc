@@ -26,6 +26,13 @@ export const Route = createFileRoute("/_main/post-search")({
   validateSearch: z.object({
     tag: z.string().optional(),
   }),
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Buscar Juegos",
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {

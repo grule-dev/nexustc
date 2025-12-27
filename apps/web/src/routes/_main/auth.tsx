@@ -13,6 +13,13 @@ import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_main/auth")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "NeXusTC - Autenticación",
+      },
+    ],
+  }),
 });
 
 const loginSchema = z.object({
