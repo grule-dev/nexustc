@@ -56,7 +56,7 @@ export default {
     .handler(async ({ context: { db, session }, input }) => {
       if (input.liked) {
         await db
-          .insert(postBookmark)
+          .insert(postLikes)
           .values({
             postId: input.postId,
             userId: session.user.id,
@@ -67,7 +67,7 @@ export default {
           .delete(postBookmark)
           .where(
             and(
-              eq(postBookmark.postId, input.postId),
+              eq(postLikes.postId, input.postId),
               eq(postBookmark.userId, session.user.id)
             )
           );
