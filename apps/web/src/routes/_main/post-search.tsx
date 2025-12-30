@@ -43,6 +43,7 @@ export const Route = createFileRoute("/_main/post-search")({
     ];
 
     const filteredPosts = await orpcClient.post.search({
+      type: "post",
       query: deps.query,
       termIds: termIds.length > 0 ? termIds : undefined,
     });

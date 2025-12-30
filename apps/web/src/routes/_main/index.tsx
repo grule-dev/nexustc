@@ -1,30 +1,41 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GamesCarousel } from "@/components/landing/games-carousel";
+import { PostCard } from "@/components/landing/post-card";
+import { TermBadge } from "@/components/term-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { UserLabel } from "@/components/users/user-label";
-import { safeOrpcClient } from "@/lib/orpc";
+import { useTerms } from "@/hooks/use-terms";
+import { orpcClient, safeOrpcClient } from "@/lib/orpc";
+
+const RECENT_POSTS_LIMIT = 12;
 
 export const Route = createFileRoute("/_main/")({
   component: HomeComponent,
   loader: async () => {
-    const [error, result, isDefined] =
-      await safeOrpcClient.user.getRecentUsers();
+    const [recentUsersResult, weeklyGamesResult] = await Promise.all([
+      safeOrpcClient.user.getRecentUsers(),
+      safeOrpcClient.post.getWeekly(),
+    ]);
 
-    if (isDefined) {
-      const err = {
-        code: error.code,
-        name: error.name,
-        message: error.message,
-      };
+    const [recentUsersError, recentUsers, recentUsersDefined] =
+      recentUsersResult;
+    const [weeklyGamesError, weeklyGames, weeklyGamesDefined] =
+      weeklyGamesResult;
 
-      return [err, undefined] as const;
-    }
-
-    if (error) {
-      throw error;
-    }
-
-    return [undefined, result] as const;
+    return {
+      recentUsers: recentUsersDefined
+        ? { error: { code: recentUsersError.code }, data: undefined }
+        : recentUsersError
+          ? { error: { code: "UNKNOWN" }, data: undefined }
+          : { error: undefined, data: recentUsers },
+      weeklyGames: weeklyGamesDefined
+        ? { error: { code: weeklyGamesError.code }, data: undefined }
+        : weeklyGamesError
+          ? { error: { code: "UNKNOWN" }, data: undefined }
+          : { error: undefined, data: weeklyGames },
+    };
   },
   head: () => ({
     meta: [
@@ -36,13 +47,15 @@ export const Route = createFileRoute("/_main/")({
 });
 
 function HomeComponent() {
+  const { weeklyGames } = Route.useLoaderData();
+
   return (
     <main className="container grid grid-cols-1 gap-4 xl:grid-cols-4">
       <div className="flex flex-col items-center justify-center xl:col-span-3">
         <div className="container flex flex-col items-center justify-center gap-12 px-4">
           <HeroSection />
           <h1 className="font-extrabold text-3xl">Juegos de la Semana</h1>
-          <GamesCarousel games={[]} />
+          <GamesCarousel games={weeklyGames.data ?? []} />
           <h1 className="font-extrabold text-3xl">Juegos Recientes</h1>
           <RecentPosts />
         </div>
@@ -53,7 +66,10 @@ function HomeComponent() {
 }
 
 function Sidebar() {
-  const [recentUsersError, recentUsers] = Route.useLoaderData();
+  const { recentUsers } = Route.useLoaderData();
+  const { data: terms } = useTerms();
+
+  const tags = terms?.filter((term) => term.taxonomy === "tag") ?? [];
 
   return (
     <section className="flex flex-col items-center gap-4 px-4">
@@ -62,15 +78,17 @@ function Sidebar() {
           <CardTitle>Usuarios Recientes</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap">
-          {!!recentUsersError && (
-            <p className="text-red-500">Error: {recentUsersError.code}</p>
+          {!!recentUsers.error && (
+            <p className="text-red-500">Error: {recentUsers.error.code}</p>
           )}
-          {recentUsers?.map((user, idx) => (
+          {recentUsers.data?.map((user, idx) => (
             <div className="flex items-center" key={user.id}>
               <Link params={{ id: user.id }} to="/user/$id">
                 <UserLabel user={user} />
               </Link>
-              {idx < recentUsers.length - 1 && <span className="mr-1">,</span>}
+              {idx < (recentUsers.data?.length ?? 0) - 1 && (
+                <span className="mr-1">,</span>
+              )}
             </div>
           ))}
         </CardContent>
@@ -80,10 +98,9 @@ function Sidebar() {
           <CardTitle>Tags</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          {/* TODO: add tags back
           {tags.map((tag) => (
             <TagCard key={tag.id} tag={tag} />
-          ))} */}
+          ))}
         </CardContent>
       </Card>
     </section>
@@ -92,7 +109,7 @@ function Sidebar() {
 
 function HeroSection() {
   return (
-    <div className="container grid h-96 grid-cols-1 gap-4 md:grid-cols-3">
+    <div className="container grid h-96 w-full grid-cols-1 gap-4 md:grid-cols-3">
       <div className="md:col-span-2">
         <div className="relative">
           <img
@@ -127,26 +144,52 @@ function HeroSection() {
   );
 }
 
-// function TagCard({
-//   tag,
-// }: {
-//   tag: { id: string; name: string; color: string | null };
-// }) {
-//   return (
-//     <Link className="grow" search={{ tag: tag.id }} to="/post-search">
-//       <TermBadge className="w-full justify-center" tag={tag} />
-//     </Link>
-//   );
-// }
+function TagCard({
+  tag,
+}: {
+  tag: { id: string; name: string; color: string | null };
+}) {
+  return (
+    <Link className="grow" search={{ tag: [tag.id] }} to="/post-search">
+      <TermBadge className="w-full justify-center" tag={tag} />
+    </Link>
+  );
+}
 
 function RecentPosts() {
-  // TODO: add recent posts back
+  const {
+    data: recentPosts,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["posts", "recent", RECENT_POSTS_LIMIT],
+    queryFn: () => orpcClient.post.getRecent({ limit: RECENT_POSTS_LIMIT }),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid w-full grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 md:gap-8">
+        {Array.from({ length: RECENT_POSTS_LIMIT }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
+          <Skeleton className="aspect-video w-full rounded-lg" key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="w-full text-center text-muted-foreground">
+        Error al cargar los posts recientes
+      </div>
+    );
+  }
 
   return (
     <div className="grid w-full grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 md:gap-8">
-      {/* {recentPosts.map((post) => (
+      {recentPosts?.map((post) => (
         <PostCard key={post.id} post={post} />
-      ))} */}
+      ))}
     </div>
   );
 }

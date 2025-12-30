@@ -1,4 +1,4 @@
-import { and, eq, sql } from "@repo/db";
+import { and, asc, desc, eq, sql } from "@repo/db";
 import {
   comment,
   post,
@@ -102,9 +102,161 @@ export default {
     }
   ),
 
+  getRecent: publicProcedure
+    .input(z.object({ limit: z.number().min(1).max(24).default(12) }))
+    .handler(async ({ context: { db }, input }) => {
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
+
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
+            json_agg(
+              json_build_object(
+                'id', ${term.id},
+                'name', ${term.name},
+                'taxonomy', ${term.taxonomy},
+                'color', ${term.color}
+              )
+            )
+          `.as("terms"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
+
+      const posts = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          version: post.version,
+          content: post.content,
+          isWeekly: post.isWeekly,
+          imageObjectKeys: post.imageObjectKeys,
+          adsLinks: post.adsLinks,
+          authorContent: post.authorContent,
+
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+
+          terms: sql<
+            {
+              id: string;
+              name: string;
+              taxonomy: (typeof TAXONOMIES)[number];
+              color: string;
+            }[]
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
+
+          createdAt: post.createdAt,
+        })
+        .from(post)
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .where(eq(post.status, "publish"))
+        .orderBy(desc(post.createdAt))
+        .limit(input.limit);
+
+      return posts;
+    }),
+
+  getWeekly: publicProcedure.handler(async ({ context: { db } }) => {
+    const likesAgg = db
+      .select({
+        postId: postLikes.postId,
+        count: sql<number>`COUNT(*)`.as("likes_count"),
+      })
+      .from(postLikes)
+      .groupBy(postLikes.postId)
+      .as("likes_agg");
+
+    const favoritesAgg = db
+      .select({
+        postId: postBookmark.postId,
+        count: sql<number>`COUNT(*)`.as("favorites_count"),
+      })
+      .from(postBookmark)
+      .groupBy(postBookmark.postId)
+      .as("favorites_agg");
+
+    const termsAgg = db
+      .select({
+        postId: termPostRelation.postId,
+        terms: sql`
+          json_agg(
+            json_build_object(
+              'id', ${term.id},
+              'name', ${term.name},
+              'taxonomy', ${term.taxonomy},
+              'color', ${term.color}
+            )
+          )
+        `.as("terms"),
+      })
+      .from(termPostRelation)
+      .innerJoin(term, eq(term.id, termPostRelation.termId))
+      .groupBy(termPostRelation.postId)
+      .as("terms_agg");
+
+    const posts = await db
+      .select({
+        id: post.id,
+        title: post.title,
+        type: post.type,
+        version: post.version,
+        content: post.content,
+        isWeekly: post.isWeekly,
+        imageObjectKeys: post.imageObjectKeys,
+        adsLinks: post.adsLinks,
+        authorContent: post.authorContent,
+
+        favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+        likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+
+        terms: sql<
+          {
+            id: string;
+            name: string;
+            taxonomy: (typeof TAXONOMIES)[number];
+            color: string;
+          }[]
+        >`COALESCE(${termsAgg.terms}, '[]'::json)`,
+
+        createdAt: post.createdAt,
+      })
+      .from(post)
+      .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+      .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+      .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+      .where(and(eq(post.status, "publish"), eq(post.isWeekly, true)))
+      .orderBy(asc(post.title));
+
+    return posts;
+  }),
+
   search: publicProcedure
     .input(
       z.object({
+        type: z.enum(["post", "comic"]),
         query: z.string().optional(),
         termIds: z.array(z.string()).optional(),
       })
@@ -148,7 +300,10 @@ export default {
         .as("terms_agg");
 
       // Build conditions array
-      const conditions = [eq(post.status, "publish")];
+      const conditions = [
+        eq(post.status, "publish"),
+        eq(post.type, input.type),
+      ];
 
       // Add fuzzy search filter using pg_trgm
       if (input.query && input.query.trim() !== "") {

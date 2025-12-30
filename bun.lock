@@ -12,6 +12,7 @@
         "@biomejs/biome": "2.3.10",
         "@types/node": "^22.13.11",
         "turbo": "^2.5.4",
+        "typescript": "^5.9.3",
         "ultracite": "6.5.0",
       },
     },
@@ -116,6 +117,8 @@
       "devDependencies": {
         "@repo/config": "workspace:*",
         "@repo/env": "workspace:*",
+        "redis": "^5.10.0",
+        "vitest": "^4.0.16",
       },
       "peerDependencies": {
         "typescript": "^5",

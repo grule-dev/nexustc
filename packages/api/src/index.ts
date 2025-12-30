@@ -2,8 +2,19 @@ import { os } from "@orpc/server";
 import { auth } from "@repo/auth";
 import type { Permissions, Role } from "@repo/shared/permissions";
 import type { AtLeastOne } from "@repo/shared/types";
+import type { RedisClientType } from "redis";
 import { z } from "zod";
 import type { Context } from "./context";
+import {
+  calculateRetryAfter,
+  getCurrentWindow,
+  getIdentifier,
+  getRateLimitKey,
+} from "./utils/rate-limit";
+import {
+  checkFixedWindowRateLimit,
+  checkSlidingWindowRateLimit,
+} from "./utils/redis-operations";
 
 export const o = os.$context<Context>().errors({
   RATE_LIMITED: {
@@ -50,28 +61,25 @@ export const fixedWindowRatelimitMiddleware = ({
 }) =>
   o.middleware(async ({ context, errors, next, path }) => {
     const ip = context.headers.get("cf-connecting-ip") ?? "unknown";
+    const identifier = getIdentifier({ session: context.session, ip });
+    const window = getCurrentWindow(windowSeconds);
+    const key = getRateLimitKey({
+      strategy: "fixed",
+      identifier,
+      path,
+      window,
+    });
 
-    const identifier = context.session
-      ? `user:${context.session.user.id}`
-      : `ip:${ip}`;
+    const { exceeded } = await checkFixedWindowRateLimit(
+      context.cache as RedisClientType,
+      key,
+      limit,
+      windowSeconds
+    );
 
-    const window = Math.floor(Date.now() / 1000 / windowSeconds);
-    const key = `rl:fw:${identifier}:${path.join("/")}:${window}`;
-
-    const count = await context.cache.incr(key);
-
-    if (count === 1) {
-      await context.cache.expire(key, windowSeconds);
-    }
-
-    if (count > limit) {
-      const resetIn =
-        windowSeconds - (Math.floor(Date.now() / 1000) % windowSeconds);
-
+    if (exceeded) {
       throw errors.RATE_LIMITED({
-        data: {
-          retryAfter: resetIn,
-        },
+        data: { retryAfter: calculateRetryAfter(windowSeconds) },
       });
     }
 
@@ -85,36 +93,22 @@ export const slidingWindowRatelimitMiddleware = (
   o.middleware(async ({ context, errors, next, path }) => {
     const ip = context.headers.get("cf-connecting-ip");
     const now = Date.now();
-    const windowMs = windowSeconds * 1000;
+    const identifier = getIdentifier({ session: context.session, ip });
+    const key = getRateLimitKey({ strategy: "sliding", identifier, path });
 
-    const identifier = context.session
-      ? `user:${context.session.user.id}`
-      : `ip:${ip}`;
+    const { exceeded } = await checkSlidingWindowRateLimit(
+      context.cache as RedisClientType,
+      key,
+      limit,
+      windowSeconds,
+      now
+    );
 
-    const key = `rl:sw:${identifier}:${path.join("/")}`;
-
-    await context.cache.zRemRangeByScore(key, 0, now - windowMs);
-
-    const count = await context.cache.zCard(key);
-
-    if (count >= limit) {
-      const resetIn =
-        windowSeconds - (Math.floor(Date.now() / 1000) % windowSeconds);
-
+    if (exceeded) {
       throw errors.RATE_LIMITED({
-        data: {
-          retryAfter: resetIn,
-        },
+        data: { retryAfter: calculateRetryAfter(windowSeconds) },
       });
     }
-
-    await Promise.all([
-      context.cache.zAdd(key, {
-        score: now,
-        value: now.toString(),
-      }),
-      context.cache.expire(key, windowSeconds),
-    ]);
 
     return next();
   });

@@ -32,6 +32,7 @@ export const Route = createFileRoute("/_main/comic-search")({
     const termIds = deps.tag ?? [];
 
     const filteredPosts = await orpcClient.post.search({
+      type: "comic",
       query: deps.query,
       termIds: termIds.length > 0 ? termIds : undefined,
     });
@@ -70,7 +71,7 @@ function RouteComponent() {
   useDebounceEffect(
     () => {
       navigate({
-        to: "/post-search",
+        to: "/comic-search",
         search: {
           query: formValues.query || undefined,
           tag: formValues.tag.length > 0 ? formValues.tag : undefined,

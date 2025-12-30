@@ -62,9 +62,7 @@ function MainLayout() {
         <div className="flex flex-col items-center">
           <Header />
           <div className="h-6 md:h-12" />
-          <div className="[view-transition-name:main-content]">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
         <Footer />
       </div>

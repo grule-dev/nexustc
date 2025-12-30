@@ -34,9 +34,14 @@ const links = [
 export function Header() {
   const matchRoute = useMatchRoute();
 
-  const isSticky = !matchRoute({
-    to: "/comic/$id",
-  });
+  const isSticky = !(
+    matchRoute({
+      to: "/comic/$id",
+    }) ||
+    matchRoute({
+      to: "/chronos",
+    })
+  );
 
   return (
     <>

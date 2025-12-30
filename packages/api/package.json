@@ -9,10 +9,15 @@
     }
   },
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "devDependencies": {
     "@repo/config": "workspace:*",
-    "@repo/env": "workspace:*"
+    "@repo/env": "workspace:*",
+    "redis": "^5.10.0",
+    "vitest": "^4.0.16"
   },
   "peerDependencies": {
     "typescript": "^5"
