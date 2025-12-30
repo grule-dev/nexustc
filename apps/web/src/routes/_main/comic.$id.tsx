@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Zoom from "react-medium-image-zoom";
 import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, getBucketUrl } from "@/lib/utils";
 import "react-medium-image-zoom/dist/styles.css";
 import {
   ArrowLeft01Icon,
@@ -110,7 +110,7 @@ function ComicPage({ comic }: { comic: PostType }) {
         <section className="grid grid-cols-3 gap-4">
           <img
             alt={`Imagen de portada de ${comic.title}`}
-            src={comic.imageObjectKeys[0]}
+            src={getBucketUrl(comic.imageObjectKeys[0])}
           />
           <div className="col-span-2 flex flex-col gap-4">
             <div className="flex w-full flex-row items-center justify-between gap-4">
@@ -156,7 +156,10 @@ function ComicPage({ comic }: { comic: PostType }) {
               onClick={() => setPage(index)}
               type="button"
             >
-              <img alt={`Imagen adjunta de ${comic.title}`} src={image} />
+              <img
+                alt={`Imagen adjunta de ${comic.title}`}
+                src={getBucketUrl(image)}
+              />
             </button>
           ))}
         </div>
@@ -190,7 +193,7 @@ function ComicReader({
           <img
             alt={`Página ${page + 1}`}
             className="h-full max-h-dvh w-full object-contain"
-            src={images[page]}
+            src={getBucketUrl(images[page])}
           />
         </Zoom>
       )}
@@ -220,7 +223,7 @@ function ComicReader({
                     ? "border-primary"
                     : "border-transparent hover:border-muted"
                 )}
-                src={image}
+                src={getBucketUrl(image)}
               />
             </CarouselItem>
           ))}

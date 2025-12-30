@@ -9,6 +9,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import type { PostType } from "@/lib/types";
+import { getBucketUrl } from "@/lib/utils";
 import { PostCard } from "./post-card";
 
 export function GamesCarousel({ games }: { games: PostType[] }) {
@@ -93,7 +94,7 @@ export function GamesCarousel({ games }: { games: PostType[] }) {
               <img
                 alt={game.title}
                 className="h-full w-full object-cover"
-                src={game.imageObjectKeys?.[0]}
+                src={getBucketUrl(game.imageObjectKeys?.[0] ?? "")}
               />
               {current === index && (
                 <div className="absolute inset-0 bg-black/20" />
