@@ -2,6 +2,7 @@ import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { auth } from "@repo/auth";
+import { env } from "@repo/env/client";
 import {
   createFileRoute,
   Link,
@@ -340,8 +341,7 @@ function TurnstileContainer({
         theme: "auto",
         size: "flexible",
       }}
-      // biome-ignore lint/style/noNonNullAssertion: we don't know if it's null
-      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY!}
+      siteKey={env.VITE_TURNSTILE_SITE_KEY}
     />
   );
 }

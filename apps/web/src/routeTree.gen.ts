@@ -13,6 +13,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as MainTutorialsRouteImport } from './routes/_main/tutorials'
 import { Route as MainTermsRouteImport } from './routes/_main/terms'
 import { Route as MainResetPasswordRouteImport } from './routes/_main/reset-password'
@@ -59,6 +60,11 @@ const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRouteRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MainTutorialsRoute = MainTutorialsRouteImport.update({
   id: '/tutorials',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof MainResetPasswordRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
+  '/api/health': typeof ApiHealthRoute
   '/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof MainResetPasswordRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
+  '/api/health': typeof ApiHealthRoute
   '/': typeof MainIndexRoute
   '/admin': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
@@ -275,6 +283,7 @@ export interface FileRoutesById {
   '/_main/reset-password': typeof MainResetPasswordRoute
   '/_main/terms': typeof MainTermsRoute
   '/_main/tutorials': typeof MainTutorialsRoute
+  '/api/health': typeof ApiHealthRoute
   '/_main/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/_main/comic/$id': typeof MainComicIdRoute
@@ -309,6 +318,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/tutorials'
+    | '/api/health'
     | '/'
     | '/admin/'
     | '/comic/$id'
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/tutorials'
+    | '/api/health'
     | '/'
     | '/admin'
     | '/comic/$id'
@@ -373,6 +384,7 @@ export interface FileRouteTypes {
     | '/_main/reset-password'
     | '/_main/terms'
     | '/_main/tutorials'
+    | '/api/health'
     | '/_main/'
     | '/admin/'
     | '/_main/comic/$id'
@@ -395,6 +407,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRouteRoute: typeof MainRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRouteRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_main/tutorials': {
       id: '/_main/tutorials'
@@ -698,6 +718,7 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   MainRouteRoute: MainRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }

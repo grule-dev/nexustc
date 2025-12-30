@@ -31,7 +31,6 @@
     "@upstash/redis": "^1.36.0",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "hono": "catalog:",
     "zod": "catalog:"
   }
 }

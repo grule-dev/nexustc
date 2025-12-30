@@ -1,4 +1,5 @@
 import { Turnstile } from "@marsidev/react-turnstile";
+import { env } from "@repo/env/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
@@ -98,7 +99,7 @@ function RouteComponent() {
                   size: "flexible",
                 }}
                 // biome-ignore lint/style/noNonNullAssertion: it's defined at runtime
-                siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY!}
+                siteKey={env.VITE_TURNSTILE_SITE_KEY!}
               />
             )}
           </form.AppField>
