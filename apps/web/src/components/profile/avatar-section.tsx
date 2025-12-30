@@ -22,8 +22,8 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useDebounceEffect } from "@/hooks/use-debounce-effect";
 import { authClient } from "@/lib/auth-client";
+import { safeOrpc } from "@/lib/orpc";
 import { uploadBlobWithProgress } from "@/lib/utils";
-import { safeOrpc } from "@/utils/orpc";
 import "react-image-crop/dist/ReactCrop.css";
 
 export function canvasPreview(

@@ -1,9 +1,14 @@
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { TAXONOMY_DATA } from "@repo/shared/constants";
 import { termUpdateSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { XIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { TermBadge } from "@/components/term-badge";
@@ -28,7 +33,7 @@ import {
 import { Field } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { useAppForm } from "@/hooks/use-app-form";
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/lib/orpc";
 
 const query = orpc.term.getDashboardList.queryOptions();
 
@@ -38,6 +43,7 @@ export const Route = createFileRoute("/admin/terms/")({
 
 function RouteComponent() {
   const { data } = useSuspenseQuery(query);
+  const queryClient = useQueryClient();
   const [openEdit, setOpenEdit] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState<(typeof data)[number]>();
@@ -64,7 +70,7 @@ function RouteComponent() {
       toast.dismiss("deleting");
       setOpenAlert(false);
     }
-  }, [deleteMutation, selectedTerm]);
+  }, [deleteMutation, selectedTerm, queryClient.refetchQueries]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -138,6 +144,7 @@ function EditDialog({
   setOpenAlert: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const mutation = useMutation(orpc.term.edit.mutationOptions());
+  const queryClient = useQueryClient();
   const colors: string[] = term.color ? term.color.split(",") : [];
   const form = useAppForm({
     validators: {
@@ -264,7 +271,7 @@ function EditDialog({
                 type="button"
                 variant="destructive"
               >
-                <XIcon />
+                <HugeiconsIcon icon={Cancel01Icon} />
               </Button>
 
               <Field className="w-fit gap-3">

@@ -13,6 +13,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as MainTutorialsRouteImport } from './routes/_main/tutorials'
 import { Route as MainTermsRouteImport } from './routes/_main/terms'
 import { Route as MainResetPasswordRouteImport } from './routes/_main/reset-password'
@@ -29,6 +30,8 @@ import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminTermsIndexRouteImport } from './routes/admin/terms/index'
 import { Route as AdminPostsIndexRouteImport } from './routes/admin/posts/index'
 import { Route as AdminComicsIndexRouteImport } from './routes/admin/comics/index'
+import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/create'
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
 import { Route as AdminExtrasWeeklyRouteImport } from './routes/admin/extras/weekly'
@@ -57,6 +60,11 @@ const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRouteRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MainTutorialsRoute = MainTutorialsRouteImport.update({
   id: '/tutorials',
@@ -138,6 +146,16 @@ const AdminComicsIndexRoute = AdminComicsIndexRouteImport.update({
   path: '/comics/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
+  id: '/api/rpc/$',
+  path: '/api/rpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTermsCreateRoute = AdminTermsCreateRouteImport.update({
   id: '/terms/create',
   path: '/terms/create',
@@ -198,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof MainResetPasswordRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
+  '/api/health': typeof ApiHealthRoute
   '/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
@@ -208,6 +227,8 @@ export interface FileRoutesByFullPath {
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics': typeof AdminComicsIndexRoute
   '/admin/posts': typeof AdminPostsIndexRoute
   '/admin/terms': typeof AdminTermsIndexRoute
@@ -227,6 +248,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof MainResetPasswordRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
+  '/api/health': typeof ApiHealthRoute
   '/': typeof MainIndexRoute
   '/admin': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
@@ -237,6 +259,8 @@ export interface FileRoutesByTo {
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics': typeof AdminComicsIndexRoute
   '/admin/posts': typeof AdminPostsIndexRoute
   '/admin/terms': typeof AdminTermsIndexRoute
@@ -259,6 +283,7 @@ export interface FileRoutesById {
   '/_main/reset-password': typeof MainResetPasswordRoute
   '/_main/terms': typeof MainTermsRoute
   '/_main/tutorials': typeof MainTutorialsRoute
+  '/api/health': typeof ApiHealthRoute
   '/_main/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/_main/comic/$id': typeof MainComicIdRoute
@@ -269,6 +294,8 @@ export interface FileRoutesById {
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics/': typeof AdminComicsIndexRoute
   '/admin/posts/': typeof AdminPostsIndexRoute
   '/admin/terms/': typeof AdminTermsIndexRoute
@@ -291,6 +318,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/tutorials'
+    | '/api/health'
     | '/'
     | '/admin/'
     | '/comic/$id'
@@ -301,6 +329,8 @@ export interface FileRouteTypes {
     | '/admin/extras/weekly'
     | '/admin/posts/create'
     | '/admin/terms/create'
+    | '/api/auth/$'
+    | '/api/rpc/$'
     | '/admin/comics'
     | '/admin/posts'
     | '/admin/terms'
@@ -320,6 +350,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/tutorials'
+    | '/api/health'
     | '/'
     | '/admin'
     | '/comic/$id'
@@ -330,6 +361,8 @@ export interface FileRouteTypes {
     | '/admin/extras/weekly'
     | '/admin/posts/create'
     | '/admin/terms/create'
+    | '/api/auth/$'
+    | '/api/rpc/$'
     | '/admin/comics'
     | '/admin/posts'
     | '/admin/terms'
@@ -351,6 +384,7 @@ export interface FileRouteTypes {
     | '/_main/reset-password'
     | '/_main/terms'
     | '/_main/tutorials'
+    | '/api/health'
     | '/_main/'
     | '/admin/'
     | '/_main/comic/$id'
@@ -361,6 +395,8 @@ export interface FileRouteTypes {
     | '/admin/extras/weekly'
     | '/admin/posts/create'
     | '/admin/terms/create'
+    | '/api/auth/$'
+    | '/api/rpc/$'
     | '/admin/comics/'
     | '/admin/posts/'
     | '/admin/terms/'
@@ -371,6 +407,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRouteRoute: typeof MainRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -402,6 +441,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRouteRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_main/tutorials': {
       id: '/_main/tutorials'
@@ -514,6 +560,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/comics'
       preLoaderRoute: typeof AdminComicsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/api/rpc/$': {
+      id: '/api/rpc/$'
+      path: '/api/rpc/$'
+      fullPath: '/api/rpc/$'
+      preLoaderRoute: typeof ApiRpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/terms/create': {
       id: '/admin/terms/create'
@@ -658,7 +718,19 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   MainRouteRoute: MainRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { orpc } from "@/utils/orpc";
-import { columns } from "../../../components/admin/posts/columns";
-import { DataTable } from "../../../components/admin/posts/data-table";
+import { columns } from "@/components/admin/posts/columns";
+import { DataTable } from "@/components/admin/posts/data-table";
+import { orpc } from "@/lib/orpc";
 
 export const Route = createFileRoute("/admin/posts/")({
   component: RouteComponent,

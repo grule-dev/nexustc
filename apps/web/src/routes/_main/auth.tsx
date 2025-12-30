@@ -1,6 +1,15 @@
+import { AlertCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Turnstile } from "@marsidev/react-turnstile";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { CircleAlertIcon } from "lucide-react";
+import { auth } from "@repo/auth";
+import { env } from "@repo/env/client";
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
+import { createMiddleware } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
@@ -11,8 +20,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
 
+const redirectMiddleware = createMiddleware().server(
+  async ({ request, next }) => {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (session) {
+      throw redirect({ to: "/profile", replace: true });
+    }
+    return await next();
+  }
+);
+
 export const Route = createFileRoute("/_main/auth")({
   component: RouteComponent,
+  beforeLoad: async () => {
+    const session = await authClient.getSession();
+    if (session.data?.session) {
+      throw redirect({ to: "/profile", replace: true });
+    }
+  },
   head: () => ({
     meta: [
       {
@@ -20,6 +45,9 @@ export const Route = createFileRoute("/_main/auth")({
       },
     ],
   }),
+  server: {
+    middleware: [redirectMiddleware],
+  },
 });
 
 const loginSchema = z.object({
@@ -220,7 +248,7 @@ function RouteComponent() {
               </loginForm.AppField>
               {!!error && (
                 <Alert variant="destructive">
-                  <CircleAlertIcon />
+                  <HugeiconsIcon icon={AlertCircleIcon} />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -283,7 +311,7 @@ function RouteComponent() {
               </registerForm.AppField>
               {!!error && (
                 <Alert variant="destructive">
-                  <CircleAlertIcon />
+                  <HugeiconsIcon icon={AlertCircleIcon} />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -313,8 +341,7 @@ function TurnstileContainer({
         theme: "auto",
         size: "flexible",
       }}
-      // biome-ignore lint/style/noNonNullAssertion: we don't know if it's null
-      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY!}
+      siteKey={env.VITE_TURNSTILE_SITE_KEY}
     />
   );
 }

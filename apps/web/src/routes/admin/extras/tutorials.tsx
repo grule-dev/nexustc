@@ -1,10 +1,10 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 import { TutorialCard } from "@/components/landing/tutorial-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppForm } from "@/hooks/use-app-form";
-import { orpc, orpcClient, queryClient } from "@/utils/orpc";
+import { orpc, orpcClient } from "@/lib/orpc";
 
 const query = orpc.extras.getTutorials.queryOptions();
 
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/admin/extras/tutorials")({
 
 function RouteComponent() {
   const { data: tutorials } = useSuspenseQuery(query);
+  const queryClient = useQueryClient();
 
   const form = useAppForm({
     validators: {

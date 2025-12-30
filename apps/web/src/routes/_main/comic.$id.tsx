@@ -4,16 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import Zoom from "react-medium-image-zoom";
 import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, getBucketUrl } from "@/lib/utils";
 import "react-medium-image-zoom/dist/styles.css";
+import {
+  ArrowLeft01Icon,
+  ArrowLeftDoubleIcon,
+  ArrowRight01Icon,
+  ArrowRightDoubleIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsLeftIcon,
-  ChevronsRightIcon,
-} from "lucide-react";
 import { TermBadge } from "@/components/term-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,8 +25,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { orpcClient } from "@/lib/orpc";
 import type { PostType } from "@/lib/types";
-import { orpcClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_main/comic/$id")({
   component: RouteComponent,
@@ -109,7 +110,7 @@ function ComicPage({ comic }: { comic: PostType }) {
         <section className="grid grid-cols-3 gap-4">
           <img
             alt={`Imagen de portada de ${comic.title}`}
-            src={comic.imageObjectKeys[0]}
+            src={getBucketUrl(comic.imageObjectKeys[0])}
           />
           <div className="col-span-2 flex flex-col gap-4">
             <div className="flex w-full flex-row items-center justify-between gap-4">
@@ -155,7 +156,10 @@ function ComicPage({ comic }: { comic: PostType }) {
               onClick={() => setPage(index)}
               type="button"
             >
-              <img alt={`Imagen adjunta de ${comic.title}`} src={image} />
+              <img
+                alt={`Imagen adjunta de ${comic.title}`}
+                src={getBucketUrl(image)}
+              />
             </button>
           ))}
         </div>
@@ -189,7 +193,7 @@ function ComicReader({
           <img
             alt={`Página ${page + 1}`}
             className="h-full max-h-dvh w-full object-contain"
-            src={images[page]}
+            src={getBucketUrl(images[page])}
           />
         </Zoom>
       )}
@@ -219,7 +223,7 @@ function ComicReader({
                     ? "border-primary"
                     : "border-transparent hover:border-muted"
                 )}
-                src={image}
+                src={getBucketUrl(image)}
               />
             </CarouselItem>
           ))}
@@ -236,7 +240,7 @@ function ComicReader({
           size="icon"
           variant="outline"
         >
-          <ChevronsLeftIcon />
+          <HugeiconsIcon icon={ArrowLeftDoubleIcon} />
         </Button>
         <Button
           className="grow"
@@ -247,7 +251,7 @@ function ComicReader({
             }
           }}
         >
-          <ChevronLeftIcon />
+          <HugeiconsIcon icon={ArrowLeft01Icon} />
         </Button>
         <p>
           {page + 1} / {images.length}
@@ -261,7 +265,7 @@ function ComicReader({
             }
           }}
         >
-          <ChevronRightIcon />
+          <HugeiconsIcon icon={ArrowRight01Icon} />
         </Button>
         <Button
           disabled={page >= images.length - 1}
@@ -271,7 +275,7 @@ function ComicReader({
           size="icon"
           variant="outline"
         >
-          <ChevronsRightIcon />
+          <HugeiconsIcon icon={ArrowRightDoubleIcon} />
         </Button>
       </div>
     </div>

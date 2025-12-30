@@ -1,12 +1,12 @@
-import type { postCollection } from "@/db/collections";
+import type { post, term } from "@repo/db/schema/app";
 
-type Yielded<T extends IterableIterator<unknown>> =
-  T extends IterableIterator<infer U> ? U : never;
+export type TermType = typeof term.$inferSelect;
 
-export type DiscriminatedUnion<
-  K extends string,
-  // biome-ignore lint/suspicious/noExplicitAny: the type works this way
-  T extends Record<string, any>,
-> = T[keyof T] & { [P in K]: T[keyof T][P] };
-
-export type PostType = Yielded<ReturnType<typeof postCollection.values>>;
+export type PostType = Omit<
+  typeof post.$inferSelect,
+  "updatedAt" | "authorId" | "views" | "premiumLinks" | "status"
+> & {
+  likes: number;
+  favorites: number;
+  terms: Omit<TermType, "createdAt" | "updatedAt">[];
+};

@@ -1,5 +1,6 @@
+import { FavouriteIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import Autoplay from "embla-carousel-autoplay";
-import { HeartIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Carousel,
@@ -147,7 +148,7 @@ function Post({
         <div className="absolute bottom-0 flex w-full items-end justify-between p-2">
           <div className="flex flex-row items-center gap-4 rounded-md bg-background/50 px-3 py-2 backdrop-blur">
             <div className="flex flex-row items-center gap-2">
-              <HeartIcon className="size-5" /> 10
+              <HugeiconsIcon className="size-5" icon={FavouriteIcon} /> 10
             </div>
           </div>
 

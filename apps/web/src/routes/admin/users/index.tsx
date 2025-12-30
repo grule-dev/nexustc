@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UsersChart } from "@/components/admin/users-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { orpcClient } from "@/utils/orpc";
+import { orpcClient } from "@/lib/orpc";
 
 export const Route = createFileRoute("/admin/users/")({
   component: RouteComponent,

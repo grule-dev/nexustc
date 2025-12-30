@@ -79,7 +79,7 @@ export function GenerateMarkdownLinkDialog() {
                   value={dialogData.link}
                 />
               </Field>
-              <Button>Generar</Button>
+              <Button type="submit">Generar</Button>
             </FieldGroup>
           </FieldSet>
         </form>

@@ -1,11 +1,12 @@
+import { ArrowLeft02Icon, Menu01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Link,
   useCanGoBack,
   useMatchRoute,
   useRouter,
 } from "@tanstack/react-router";
-import { ArrowLeftIcon, MenuIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { SignedIn } from "../auth/signed-in";
 import { SignedOut } from "../auth/signed-out";
@@ -20,7 +21,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { FavoritesMenu } from "./favorites-menu";
 import { UserSection } from "./login-section";
 
 const links = [
@@ -34,9 +34,14 @@ const links = [
 export function Header() {
   const matchRoute = useMatchRoute();
 
-  const isSticky = !matchRoute({
-    to: "/comic/$id",
-  });
+  const isSticky = !(
+    matchRoute({
+      to: "/comic/$id",
+    }) ||
+    matchRoute({
+      to: "/chronos",
+    })
+  );
 
   return (
     <>
@@ -72,7 +77,6 @@ export function Header() {
           <div className="flex items-center gap-4">
             <SignedIn>
               <UserSection />
-              <FavoritesMenu />
             </SignedIn>
             <SignedOut>
               <Link to="/auth">
@@ -90,16 +94,21 @@ export function Header() {
 function BackButton() {
   const router = useRouter();
   const canGoBack = useCanGoBack();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <Button
       className="md:hidden"
-      disabled={!canGoBack}
+      disabled={!(canGoBack && mounted)}
       onClick={() => router.history.back()}
       size="icon"
       variant="ghost"
     >
-      <ArrowLeftIcon className="size-6" />
+      <HugeiconsIcon className="size-6" icon={ArrowLeft02Icon} />
     </Button>
   );
 }
@@ -112,7 +121,7 @@ function BurgerMenu() {
       <SheetTrigger
         render={<Button className="md:hidden" size="icon" variant="ghost" />}
       >
-        <MenuIcon className="size-6" />
+        <HugeiconsIcon className="size-6" icon={Menu01Icon} />
       </SheetTrigger>
       <SheetContent side="right">
         <SheetHeader>
@@ -136,7 +145,6 @@ function BurgerMenu() {
             <UserSection />
           </RunOnClick>
           <ModeToggle />
-          <FavoritesMenu />
         </SheetFooter>
       </SheetContent>
     </Sheet>

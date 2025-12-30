@@ -3,7 +3,7 @@ import { es } from "date-fns/locale";
 import Zoom from "react-medium-image-zoom";
 import { TermBadge } from "@/components/term-badge";
 import type { PostType } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, getBucketUrl } from "@/lib/utils";
 import { Markdown } from "../markdown";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
@@ -11,7 +11,7 @@ import { BookmarkButton } from "./bookmark-button";
 
 export type PostProps = Omit<
   PostType,
-  "likes" | "favorites" | "isWeekly" | "type"
+  "likes" | "favorites" | "isWeekly" | "type" | "status"
 >;
 
 export function Post({ post }: { post: PostProps }) {
@@ -45,7 +45,7 @@ export function Post({ post }: { post: PostProps }) {
         <img
           alt={`Imagen de portada de ${post.title}`}
           className="rounded-xl"
-          src={post.imageObjectKeys[0]}
+          src={getBucketUrl(post.imageObjectKeys[0])}
         />
       )}
 
@@ -72,7 +72,7 @@ export function Post({ post }: { post: PostProps }) {
                       <img
                         alt={`Imagen adjunta de ${post.title}`}
                         className="rounded-md"
-                        src={image}
+                        src={getBucketUrl(image)}
                       />
                     </Zoom>
                   ))}

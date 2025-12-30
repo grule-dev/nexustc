@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { env } from "@repo/env";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { resend } from "./email";
 import { adminPlugin } from "./plugins/admin";
 import { patreonPlugin } from "./plugins/patreon";
@@ -11,7 +12,6 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
-  trustedOrigins: [env.CORS_ORIGIN],
 
   emailAndPassword: {
     enabled: true,
@@ -38,7 +38,6 @@ export const auth = betterAuth({
     },
   },
 
-  // uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
   // session: {
   //   cookieCache: {
   //     enabled: true,
@@ -57,7 +56,12 @@ export const auth = betterAuth({
     },
   },
 
-  plugins: [adminPlugin(), patreonPlugin(), turnstilePlugin()],
+  plugins: [
+    adminPlugin(),
+    patreonPlugin(),
+    turnstilePlugin(),
+    tanstackStartCookies(), // this must be the last plugin in the array
+  ],
 
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
@@ -67,12 +71,6 @@ export const auth = betterAuth({
       secure: true,
       httpOnly: true,
     },
-    // uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
-    // https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
-    // crossSubDomainCookies: {
-    //   enabled: true,
-    //   domain: "<your-workers-subdomain>",
-    // },
   },
   experimental: {
     joins: true,

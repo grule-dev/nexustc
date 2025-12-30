@@ -1,71 +1,82 @@
-import { createORPCClient } from "@orpc/client";
-import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { AppRouterClient } from "@repo/api/routers/index";
-import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import {
-  createRootRouteWithContext,
-  HeadContent,
-  Outlet,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { useState } from "react";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-import { link, type orpc } from "@/utils/orpc";
-import "../index.css";
-import { AgeVerificationDialog } from "@/components/age-verification-dialog";
+import { ConfirmDialogProvider } from "@omit/react-confirm-dialog";
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { Toaster } from "sonner";
+import appCss from "../styles.css?url";
 
-export type RouterAppContext = {
-  orpc: typeof orpc;
-  queryClient: QueryClient;
-};
-
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  component: RootComponent,
+export const Route = createRootRoute({
   head: () => ({
     meta: [
       {
-        title: "NeXusTC",
+        charSet: "utf-8",
       },
       {
-        name: "description",
-        content: "NeXusTC - Traducciones",
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
+      },
+      {
+        title: "TanStack Start Starter",
       },
     ],
     links: [
       {
-        rel: "icon",
-        href: "/favicon.ico",
+        rel: "stylesheet",
+        href: appCss,
       },
     ],
   }),
+
+  shellComponent: RootDocument,
 });
 
-function RootComponent() {
-  const [client] = useState<AppRouterClient>(() => createORPCClient(link));
-  const [_orpcUtils] = useState(() => createTanstackQueryUtils(client));
-
+function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <HeadContent />
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="dark"
-        disableTransitionOnChange
-        storageKey="vite-ui-theme"
-      >
-        {/* <div className="grid h-svh grid-rows-[auto_1fr]">
-          <Header />
-          <Outlet />
-        </div> */}
-
-        <Outlet />
-        <AgeVerificationDialog />
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: necessary
+          dangerouslySetInnerHTML={{
+            __html: themeInitScript(),
+          }}
+        />
+      </head>
+      <body>
+        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
         <Toaster richColors />
-      </ThemeProvider>
-      <TanStackRouterDevtools position="bottom-left" />
-      <ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
-    </>
+        <TanStackDevtools
+          config={{
+            position: "bottom-right",
+          }}
+          plugins={[
+            {
+              name: "Tanstack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+          ]}
+        />
+        <Scripts />
+      </body>
+    </html>
   );
+}
+
+function themeInitScript() {
+  return `
+(function () {
+  try {
+    var theme = localStorage.getItem("theme");
+    if (!theme) theme = "system";
+
+    var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var resolved = theme === "dark" || (theme === "system" && systemDark)
+      ? "dark"
+      : "light";
+
+    document.documentElement.classList.add(resolved);
+    document.documentElement.style.colorScheme = resolved;
+  } catch (_) {}
+})();
+`;
 }

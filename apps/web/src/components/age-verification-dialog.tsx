@@ -1,5 +1,6 @@
 import { Dialog } from "@base-ui/react/dialog";
-import { LockIcon } from "lucide-react";
+import { SquareLock01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 import { getCookie } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -24,7 +25,7 @@ export function AgeVerificationDialog() {
           <Card>
             <CardHeader className="flex flex-col items-center">
               <CardTitle className="flex flex-row items-center gap-2">
-                <LockIcon /> VERIFICACIÓN DE EDAD
+                <HugeiconsIcon icon={SquareLock01Icon} /> VERIFICACIÓN DE EDAD
               </CardTitle>
               <CardDescription className="flex flex-col items-center text-center">
                 <span className="font-bold">

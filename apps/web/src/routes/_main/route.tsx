@@ -15,6 +15,12 @@ export const Route = createFileRoute("/_main")({
 });
 
 function ErrorComponent({ error }: { error: Error }) {
+  if (typeof window === "undefined") {
+    console.error("[SERVER ERROR]:", error);
+  } else {
+    console.error("[CLIENT ERROR]:", error);
+  }
+
   return (
     <div className="relative grid min-h-dvh grid-rows-[1fr_auto] gap-12">
       <div className="flex flex-col items-center">
@@ -56,9 +62,7 @@ function MainLayout() {
         <div className="flex flex-col items-center">
           <Header />
           <div className="h-6 md:h-12" />
-          <div className="[view-transition-name:main-content]">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
         <Footer />
       </div>

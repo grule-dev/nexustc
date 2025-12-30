@@ -1,6 +1,5 @@
-import { and, eq, ilike, useLiveQuery } from "@tanstack/react-db";
 import { useStore } from "@tanstack/react-form";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import z from "zod";
 import { PostCard } from "@/components/landing/post-card";
 import {
@@ -9,9 +8,18 @@ import {
   SearchResults,
 } from "@/components/search/search-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
-import { postCollection, termCollection } from "@/db/collections";
 import { useAppForm } from "@/hooks/use-app-form";
+import { useDebounceEffect } from "@/hooks/use-debounce-effect";
+import { useTerms } from "@/hooks/use-terms";
+import { orpcClient } from "@/lib/orpc";
+
+const searchParamsSchema = z.object({
+  query: z.string().optional(),
+  engine: z.array(z.string()).optional().default([]),
+  status: z.array(z.string()).optional().default([]),
+  platform: z.array(z.string()).optional().default([]),
+  tag: z.array(z.string()).optional().default([]),
+});
 
 const postSearchSchema = z.object({
   query: z.string(),
@@ -23,9 +31,25 @@ const postSearchSchema = z.object({
 
 export const Route = createFileRoute("/_main/post-search")({
   component: RouteComponent,
-  validateSearch: z.object({
-    tag: z.string().optional(),
-  }),
+  validateSearch: searchParamsSchema,
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps }) => {
+    // Combine all term IDs from the search params
+    const termIds = [
+      ...(deps.engine ?? []),
+      ...(deps.status ?? []),
+      ...(deps.platform ?? []),
+      ...(deps.tag ?? []),
+    ];
+
+    const filteredPosts = await orpcClient.post.search({
+      type: "post",
+      query: deps.query,
+      termIds: termIds.length > 0 ? termIds : undefined,
+    });
+
+    return { filteredPosts };
+  },
   head: () => ({
     meta: [
       {
@@ -37,54 +61,60 @@ export const Route = createFileRoute("/_main/post-search")({
 
 function RouteComponent() {
   const params = Route.useSearch();
-  const tag: string[] = params.tag ? [params.tag] : [];
+  const { filteredPosts } = Route.useLoaderData();
+  const navigate = useNavigate();
+  const termsQuery = useTerms();
 
   const form = useAppForm({
     validators: {
       onSubmit: postSearchSchema,
     },
     defaultValues: {
-      query: "",
-      engine: [] as string[],
-      status: [] as string[],
-      tag,
-      platform: [] as string[],
+      query: params.query ?? "",
+      engine: params.engine ?? [],
+      status: params.status ?? [],
+      tag: params.tag ?? [],
+      platform: params.platform ?? [],
     },
   });
 
-  const { data: terms, isLoading: termsLoading } = useLiveQuery((q) =>
-    q.from({ term: termCollection })
+  // Watch form values for debounced search
+  const formValues = useStore(form.store, (state) => state.values);
+
+  // Debounced navigation - triggers 300ms after form values change
+  useDebounceEffect(
+    () => {
+      navigate({
+        to: "/post-search",
+        search: {
+          query: formValues.query || undefined,
+          engine: formValues.engine.length > 0 ? formValues.engine : undefined,
+          status: formValues.status.length > 0 ? formValues.status : undefined,
+          platform:
+            formValues.platform.length > 0 ? formValues.platform : undefined,
+          tag: formValues.tag.length > 0 ? formValues.tag : undefined,
+        },
+      });
+    },
+    300,
+    [
+      formValues.query,
+      formValues.engine,
+      formValues.status,
+      formValues.platform,
+      formValues.tag,
+    ]
   );
 
-  const groupedTerms = Object.groupBy(terms, (term) => term.taxonomy);
-  const { values: formState } = useStore(form.store);
-
-  const { data: recentPosts, isLoading: postsLoading } = useLiveQuery(
-    (q) =>
-      q
-        .from({ post: postCollection })
-        .where(({ post }) =>
-          and(ilike(post.title, `%${formState.query}%`), eq(post.type, "post"))
-        )
-        .orderBy(({ post }) => post.createdAt, "desc"),
-    [formState.query]
-  );
-
-  const filteredPosts = recentPosts?.filter((post) => {
-    const searchTerms = formState.platform
-      .concat(formState.tag, formState.engine, formState.status)
-      .filter((term) => term !== "");
-
-    if (searchTerms.length === 0) {
-      return true;
-    }
-    const postTermIds = post.terms?.map((t) => t.id) ?? [];
-    return searchTerms.every((term) => postTermIds.includes(term));
-  });
-
-  if (termsLoading || postsLoading) {
-    return <Spinner />;
+  if (termsQuery.isPending) {
+    return <div>Loading...</div>;
   }
+
+  if (termsQuery.isError) {
+    return <div>Error</div>;
+  }
+
+  const groupedTerms = Object.groupBy(termsQuery.data, (t) => t.taxonomy);
 
   return (
     <SearchContainer label="Buscar Juegos">
@@ -106,8 +136,6 @@ function RouteComponent() {
       <SearchForm
         onSubmit={(e) => {
           e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
         }}
       >
         <Card className="w-full">

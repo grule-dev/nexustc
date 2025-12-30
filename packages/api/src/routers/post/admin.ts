@@ -1,5 +1,5 @@
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
-import { eq, inArray } from "@repo/db";
+import { and, eq, inArray, sql } from "@repo/db";
 import { post, termPostRelation } from "@repo/db/schema/app";
 import { env } from "@repo/env";
 import { postCreateSchema } from "@repo/shared/schemas";
@@ -220,4 +220,50 @@ export default {
 
       // await env.KV_STORE.delete("all-posts");
     }),
+
+  getWeeklySelectionPosts: permissionProcedure({
+    posts: ["list"],
+  })
+    .input(z.object({ search: z.string().optional() }))
+    .handler(async ({ context: { db }, input }) => {
+      const conditions = [eq(post.type, "post")];
+
+      // Fuzzy search using pg_trgm (same pattern as public search endpoint)
+      if (input.search && input.search.trim() !== "") {
+        conditions.push(sql`${post.title} % ${input.search.trim()}`);
+      }
+
+      const posts = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          version: post.version,
+          imageObjectKeys: post.imageObjectKeys,
+          isWeekly: post.isWeekly,
+          similarity: sql<number>`similarity(${post.title}, ${input.search?.trim() || ""})`,
+        })
+        .from(post)
+        .where(and(...conditions))
+        .orderBy(
+          input.search && input.search.trim() !== ""
+            ? sql`similarity DESC, ${post.createdAt} DESC`
+            : sql`${post.createdAt} DESC`
+        );
+
+      return posts.map(({ similarity, ...postData }) => postData);
+    }),
+
+  getSelectedWeeklyPosts: permissionProcedure({
+    posts: ["list"],
+  }).handler(({ context: { db } }) =>
+    db
+      .select({
+        id: post.id,
+        title: post.title,
+        version: post.version,
+        imageObjectKeys: post.imageObjectKeys,
+      })
+      .from(post)
+      .where(and(eq(post.type, "post"), eq(post.isWeekly, true)))
+  ),
 };

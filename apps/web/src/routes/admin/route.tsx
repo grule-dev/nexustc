@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  redirect,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { HasPermissions } from "@/components/auth/has-role";
 import Loader from "@/components/loader";
@@ -20,20 +15,10 @@ import {
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
+import { adminMiddleware } from "@/middleware/admin";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
-  beforeLoad: async () => {
-    const { data } = await authClient.getSession();
-
-    if (data?.user.role === "user") {
-      throw redirect({
-        to: "/",
-        replace: true,
-      });
-    }
-  },
   head: () => ({
     meta: [
       {
@@ -41,6 +26,9 @@ export const Route = createFileRoute("/admin")({
       },
     ],
   }),
+  server: {
+    middleware: [adminMiddleware],
+  },
 });
 
 const nav = {
