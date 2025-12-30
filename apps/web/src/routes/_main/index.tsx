@@ -27,14 +27,14 @@ export const Route = createFileRoute("/_main/")({
     return {
       recentUsers: recentUsersDefined
         ? { error: { code: recentUsersError.code }, data: undefined }
-        : recentUsersError
-          ? { error: { code: "UNKNOWN" }, data: undefined }
-          : { error: undefined, data: recentUsers },
+        : recentUsers
+          ? { error: undefined, data: recentUsers }
+          : { error: { code: "UNKNOWN" }, data: undefined },
       weeklyGames: weeklyGamesDefined
         ? { error: { code: weeklyGamesError.code }, data: undefined }
-        : weeklyGamesError
-          ? { error: { code: "UNKNOWN" }, data: undefined }
-          : { error: undefined, data: weeklyGames },
+        : weeklyGames
+          ? { error: undefined, data: weeklyGames }
+          : { error: { code: "UNKNOWN" }, data: undefined },
     };
   },
   head: () => ({
