@@ -8,8 +8,13 @@ import {
   termPostRelation,
   user,
 } from "@repo/db/schema/app";
+import type { TAXONOMIES } from "@repo/shared/constants";
 import z from "zod";
-import { protectedProcedure, publicProcedure } from "../../index";
+import {
+  fixedWindowRatelimitMiddleware,
+  protectedProcedure,
+  publicProcedure,
+} from "../../index";
 import admin from "./admin";
 
 export default {
@@ -91,15 +96,133 @@ export default {
           .where(eq(user.id, u.id));
       }
 
-      await cache.setex("all-posts", 5 * 60, JSON.stringify(posts));
+      await cache.setEx("all-posts", 5 * 60, JSON.stringify(posts));
 
       return posts;
     }
   ),
 
-  getPostById: publicProcedure
-    .input(z.string())
+  search: publicProcedure
+    .input(
+      z.object({
+        query: z.string().optional(),
+        termIds: z.array(z.string()).optional(),
+      })
+    )
     .handler(async ({ context: { db }, input }) => {
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
+
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
+            json_agg(
+              json_build_object(
+                'id', ${term.id},
+                'name', ${term.name},
+                'taxonomy', ${term.taxonomy},
+                'color', ${term.color}
+              )
+            )
+          `.as("terms"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
+
+      // Build conditions array
+      const conditions = [eq(post.status, "publish")];
+
+      // Add fuzzy search filter using pg_trgm
+      if (input.query && input.query.trim() !== "") {
+        conditions.push(sql`${post.title} % ${input.query.trim()}`);
+      }
+
+      // Add term filter - posts must have ALL specified terms
+      if (input.termIds && input.termIds.length > 0) {
+        const termMatchSubquery = db
+          .select({ postId: termPostRelation.postId })
+          .from(termPostRelation)
+          .where(
+            sql`${termPostRelation.termId} IN (${sql.join(
+              input.termIds.map((id) => sql`${id}`),
+              sql`, `
+            )})`
+          )
+          .groupBy(termPostRelation.postId)
+          .having(
+            sql`COUNT(DISTINCT ${termPostRelation.termId}) = ${input.termIds.length}`
+          );
+
+        conditions.push(sql`${post.id} IN (${termMatchSubquery})`);
+      }
+
+      // Build the base query
+      const baseQuery = db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          version: post.version,
+          content: post.content,
+          isWeekly: post.isWeekly,
+          imageObjectKeys: post.imageObjectKeys,
+          adsLinks: post.adsLinks,
+          authorContent: post.authorContent,
+
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+
+          terms: sql<
+            {
+              id: string;
+              name: string;
+              taxonomy: (typeof TAXONOMIES)[number];
+              color: string;
+            }[]
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
+
+          createdAt: post.createdAt,
+          similarity: sql<number>`similarity(${post.title}, ${input.query?.trim() || ""})`,
+        })
+        .from(post)
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .where(and(...conditions));
+
+      // Order by similarity score if there's a query, otherwise by creation date
+      const posts = await baseQuery.orderBy(
+        input.query && input.query.trim() !== ""
+          ? sql`similarity DESC, ${post.createdAt} DESC`
+          : sql`${post.createdAt} DESC`
+      );
+
+      // Remove similarity field from the final result
+      return posts.map(({ similarity, ...postData }) => postData);
+    }),
+
+  getPostById: publicProcedure
+    .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
+    .input(z.string())
+    .handler(async ({ context: { db }, input, errors }) => {
       const result = await db
         .select({
           id: post.id,
@@ -114,44 +237,55 @@ export default {
           createdAt: post.createdAt,
 
           favorites: sql<number>`
-            (
-              SELECT COUNT(*)
-              FROM ${postBookmark}
-              WHERE ${postBookmark.postId} = ${post.id}
-            )`,
+      (
+        SELECT COUNT(*)
+        FROM ${postBookmark}
+        WHERE ${postBookmark.postId} = ${post.id}
+      )
+    `,
 
           likes: sql<number>`
-            (
-              SELECT COUNT(*)
-              FROM ${postLikes}
-              WHERE ${postLikes.postId} = ${post.id}
-            )`,
+      (
+        SELECT COUNT(*)
+        FROM ${postLikes}
+        WHERE ${postLikes.postId} = ${post.id}
+      )
+    `,
 
           terms: sql<
-            { id: string; name: string; taxonomy: string; color: string }[]
+            {
+              id: string;
+              name: string;
+              taxonomy: (typeof TAXONOMIES)[number];
+              color: string;
+            }[]
           >`
-            COALESCE(
-              (
-                SELECT json_agg(
-                  json_build_object(
-                    'id', ${term.id},
-                    'name', ${term.name},
-                    'taxonomy', ${term.taxonomy},
-                    'color', ${term.color}
-                  )
-                )
-              )
-              FROM ${termPostRelation}
-              JOIN ${term}
-                ON ${term.id} = ${termPostRelation.termId}
-              WHERE ${termPostRelation.postId} = ${post.id}
-            ),
-            '[]'::json
-          )`,
+      COALESCE(
+        (
+          SELECT json_agg(
+            json_build_object(
+              'id', ${term.id},
+              'name', ${term.name},
+              'taxonomy', ${term.taxonomy},
+              'color', ${term.color}
+            )
+          )
+          FROM ${termPostRelation}
+          JOIN ${term}
+            ON ${term.id} = ${termPostRelation.termId}
+          WHERE ${termPostRelation.postId} = ${post.id}
+        ),
+        '[]'::json
+      )
+    `,
         })
         .from(post)
         .where(and(eq(post.status, "publish"), eq(post.id, input)))
         .limit(1);
+
+      if (!result.length) {
+        throw errors.NOT_FOUND();
+      }
 
       return result[0];
     }),
@@ -159,11 +293,15 @@ export default {
   getLikes: publicProcedure
     .input(z.string())
     .handler(async ({ context: { db }, input }) => {
-      const likes = await db
-        .select()
+      const { count } = await db
+        .select({
+          count: sql<number>`COUNT(*)`,
+        })
         .from(postLikes)
-        .where(eq(postLikes.postId, input));
-      return likes.length;
+        .where(eq(postLikes.postId, input))
+        .then((r) => r[0] ?? { count: 0 });
+
+      return count;
     }),
 
   likePost: protectedProcedure

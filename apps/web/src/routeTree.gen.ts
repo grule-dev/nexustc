@@ -29,6 +29,8 @@ import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminTermsIndexRouteImport } from './routes/admin/terms/index'
 import { Route as AdminPostsIndexRouteImport } from './routes/admin/posts/index'
 import { Route as AdminComicsIndexRouteImport } from './routes/admin/comics/index'
+import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/create'
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
 import { Route as AdminExtrasWeeklyRouteImport } from './routes/admin/extras/weekly'
@@ -138,6 +140,16 @@ const AdminComicsIndexRoute = AdminComicsIndexRouteImport.update({
   path: '/comics/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
+  id: '/api/rpc/$',
+  path: '/api/rpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTermsCreateRoute = AdminTermsCreateRouteImport.update({
   id: '/terms/create',
   path: '/terms/create',
@@ -208,6 +220,8 @@ export interface FileRoutesByFullPath {
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics': typeof AdminComicsIndexRoute
   '/admin/posts': typeof AdminPostsIndexRoute
   '/admin/terms': typeof AdminTermsIndexRoute
@@ -237,6 +251,8 @@ export interface FileRoutesByTo {
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics': typeof AdminComicsIndexRoute
   '/admin/posts': typeof AdminPostsIndexRoute
   '/admin/terms': typeof AdminTermsIndexRoute
@@ -269,6 +285,8 @@ export interface FileRoutesById {
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics/': typeof AdminComicsIndexRoute
   '/admin/posts/': typeof AdminPostsIndexRoute
   '/admin/terms/': typeof AdminTermsIndexRoute
@@ -301,6 +319,8 @@ export interface FileRouteTypes {
     | '/admin/extras/weekly'
     | '/admin/posts/create'
     | '/admin/terms/create'
+    | '/api/auth/$'
+    | '/api/rpc/$'
     | '/admin/comics'
     | '/admin/posts'
     | '/admin/terms'
@@ -330,6 +350,8 @@ export interface FileRouteTypes {
     | '/admin/extras/weekly'
     | '/admin/posts/create'
     | '/admin/terms/create'
+    | '/api/auth/$'
+    | '/api/rpc/$'
     | '/admin/comics'
     | '/admin/posts'
     | '/admin/terms'
@@ -361,6 +383,8 @@ export interface FileRouteTypes {
     | '/admin/extras/weekly'
     | '/admin/posts/create'
     | '/admin/terms/create'
+    | '/api/auth/$'
+    | '/api/rpc/$'
     | '/admin/comics/'
     | '/admin/posts/'
     | '/admin/terms/'
@@ -371,6 +395,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRouteRoute: typeof MainRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -515,6 +541,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminComicsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/api/rpc/$': {
+      id: '/api/rpc/$'
+      path: '/api/rpc/$'
+      fullPath: '/api/rpc/$'
+      preLoaderRoute: typeof ApiRpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/terms/create': {
       id: '/admin/terms/create'
       path: '/terms/create'
@@ -658,7 +698,18 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   MainRouteRoute: MainRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

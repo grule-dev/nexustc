@@ -1,7 +1,8 @@
+import { Bookmark02Icon, FavouriteIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { BookmarkIcon, HeartIcon } from "lucide-react";
 import type { PostType } from "@/lib/types";
-import { getTierColor } from "@/lib/utils";
+import { getBucketUrl, getTierColor } from "@/lib/utils";
 import { AndroidLogo } from "../icons/android";
 import { IOSLogo } from "../icons/ios";
 import { WindowsLogo } from "../icons/windows";
@@ -21,7 +22,7 @@ export function PostCard({
   const platforms = groupedTerms.platform?.map((t) => t.name);
   const tags = groupedTerms.tag?.map((t) => ({ name: t.name, color: t.color }));
 
-  const images = post.imageObjectKeys?.slice(0, 4) ?? [];
+  const images = (post.imageObjectKeys?.slice(0, 4) ?? []).map(getBucketUrl);
   const count = images.length;
 
   return (
@@ -36,7 +37,7 @@ export function PostCard({
         <div className="relative w-full">
           <div className={`h-2 w-full ${getTierColor(post.favorites)}`} />
           {post.type === "comic" && (
-            <div className="aspect-[3/4] w-full">
+            <div className="aspect-3/4 w-full">
               <img
                 alt={post.title}
                 className="h-full w-full rounded object-cover"
@@ -124,9 +125,16 @@ export function PostCard({
           <div className="bottom-2 left-2 flex items-center gap-2 rounded-lg">
             {/* <StarIcon className="h-4 w-4 fill-amber-400 text-amber-400" />
             <span className="text-sm text-white">{game.likes}</span> */}
-            <HeartIcon className="size-5 fill-red-500 text-red-500" />
+
+            <HugeiconsIcon
+              className="size-5 fill-red-500 text-red-500"
+              icon={FavouriteIcon}
+            />
             <span className="text-sm text-white">{post.likes}</span>
-            <BookmarkIcon className="size-5 fill-blue-500 text-blue-500" />
+            <HugeiconsIcon
+              className="size-5 fill-blue-500 text-blue-500"
+              icon={Bookmark02Icon}
+            />
             <span className="text-sm text-white">{post.favorites}</span>
           </div>
 

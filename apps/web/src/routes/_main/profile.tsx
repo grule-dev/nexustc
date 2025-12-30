@@ -1,6 +1,5 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { CheckCircle2Icon, CircleQuestionMarkIcon } from "lucide-react";
 import { toast } from "sonner";
 import z from "zod";
 import { DiscordLogo } from "@/components/icons/discord";
@@ -11,13 +10,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
 import { getBucketUrl } from "@/lib/utils";
-import { queryClient } from "@/utils/orpc";
 import "react-image-crop/dist/ReactCrop.css";
+import {
+  CheckmarkCircle02Icon,
+  HelpCircleIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { HoverReveal } from "@/components/hover-reveal";
 import { AvatarSection } from "@/components/profile/avatar-section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { UserLabel } from "@/components/users/user-label";
+import { authMiddleware } from "@/middleware/auth";
 
 export const Route = createFileRoute("/_main/profile")({
   component: RouteComponent,
@@ -28,6 +32,9 @@ export const Route = createFileRoute("/_main/profile")({
       },
     ],
   }),
+  server: {
+    middleware: [authMiddleware],
+  },
 });
 
 function RouteComponent() {
@@ -98,7 +105,9 @@ function AccountsSection() {
   const { data: accounts } = useSuspenseQuery({
     queryKey: ["accounts"],
     queryFn: () => authClient.listAccounts().then((res) => res.data),
+    staleTime: 1000 * 60,
   });
+  const queryClient = useQueryClient();
 
   const providers: Record<string, string | null> = {
     discord: null,
@@ -126,7 +135,7 @@ function AccountsSection() {
                 authClient.linkSocial({ provider });
               }}
             >
-              <providerData.Icon />
+              {providerData.Icon}
               Vincular {providerData.label}
             </Button>
           );
@@ -138,15 +147,14 @@ function AccountsSection() {
             key={provider}
           >
             <div className="flex items-center gap-2">
-              <providerData.Icon className="size-6" />
+              {providerData.Icon}
               <span className="font-medium">{providerData.label}</span>
             </div>
-            <CheckCircle2Icon className="size-6" />
+            <HugeiconsIcon className="size-6" icon={CheckmarkCircle02Icon} />
           </div>
         );
       })}
       <Button
-        loading
         onClick={async () => {
           authClient.signOut();
           await queryClient.invalidateQueries({ queryKey: ["session"] });
@@ -236,12 +244,19 @@ function ChangePasswordForm() {
 }
 
 function matchProvider(provider: string) {
+  const defaultProps = {
+    className: "size-6",
+  };
+
   switch (provider) {
     case "discord":
-      return { Icon: DiscordLogo, label: "Discord" };
+      return { Icon: <DiscordLogo {...defaultProps} />, label: "Discord" };
     case "patreon":
-      return { Icon: PatreonLogo, label: "Patreon" };
+      return { Icon: <PatreonLogo {...defaultProps} />, label: "Patreon" };
     default:
-      return { Icon: CircleQuestionMarkIcon, label: provider };
+      return {
+        Icon: <HugeiconsIcon icon={HelpCircleIcon} {...defaultProps} />,
+        label: provider,
+      };
   }
 }

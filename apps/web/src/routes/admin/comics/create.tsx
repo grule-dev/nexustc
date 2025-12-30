@@ -1,7 +1,8 @@
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { DOCUMENT_STATUSES } from "@repo/shared/constants";
 import { comicCreateSchema } from "@repo/shared/schemas";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
+import { orpcClient } from "@/lib/orpc";
 import { uploadBlobWithProgress } from "@/lib/utils";
-import { orpcClient } from "@/utils/orpc";
 
 const statusDisplayMap = {
   queued: "En cola",
@@ -280,7 +281,7 @@ function RouteComponent() {
                               size="icon"
                               variant="ghost"
                             >
-                              <XIcon />
+                              <HugeiconsIcon icon={Cancel01Icon} />
                             </Button>
                           </CardAction>
                         </CardHeader>

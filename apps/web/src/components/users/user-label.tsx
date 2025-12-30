@@ -13,7 +13,11 @@ export function UserLabel({
   user,
   className,
 }: {
-  user: { name: string; image?: string | null; role: string | null };
+  user: {
+    name: string;
+    image?: string | null;
+    role?: string | null;
+  };
   className?: string;
 }) {
   const roleClassname = user.role ? roleClassnames[user.role] : null;

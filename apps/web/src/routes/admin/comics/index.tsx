@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { orpcClient } from "@/utils/orpc";
+import { orpcClient } from "@/lib/orpc";
 import { columns } from "../../../components/admin/posts/columns";
 import { DataTable } from "../../../components/admin/posts/data-table";
 

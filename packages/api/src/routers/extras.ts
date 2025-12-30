@@ -1,10 +1,14 @@
+import type { tutorials as TutorialTable } from "@repo/db/schema/app";
 import { tutorials } from "@repo/db/schema/app";
 import z from "zod";
 import { permissionProcedure, publicProcedure } from "../index";
 
+type Tutorial = typeof TutorialTable.$inferSelect;
+
 export default {
-  getTutorials: publicProcedure.handler(({ context: { db } }) =>
-    db.query.tutorials.findMany()
+  getTutorials: publicProcedure.handler(
+    async ({ context: { db } }): Promise<Tutorial[]> =>
+      await db.query.tutorials.findMany()
   ),
 
   createTutorial: permissionProcedure({
@@ -17,7 +21,7 @@ export default {
         embedUrl: z.url(),
       })
     )
-    .handler(async ({ context: { db }, input }) =>
-      db.insert(tutorials).values(input)
-    ),
+    .handler(async ({ context: { db }, input }): Promise<void> => {
+      await db.insert(tutorials).values(input);
+    }),
 };

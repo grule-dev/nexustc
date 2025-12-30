@@ -132,22 +132,30 @@ export const term = pgTable("term", {
   ...timestamps,
 });
 
-export const post = pgTable("post", {
-  id: text("id").primaryKey().$defaultFn(generateId),
-  title: text("title").notNull(),
-  content: text("content").notNull().default(""),
-  type: postTypeEnum("type").notNull().default("post"),
-  isWeekly: boolean("is_weekly").notNull().default(false),
-  authorId: text("author_id").notNull(),
-  authorContent: text("author_content").notNull().default(""),
-  status: documentStatusEnum("status").notNull().default("draft"),
-  version: text("version"),
-  adsLinks: text("ads_links"),
-  premiumLinks: text("premium_links"),
-  views: integer("views").notNull().default(0),
-  imageObjectKeys: jsonb("image_object_keys").$type<string[]>(),
-  ...timestamps,
-});
+export const post = pgTable(
+  "post",
+  {
+    id: text("id").primaryKey().$defaultFn(generateId),
+    title: text("title").notNull(),
+    content: text("content").notNull().default(""),
+    type: postTypeEnum("type").notNull().default("post"),
+    isWeekly: boolean("is_weekly").notNull().default(false),
+    authorId: text("author_id").notNull(),
+    authorContent: text("author_content").notNull().default(""),
+    status: documentStatusEnum("status").notNull().default("draft"),
+    version: text("version"),
+    adsLinks: text("ads_links"),
+    premiumLinks: text("premium_links"),
+    views: integer("views").notNull().default(0),
+    imageObjectKeys: jsonb("image_object_keys").$type<string[]>(),
+    ...timestamps,
+  },
+  (table) => [
+    index("post_title_gin_idx").using("gin", table.title.op("gin_trgm_ops")),
+    index("post_status_idx").on(table.status),
+    index("post_created_at_idx").on(table.createdAt),
+  ]
+);
 
 export const comment = pgTable(
   "comment",

@@ -4,8 +4,8 @@ import { es } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { UserLabel } from "@/components/users/user-label";
+import { orpcClient } from "@/lib/orpc";
 import { getBucketUrl } from "@/lib/utils";
-import { orpcClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_main/user/$id")({
   component: RouteComponent,

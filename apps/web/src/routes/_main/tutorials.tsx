@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { TutorialCard } from "@/components/landing/tutorial-card";
-import { orpcClient } from "@/utils/orpc";
+import { orpcClient } from "@/lib/orpc";
 
 export const Route = createFileRoute("/_main/tutorials")({
   component: RouteComponent,

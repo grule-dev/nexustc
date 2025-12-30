@@ -112,7 +112,7 @@ export function getCookie(name: string): string | null {
 }
 
 export function getBucketUrl(object: string) {
-  return `${import.meta.env.VITE_ASSETS_BUCKET_URL}${object}`;
+  return `${import.meta.env.VITE_ASSETS_BUCKET_URL}/${object}`;
 }
 
 const TIER_BREAKPOINTS = {

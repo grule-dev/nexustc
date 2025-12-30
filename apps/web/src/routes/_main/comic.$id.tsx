@@ -6,14 +6,15 @@ import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import "react-medium-image-zoom/dist/styles.css";
+import {
+  ArrowLeft01Icon,
+  ArrowLeftDoubleIcon,
+  ArrowRight01Icon,
+  ArrowRightDoubleIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsLeftIcon,
-  ChevronsRightIcon,
-} from "lucide-react";
 import { TermBadge } from "@/components/term-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,8 +25,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { orpcClient } from "@/lib/orpc";
 import type { PostType } from "@/lib/types";
-import { orpcClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_main/comic/$id")({
   component: RouteComponent,
@@ -236,7 +237,7 @@ function ComicReader({
           size="icon"
           variant="outline"
         >
-          <ChevronsLeftIcon />
+          <HugeiconsIcon icon={ArrowLeftDoubleIcon} />
         </Button>
         <Button
           className="grow"
@@ -247,7 +248,7 @@ function ComicReader({
             }
           }}
         >
-          <ChevronLeftIcon />
+          <HugeiconsIcon icon={ArrowLeft01Icon} />
         </Button>
         <p>
           {page + 1} / {images.length}
@@ -261,7 +262,7 @@ function ComicReader({
             }
           }}
         >
-          <ChevronRightIcon />
+          <HugeiconsIcon icon={ArrowRight01Icon} />
         </Button>
         <Button
           disabled={page >= images.length - 1}
@@ -271,7 +272,7 @@ function ComicReader({
           size="icon"
           variant="outline"
         >
-          <ChevronsRightIcon />
+          <HugeiconsIcon icon={ArrowRightDoubleIcon} />
         </Button>
       </div>
     </div>

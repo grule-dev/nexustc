@@ -1,13 +1,14 @@
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { DOCUMENT_STATUSES } from "@repo/shared/constants";
 import { postCreateSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { XIcon } from "lucide-react";
 import type React from "react";
 import { Activity, useState } from "react";
-import Markdown from "react-markdown";
 import { toast } from "sonner";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
+import { Markdown } from "@/components/markdown";
 import { Post, type PostProps } from "@/components/posts/post";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,8 +26,8 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
+import { orpcClient } from "@/lib/orpc";
 import { uploadBlobWithProgress } from "@/lib/utils";
-import { orpcClient } from "@/utils/orpc";
 
 const statusDisplayMap = {
   queued: "En cola",
@@ -427,7 +428,7 @@ function RouteComponent() {
                               size="icon"
                               variant="ghost"
                             >
-                              <XIcon />
+                              <HugeiconsIcon icon={Cancel01Icon} />
                             </Button>
                           </CardAction>
                         </CardHeader>
@@ -527,7 +528,7 @@ function Preview({
     <div className="absolute top-0 z-999999 flex h-full w-full items-center bg-black/80">
       <section className="w-[50%] translate-x-[50%] space-y-4">
         <Button onClick={() => setVisible(false)} size="icon" type="button">
-          <XIcon className="size-8" />
+          <HugeiconsIcon className="size-8" icon={Cancel01Icon} />
         </Button>
         <Post post={post} />
       </section>

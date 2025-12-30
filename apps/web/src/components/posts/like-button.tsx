@@ -1,10 +1,11 @@
+import { FavouriteIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { HeartIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { orpc, queryClient } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import { orpc, queryClient } from "@/utils/orpc";
 
 function useLikeMutation(postId: string) {
   const queryOptions = orpc.post.getLikes.queryOptions({ input: postId });
@@ -65,7 +66,7 @@ export function LikeButton({
   if (!auth) {
     return (
       <Button size="icon">
-        <HeartIcon className="size-6" />
+        <HugeiconsIcon className="size-6" icon={FavouriteIcon} />
       </Button>
     );
   }
@@ -85,11 +86,12 @@ export function LikeButton({
       onClick={handleClick}
       variant="outline"
     >
-      <HeartIcon
+      <HugeiconsIcon
         className={cn(
           "size-6",
           likes ? "fill-primary stroke-primary" : "fill-none"
         )}
+        icon={FavouriteIcon}
       />
       {localLikes}
     </Button>

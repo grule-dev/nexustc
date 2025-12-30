@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { CommentSection } from "@/components/posts/comment-section";
-import { orpcClient } from "@/utils/orpc";
+import { orpcClient } from "@/lib/orpc";
 import { Post } from "../../components/posts/post";
 
 export const Route = createFileRoute("/_main/post/$id")({

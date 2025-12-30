@@ -2,6 +2,7 @@ import { and, eq, sql } from "@repo/db";
 import { postBookmark, postLikes, user } from "@repo/db/schema/app";
 import * as z from "zod";
 import {
+  fixedWindowRatelimitMiddleware,
   permissionProcedure,
   protectedProcedure,
   publicProcedure,
@@ -20,6 +21,7 @@ export default {
   ),
 
   toggleBookmark: protectedProcedure
+    .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
     .input(z.object({ bookmarked: z.boolean(), postId: z.string() }))
     .handler(async ({ context: { db, session }, input }) => {
       if (input.bookmarked) {
@@ -142,7 +144,7 @@ export default {
         },
       });
 
-      await cache.setex(
+      await cache.setEx(
         "recent-users",
         RECENT_USERS_CACHE_TTL_SECONDS,
         JSON.stringify(users)
@@ -194,36 +196,38 @@ export default {
   }).handler(async ({ context: { db } }) => {
     const registeredLastWeekPromise = db
       .select({
-        time: sql<string>`hour`,
+        time: sql<string>`t.d`,
         count: sql<number>`count(*)`,
       })
       .from(
         db
           .select({
-            hour: sql`date_trunc('hour', ${user.createdAt} AT TIME ZONE 'UTC')`,
+            hour: sql`date_trunc('hour', ${user.createdAt} AT TIME ZONE 'UTC')`.as(
+              "d"
+            ),
           })
           .from(user)
           .where(sql`${user.createdAt} >= now() - interval '7 days'`)
           .as("t")
       )
-      .groupBy(sql`hour`)
-      .orderBy(sql`hour`);
+      .groupBy(sql`t.d`)
+      .orderBy(sql`t.d`);
 
     const registeredAllTimePromise = db
       .select({
-        time: sql<string>`day`,
+        time: sql<string>`t.d`,
         count: sql<number>`count(*)`,
       })
       .from(
         db
           .select({
-            day: sql`date(${user.createdAt} AT TIME ZONE 'UTC')`,
+            day: sql`date(${user.createdAt} AT TIME ZONE 'UTC')`.as("d"),
           })
           .from(user)
           .as("t")
       )
-      .groupBy(sql`day`)
-      .orderBy(sql`day`);
+      .groupBy(sql`t.d`)
+      .orderBy(sql`t.d`);
 
     const userCountPromise = db
       .select({

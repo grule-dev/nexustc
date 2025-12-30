@@ -11,7 +11,7 @@ import { BookmarkButton } from "./bookmark-button";
 
 export type PostProps = Omit<
   PostType,
-  "likes" | "favorites" | "isWeekly" | "type"
+  "likes" | "favorites" | "isWeekly" | "type" | "status"
 >;
 
 export function Post({ post }: { post: PostProps }) {

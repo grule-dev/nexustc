@@ -1,9 +1,10 @@
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { type TAXONOMIES, TAXONOMY_DATA } from "@repo/shared/constants";
 import { termCreateSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,7 @@ import {
 import { Field } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { useAppForm } from "@/hooks/use-app-form";
-import { orpc } from "@/utils/orpc";
+import { orpc } from "@/lib/orpc";
 
 export const Route = createFileRoute("/admin/terms/create")({
   component: RouteComponent,
@@ -145,7 +146,7 @@ function RouteComponent() {
               type="button"
               variant="destructive"
             >
-              <XIcon />
+              <HugeiconsIcon icon={Cancel01Icon} />
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-4">

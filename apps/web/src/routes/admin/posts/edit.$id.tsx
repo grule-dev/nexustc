@@ -1,6 +1,6 @@
 import { postCreateSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAppForm } from "@/hooks/use-app-form";
-import { orpc, orpcClient, queryClient } from "@/utils/orpc";
+import { orpc, orpcClient } from "@/lib/orpc";
 
 export const Route = createFileRoute("/admin/posts/edit/$id")({
   component: RouteComponent,
@@ -34,6 +34,7 @@ function RouteComponent() {
     (item) => item.taxonomy
   );
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // biome-ignore lint/style/noNonNullAssertion: should never happen
   const oldPost = data.oldPost!;

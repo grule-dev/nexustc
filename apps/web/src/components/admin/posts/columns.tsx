@@ -1,12 +1,13 @@
+import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useConfirm } from "@omit/react-confirm-dialog";
 import { DOCUMENT_STATUS_LABELS } from "@repo/shared/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { orpc, orpcClient } from "@/utils/orpc";
+import { orpc, orpcClient } from "@/lib/orpc";
 
 export type Post = {
   id: string;
@@ -82,7 +83,7 @@ export const columns: ColumnDef<Post>[] = [
             size="icon"
             variant="destructive"
           >
-            <XIcon />
+            <HugeiconsIcon icon={Delete02Icon} />
           </Button>
         </div>
       );

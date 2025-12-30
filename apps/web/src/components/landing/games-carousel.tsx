@@ -1,4 +1,3 @@
-import { and, eq, useLiveQuery } from "@tanstack/react-db";
 import Autoplay from "embla-carousel-autoplay";
 import { useEffect, useState } from "react";
 import {
@@ -9,16 +8,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { postCollection } from "@/db/collections";
+import type { PostType } from "@/lib/types";
 import { PostCard } from "./post-card";
 
-export function GamesCarousel() {
-  const gamesQuery = useLiveQuery((q) =>
-    q
-      .from({ post: postCollection })
-      .where(({ post }) => and(eq(post.type, "post"), eq(post.isWeekly, true)))
-  );
-
+export function GamesCarousel({ games }: { games: PostType[] }) {
   const [api, setApi] = useState<CarouselApi | undefined>();
   const [current, setCurrent] = useState<number>(0);
 
@@ -43,10 +36,6 @@ export function GamesCarousel() {
     }
   };
 
-  if (gamesQuery.isLoading) {
-    return null;
-  }
-
   return (
     <div className="w-full">
       {/* Main Carousel */}
@@ -63,7 +52,7 @@ export function GamesCarousel() {
         setApi={setApi}
       >
         <CarouselContent className="-ml-2">
-          {gamesQuery.data.map((game) => (
+          {games.map((game) => (
             <CarouselItem
               className="basis-full py-1 pl-2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
               key={game.id}
@@ -88,11 +77,11 @@ export function GamesCarousel() {
           className="thumb-scrollbar inline-flex snap-x snap-mandatory gap-2 overflow-x-auto px-2 py-1"
           role="tablist"
         >
-          {gamesQuery.data.map((game, index) => (
+          {games.map((game, index) => (
             <button
               aria-label={`Go to ${game.title}`}
               aria-pressed={current === index}
-              className={`relative h-20 w-16 flex-shrink-0 snap-start overflow-hidden rounded-md border-2 transition-transform focus:outline-none focus-visible:ring ${
+              className={`relative h-20 w-16 shrink-0 snap-start overflow-hidden rounded-md border-2 transition-transform focus:outline-none focus-visible:ring ${
                 current === index
                   ? "scale-105 border-primary"
                   : "border-transparent opacity-70 hover:opacity-100"

@@ -1,4 +1,9 @@
-import { CheckIcon, ChevronsUpDownIcon, XIcon } from "lucide-react";
+import {
+  Cancel01Icon,
+  Tick02Icon,
+  UnfoldMoreIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   type ComponentPropsWithoutRef,
   createContext,
@@ -111,14 +116,14 @@ export function MultiSelectTrigger({
       {...props}
       aria-expanded={props["aria-expanded"] ?? open}
       className={cn(
-        "flex w-fit items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 data-[placeholder]:text-muted-foreground *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "flex w-fit items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 data-placeholder:text-muted-foreground *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       data-slot="select-trigger"
       role={props.role ?? "combobox"}
     >
       {children}
-      <ChevronsUpDownIcon className="size-4 opacity-50" />
+      <HugeiconsIcon className="size-4 opacity-50" icon={UnfoldMoreIcon} />
     </PopoverTrigger>
   );
 }
@@ -239,7 +244,10 @@ export function MultiSelectValue({
           >
             {items.get(value)}
             {!!clickToRemove && (
-              <XIcon className="size-2 text-muted-foreground group-hover:text-destructive" />
+              <HugeiconsIcon
+                className="size-2 text-muted-foreground group-hover:text-destructive"
+                icon={Cancel01Icon}
+              />
             )}
           </Badge>
         ))}
@@ -273,7 +281,7 @@ export function MultiSelectContent({
           <CommandList>{children}</CommandList>
         </Command>
       </div>
-      <PopoverContent className="min-w-[var(--radix-popover-trigger-width)] p-0">
+      <PopoverContent className="min-w-(--radix-popover-trigger-width) p-0">
         <Command {...props}>
           {canSearch ? (
             <CommandInput
@@ -325,8 +333,9 @@ export function MultiSelectItem({
       }}
       value={value}
     >
-      <CheckIcon
+      <HugeiconsIcon
         className={cn("mr-2 size-4", isSelected ? "opacity-100" : "opacity-0")}
+        icon={Tick02Icon}
       />
       {children}
     </CommandItem>

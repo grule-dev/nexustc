@@ -1,7 +1,6 @@
-"use client";
-
+import { SquareLock01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import { LockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
@@ -16,7 +15,7 @@ export function UserSection() {
         {role !== "user" && (
           <Link to="/admin">
             <Button variant="default">
-              <LockIcon />
+              <HugeiconsIcon icon={SquareLock01Icon} />
               Admin
             </Button>
           </Link>

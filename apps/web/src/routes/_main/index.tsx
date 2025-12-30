@@ -1,19 +1,30 @@
-import { eq, useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GamesCarousel } from "@/components/landing/games-carousel";
-import { PostCard } from "@/components/landing/post-card";
-import { TermBadge } from "@/components/term-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserLabel } from "@/components/users/user-label";
-import { postCollection, termCollection } from "@/db/collections";
-import { safeOrpcClient } from "@/utils/orpc";
+import { safeOrpcClient } from "@/lib/orpc";
 
 export const Route = createFileRoute("/_main/")({
   component: HomeComponent,
   loader: async () => {
-    const recentUsers = await safeOrpcClient.user.getRecentUsers();
+    const [error, result, isDefined] =
+      await safeOrpcClient.user.getRecentUsers();
 
-    return recentUsers;
+    if (isDefined) {
+      const err = {
+        code: error.code,
+        name: error.name,
+        message: error.message,
+      };
+
+      return [err, undefined] as const;
+    }
+
+    if (error) {
+      throw error;
+    }
+
+    return [undefined, result] as const;
   },
   head: () => ({
     meta: [
@@ -31,7 +42,7 @@ function HomeComponent() {
         <div className="container flex flex-col items-center justify-center gap-12 px-4">
           <HeroSection />
           <h1 className="font-extrabold text-3xl">Juegos de la Semana</h1>
-          <GamesCarousel />
+          <GamesCarousel games={[]} />
           <h1 className="font-extrabold text-3xl">Juegos Recientes</h1>
           <RecentPosts />
         </div>
@@ -43,12 +54,6 @@ function HomeComponent() {
 
 function Sidebar() {
   const [recentUsersError, recentUsers] = Route.useLoaderData();
-  const { data: tags } = useLiveQuery((q) =>
-    q
-      .from({ term: termCollection })
-      .where(({ term: t }) => eq(t.taxonomy, "tag"))
-      .orderBy(({ term: t }) => t.name)
-  );
 
   return (
     <section className="flex flex-col items-center gap-4 px-4">
@@ -57,7 +62,9 @@ function Sidebar() {
           <CardTitle>Usuarios Recientes</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap">
-          {!!recentUsersError && <div>Error al cargar usuarios recientes</div>}
+          {!!recentUsersError && (
+            <p className="text-red-500">Error: {recentUsersError.code}</p>
+          )}
           {recentUsers?.map((user, idx) => (
             <div className="flex items-center" key={user.id}>
               <Link params={{ id: user.id }} to="/user/$id">
@@ -73,9 +80,10 @@ function Sidebar() {
           <CardTitle>Tags</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
+          {/* TODO: add tags back
           {tags.map((tag) => (
             <TagCard key={tag.id} tag={tag} />
-          ))}
+          ))} */}
         </CardContent>
       </Card>
     </section>
@@ -119,32 +127,26 @@ function HeroSection() {
   );
 }
 
-function TagCard({
-  tag,
-}: {
-  tag: { id: string; name: string; color: string | null };
-}) {
-  return (
-    <Link className="grow" search={{ tag: tag.id }} to="/post-search">
-      <TermBadge className="w-full justify-center" tag={tag} />
-    </Link>
-  );
-}
+// function TagCard({
+//   tag,
+// }: {
+//   tag: { id: string; name: string; color: string | null };
+// }) {
+//   return (
+//     <Link className="grow" search={{ tag: tag.id }} to="/post-search">
+//       <TermBadge className="w-full justify-center" tag={tag} />
+//     </Link>
+//   );
+// }
 
 function RecentPosts() {
-  const { data: recentPosts } = useLiveQuery((q) =>
-    q
-      .from({ post: postCollection })
-      .where(({ post }) => eq(post.type, "post"))
-      .orderBy(({ post }) => post.createdAt, "desc")
-      .limit(9)
-  );
+  // TODO: add recent posts back
 
   return (
     <div className="grid w-full grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 md:gap-8">
-      {recentPosts.map((post) => (
+      {/* {recentPosts.map((post) => (
         <PostCard key={post.id} post={post} />
-      ))}
+      ))} */}
     </div>
   );
 }
