@@ -35,6 +35,7 @@ export function SelectField(
       </Label>
       <div className="flex flex-row gap-4">
         <Select
+          items={props.options}
           onValueChange={(value) => field.handleChange(value as string)}
           value={field.state.value}
           {...props}

@@ -4,6 +4,7 @@ import { createClient, type RedisClientType } from "redis";
 import * as schema from "./schema/app";
 
 export const db = drizzle(env.DATABASE_URL, {
+  logger: true,
   schema,
 });
 

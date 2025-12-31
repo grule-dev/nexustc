@@ -1,10 +1,35 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { AlertCircleIcon, Clock01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  createFileRoute,
+  type ErrorComponentProps,
+  Outlet,
+} from "@tanstack/react-router";
+import { Suspense } from "react";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
+import { LoadingSpinner } from "@/components/loading-spinner";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_main")({
   component: MainLayout,
-  errorComponent: ErrorComponent,
   head: () => ({
     meta: [
       {
@@ -12,39 +37,24 @@ export const Route = createFileRoute("/_main")({
       },
     ],
   }),
+  errorComponent: ({ error, reset }) => (
+    <Wrapper>
+      <ErrorComponent error={error} reset={reset} />
+    </Wrapper>
+  ),
 });
 
-function ErrorComponent({ error }: { error: Error }) {
-  if (typeof window === "undefined") {
-    console.error("[SERVER ERROR]:", error);
-  } else {
-    console.error("[CLIENT ERROR]:", error);
-  }
-
+function MainLayout() {
   return (
-    <div className="relative grid min-h-dvh grid-rows-[1fr_auto] gap-12">
-      <div className="flex flex-col items-center">
-        <Header />
-        <div className="h-6 md:h-12" />
-        <div className="flex h-full flex-col items-center justify-center p-4">
-          <h1 className="mb-4 font-bold text-2xl">Error: {error.message}</h1>
-          <p className="text-center">
-            Algo salió mal. Por favor, intenta recargar la página. Si el
-            problema persiste, contacta al administrador del sitio.
-          </p>
-          {!!error.stack && (
-            <pre className="mt-4 whitespace-pre-wrap text-red-500 text-sm">
-              {error.stack}
-            </pre>
-          )}
-        </div>
-      </div>
-      <Footer />
-    </div>
+    <Wrapper>
+      <Suspense fallback={<LoadingSpinner />}>
+        <Outlet />
+      </Suspense>
+    </Wrapper>
   );
 }
 
-function MainLayout() {
+function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative min-h-screen w-full">
       <div
@@ -62,10 +72,92 @@ function MainLayout() {
         <div className="flex flex-col items-center">
           <Header />
           <div className="h-6 md:h-12" />
-          <Outlet />
+          {children}
         </div>
         <Footer />
       </div>
     </div>
+  );
+}
+
+function isRateLimitError(error: unknown) {
+  console.log(error);
+  return error instanceof Error && error.message === "RATE_LIMITED";
+}
+
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
+  const rateLimited = isRateLimitError(error);
+
+  const reload = () => {
+    window.location.reload();
+  };
+
+  if (rateLimited) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader className="flex flex-col items-center text-center">
+          <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-amber-500/10">
+            <HugeiconsIcon
+              className="size-6 text-amber-500"
+              icon={Clock01Icon}
+            />
+          </div>
+          <CardTitle>Demasiadas solicitudes</CardTitle>
+          <CardDescription>
+            <p>Has realizado demasiadas solicitudes en poco tiempo.</p>
+            <p>Por favor, espera un momento antes de intentarlo de nuevo.</p>
+          </CardDescription>
+        </CardHeader>
+        <CardFooter className="justify-center">
+          <Button onClick={reload}>Recargar</Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  // Generic error UI
+  return (
+    <Card className="max-w-md">
+      <CardHeader className="items-center text-center">
+        <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-destructive/10">
+          <HugeiconsIcon
+            className="size-6 text-destructive"
+            icon={AlertCircleIcon}
+          />
+        </div>
+        <CardTitle>Ha ocurrido un error</CardTitle>
+        <CardDescription>{error.message}</CardDescription>
+      </CardHeader>
+      <CardContent className="text-center">
+        <p className="text-muted-foreground">
+          Algo salió mal. Por favor, intenta recargar la página. Si el problema
+          persiste, contacta al administrador del sitio.
+        </p>
+      </CardContent>
+      <CardFooter className="justify-center gap-2">
+        <Button onClick={reset}>Reintentar</Button>
+        {!!error.stack && (
+          <Dialog>
+            <DialogTrigger render={<Button variant="outline" />}>
+              Ver detalles
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Detalles del error</DialogTitle>
+                <DialogDescription>
+                  Información técnica del error para depuración.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-80 overflow-auto rounded-lg bg-muted p-4">
+                <pre className="whitespace-pre-wrap text-destructive text-xs">
+                  {error.stack}
+                </pre>
+              </div>
+              <DialogFooter showCloseButton />
+            </DialogContent>
+          </Dialog>
+        )}
+      </CardFooter>
+    </Card>
   );
 }

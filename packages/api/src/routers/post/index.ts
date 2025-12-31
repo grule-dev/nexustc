@@ -4,6 +4,7 @@ import {
   post,
   postBookmark,
   postLikes,
+  postRating,
   term,
   termPostRelation,
   user,
@@ -63,6 +64,19 @@ export default {
         .groupBy(termPostRelation.postId)
         .as("terms_agg");
 
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::numeric(10,1), 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
+
       const posts = await db
         .select({
           id: post.id,
@@ -80,12 +94,16 @@ export default {
 
           terms: sql<string>`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
+
           createdAt: post.createdAt,
         })
         .from(post)
         .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
         .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(eq(post.status, "publish"));
 
       const u = session?.user;
@@ -142,6 +160,19 @@ export default {
         .groupBy(termPostRelation.postId)
         .as("terms_agg");
 
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
+
       const posts = await db
         .select({
           id: post.id,
@@ -166,12 +197,16 @@ export default {
             }[]
           >`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
+
           createdAt: post.createdAt,
         })
         .from(post)
         .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
         .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(eq(post.status, "publish"))
         .orderBy(desc(post.createdAt))
         .limit(input.limit);
@@ -217,6 +252,19 @@ export default {
       .groupBy(termPostRelation.postId)
       .as("terms_agg");
 
+    const ratingsAgg = db
+      .select({
+        postId: postRating.postId,
+        averageRating:
+          sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+            "average_rating"
+          ),
+        ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+      })
+      .from(postRating)
+      .groupBy(postRating.postId)
+      .as("ratings_agg");
+
     const posts = await db
       .select({
         id: post.id,
@@ -241,12 +289,16 @@ export default {
           }[]
         >`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
+        averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+        ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
+
         createdAt: post.createdAt,
       })
       .from(post)
       .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
       .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
       .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+      .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
       .where(and(eq(post.status, "publish"), eq(post.isWeekly, true)))
       .orderBy(asc(post.title));
 
@@ -298,6 +350,19 @@ export default {
         .innerJoin(term, eq(term.id, termPostRelation.termId))
         .groupBy(termPostRelation.postId)
         .as("terms_agg");
+
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
 
       // Build conditions array
       const conditions = [
@@ -354,6 +419,9 @@ export default {
             }[]
           >`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
+
           createdAt: post.createdAt,
           similarity: sql<number>`similarity(${post.title}, ${input.query?.trim() || ""})`,
         })
@@ -361,6 +429,7 @@ export default {
         .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
         .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(and(...conditions));
 
       // Order by similarity score if there's a query, otherwise by creation date
@@ -375,7 +444,7 @@ export default {
     }),
 
   getPostById: publicProcedure
-    .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
+    .use(fixedWindowRatelimitMiddleware({ limit: 20, windowSeconds: 60 }))
     .input(z.string())
     .handler(async ({ context: { db }, input, errors }) => {
       const result = await db
@@ -431,6 +500,25 @@ export default {
           WHERE ${termPostRelation.postId} = ${post.id}
         ),
         '[]'::json
+      )
+    `,
+
+          averageRating: sql<number>`
+      COALESCE(
+        (
+          SELECT AVG(${postRating.rating})::float
+          FROM ${postRating}
+          WHERE ${postRating.postId} = ${post.id}
+        ),
+        0
+      )
+    `,
+
+          ratingCount: sql<number>`
+      (
+        SELECT COUNT(*)::integer
+        FROM ${postRating}
+        WHERE ${postRating.postId} = ${post.id}
       )
     `,
         })

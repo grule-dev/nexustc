@@ -3,6 +3,7 @@ import comic from "./comic";
 import extras from "./extras";
 import file from "./file";
 import post from "./post";
+import rating from "./rating";
 import term from "./term";
 import user from "./user";
 
@@ -13,6 +14,7 @@ export const appRouter = {
   user,
   file,
   extras,
+  rating,
 };
 
 export type AppRouter = typeof appRouter;
