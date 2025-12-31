@@ -81,7 +81,7 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 }
 
 function isRateLimitError(error: unknown) {
-  console.log(error);
+  return error instanceof Error && error.message === "RATE_LIMITED";
   return error instanceof Error && error.message === "RATE_LIMITED";
 }
 
