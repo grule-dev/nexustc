@@ -5,14 +5,14 @@ import {
   ArrowRightDoubleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Navigate } from "@tanstack/react-router";
+import { getRouteApi, Navigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Zoom from "react-medium-image-zoom";
 import type { PostType } from "@/lib/types";
 import { cn, getBucketUrl } from "@/lib/utils";
-import { RatingButton, RatingDisplay, RatingSection } from "../ratings";
+import { RatingButton, RatingDisplay } from "../ratings";
 import { TermBadge } from "../term-badge";
 import { Button } from "../ui/button";
 import {
@@ -26,8 +26,18 @@ import {
 import { Separator } from "../ui/separator";
 import { BookmarkButton } from "./bookmark-button";
 
+const postPageApi = getRouteApi("/_main/post/$id");
+
 export function ComicPage({ comic }: { comic: PostType }) {
-  const [page, setPage] = useState(-1);
+  const { page } = postPageApi.useSearch();
+  const navigate = postPageApi.useNavigate();
+
+  const setPage = useMemo(
+    () => (page: number) => {
+      navigate({ search: () => ({ page }) });
+    },
+    [navigate]
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -58,7 +68,7 @@ export function ComicPage({ comic }: { comic: PostType }) {
     });
 
     return () => controller.abort();
-  }, [comic.imageObjectKeys?.length, page]);
+  }, [comic.imageObjectKeys?.length, page, setPage]);
 
   if (!comic || comic.imageObjectKeys === null) {
     return <Navigate to="/" />;
@@ -81,77 +91,70 @@ export function ComicPage({ comic }: { comic: PostType }) {
   }
 
   return (
-    <main className="grid w-full grid-cols-1 md:grid-cols-4">
-      <div className="flex flex-col gap-4 px-4 md:col-span-2 md:col-start-2">
-        <section className="grid grid-cols-3 gap-4">
-          <img
-            alt={`Imagen de portada de ${comic.title}`}
-            src={getBucketUrl(comic.imageObjectKeys[0])}
-          />
-          <div className="col-span-2 flex flex-col gap-4">
-            <div className="flex w-full flex-row items-center justify-between gap-4">
-              <div className="flex flex-col items-start gap-2">
-                <h1 className="font-bold text-4xl">{comic.title}</h1>
-                <p className="text-muted-foreground">
-                  {format(comic.createdAt, "PPPP", { locale: es })}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <div className="flex flex-row items-center gap-4">
-                  <RatingButton postId={comic.id} />
-                  <BookmarkButton postId={comic.id} />
-                </div>
-              </div>
+    <main className="flex flex-col gap-4 px-4">
+      <section className="grid grid-cols-3 gap-4">
+        <img
+          alt={`Imagen de portada de ${comic.title}`}
+          src={getBucketUrl(comic.imageObjectKeys[0])}
+        />
+        <div className="col-span-2 flex flex-col gap-4">
+          <div className="flex w-full flex-row items-center justify-between gap-4">
+            <div className="flex flex-col items-start gap-2">
+              <h1 className="font-bold text-4xl">{comic.title}</h1>
+              <p className="text-muted-foreground">
+                {format(comic.createdAt, "PPPP", { locale: es })}
+              </p>
             </div>
-            {comic.ratingCount !== undefined && comic.ratingCount > 0 && (
-              <RatingDisplay
-                averageRating={comic.averageRating ?? 0}
-                ratingCount={comic.ratingCount}
-                variant="compact"
-              />
-            )}
-            <div className="flex flex-col gap-4">
-              <PostBadges label="Tags: " terms={groupedTerms.tag ?? []} />
-              <PostBadges
-                label="Idiomas: "
-                terms={groupedTerms.language ?? []}
-              />
-              <PostBadges
-                label="Censura: "
-                terms={groupedTerms.censorship ?? []}
-              />
-              <div className="flex flex-row gap-2">
-                <h3 className="font-bold">Páginas: </h3>
-                <div className="flex flex-wrap gap-2">
-                  {((comic.imageObjectKeys?.length ?? 0) + 1).toString()}
-                </div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-row items-center gap-4">
+                <RatingButton postId={comic.id} />
+                <BookmarkButton postId={comic.id} />
               </div>
             </div>
           </div>
-        </section>
-
-        <Separator orientation="horizontal" />
-
-        <div className="grid grid-cols-6 gap-4">
-          {comic.imageObjectKeys?.slice(0, 11).map((image, index) => (
-            <button
-              className="ring-primary hover:ring"
-              key={image}
-              onClick={() => setPage(index)}
-              type="button"
-            >
-              <img
-                alt={`Imagen adjunta de ${comic.title}`}
-                src={getBucketUrl(image)}
-              />
-            </button>
-          ))}
+          {comic.ratingCount !== undefined && comic.ratingCount > 0 && (
+            <RatingDisplay
+              averageRating={comic.averageRating ?? 0}
+              ratingCount={comic.ratingCount}
+              variant="compact"
+            />
+          )}
+          <div className="flex flex-col gap-4">
+            <PostBadges label="Tags: " terms={groupedTerms.tag ?? []} />
+            <PostBadges label="Idiomas: " terms={groupedTerms.language ?? []} />
+            <PostBadges
+              label="Censura: "
+              terms={groupedTerms.censorship ?? []}
+            />
+            <div className="flex flex-row gap-2">
+              <h3 className="font-bold">Páginas: </h3>
+              <div className="flex flex-wrap gap-2">
+                {((comic.imageObjectKeys?.length ?? 0) + 1).toString()}
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <Separator orientation="horizontal" />
+      <Separator orientation="horizontal" />
 
-        <RatingSection postId={comic.id} />
+      <div className="grid grid-cols-6 gap-4">
+        {comic.imageObjectKeys?.slice(0, 11).map((image, index) => (
+          <button
+            className="ring-primary hover:ring"
+            key={image}
+            onClick={() => setPage(index)}
+            type="button"
+          >
+            <img
+              alt={`Imagen adjunta de ${comic.title}`}
+              src={getBucketUrl(image)}
+            />
+          </button>
+        ))}
       </div>
+
+      <Separator orientation="horizontal" />
     </main>
   );
 }
@@ -162,7 +165,7 @@ function ComicReader({
   images,
 }: {
   page: number;
-  setPage: React.Dispatch<React.SetStateAction<number>>;
+  setPage: (page: number) => void;
   images: string[];
 }) {
   const carouselApiRef = useRef<CarouselApi>(null);

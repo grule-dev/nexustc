@@ -33,7 +33,7 @@ export function PostCard({
     <Link
       className="group w-full transition-transform hover:scale-102"
       params={{ id: post.id }}
-      to={post.type === "comic" ? "/comic/$id" : "/post/$id"}
+      to="/post/$id"
     >
       <Card className="relative h-full gap-4 overflow-hidden pt-0 ring-primary group-hover:ring">
         {/* Image */}

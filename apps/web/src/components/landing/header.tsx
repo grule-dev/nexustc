@@ -5,6 +5,7 @@ import {
   useCanGoBack,
   useMatchRoute,
   useRouter,
+  useSearch,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -31,13 +32,20 @@ const links = [
   { label: "Tutoriales", href: "/tutorials" },
 ] as const;
 
+// const postPageApi = getRouteApi("/_main/post/$id");
+
 export function Header() {
   const matchRoute = useMatchRoute();
+  const search = useSearch({
+    from: "/_main/post/$id",
+    shouldThrow: false,
+  });
 
   const isSticky = !(
-    matchRoute({
-      to: "/comic/$id",
-    }) ||
+    (matchRoute({
+      to: "/post/$id",
+    }) &&
+      search?.page !== -1) ||
     matchRoute({
       to: "/chronos",
     })
