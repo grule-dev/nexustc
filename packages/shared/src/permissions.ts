@@ -9,18 +9,21 @@ export const statement = {
   comics: ["create", "update", "delete", "list"],
   terms: ["create", "update", "delete", "list"],
   comments: ["create", "self-update", "self-delete", "update", "delete"],
+  ratings: ["create", "self-update", "self-delete", "delete"],
 } as const;
 
 export const ac = createAccessControl(statement);
 
 const user = ac.newRole({
   comments: ["create", "self-update", "self-delete"],
+  ratings: ["create", "self-update", "self-delete"],
 });
 
 const moderator = ac.newRole({
   files: ["upload"],
   comics: ["create", "update", "delete"],
   dashboard: ["view"],
+  ratings: ["create", "self-update", "self-delete", "delete"],
 });
 
 const admin = ac.newRole({
@@ -29,6 +32,7 @@ const admin = ac.newRole({
   comics: ["create", "list", "update", "delete"],
   terms: ["create", "list", "update", "delete"],
   dashboard: ["view"],
+  ratings: ["create", "self-update", "self-delete", "delete"],
 });
 
 const owner = ac.newRole({
@@ -38,6 +42,7 @@ const owner = ac.newRole({
   comics: ["create", "list", "update", "delete"],
   terms: ["create", "list", "update", "delete"],
   dashboard: ["view"],
+  ratings: ["create", "self-update", "self-delete", "delete"],
 });
 
 export const roles = {

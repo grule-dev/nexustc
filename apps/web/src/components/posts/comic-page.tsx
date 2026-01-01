@@ -1,14 +1,3 @@
-import { createFileRoute, Navigate, notFound } from "@tanstack/react-router";
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
-import Zoom from "react-medium-image-zoom";
-import { BookmarkButton } from "@/components/posts/bookmark-button";
-import { RatingButton } from "@/components/ratings/rating-button";
-import { RatingDisplay } from "@/components/ratings/rating-display";
-import { RatingSection } from "@/components/ratings/rating-section";
-import { Separator } from "@/components/ui/separator";
-import { cn, getBucketUrl } from "@/lib/utils";
-import "react-medium-image-zoom/dist/styles.css";
 import {
   ArrowLeft01Icon,
   ArrowLeftDoubleIcon,
@@ -16,10 +5,16 @@ import {
   ArrowRightDoubleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Navigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { TermBadge } from "@/components/term-badge";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react";
+import Zoom from "react-medium-image-zoom";
+import type { PostType } from "@/lib/types";
+import { cn, getBucketUrl } from "@/lib/utils";
+import { RatingButton, RatingDisplay, RatingSection } from "../ratings";
+import { TermBadge } from "../term-badge";
+import { Button } from "../ui/button";
 import {
   Carousel,
   type CarouselApi,
@@ -27,33 +22,11 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
-import { orpcClient } from "@/lib/orpc";
-import type { PostType } from "@/lib/types";
+} from "../ui/carousel";
+import { Separator } from "../ui/separator";
+import { BookmarkButton } from "./bookmark-button";
 
-export const Route = createFileRoute("/_main/comic/$id")({
-  component: RouteComponent,
-  loader: async ({ params }) => orpcClient.post.getPostById(params.id),
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: `NeXusTC - ${loaderData ? loaderData.title : "Cómic"}`,
-      },
-    ],
-  }),
-});
-
-function RouteComponent() {
-  const comic = Route.useLoaderData();
-
-  if (!comic) {
-    throw notFound();
-  }
-
-  return <ComicPage comic={comic} />;
-}
-
-function ComicPage({ comic }: { comic: PostType }) {
+export function ComicPage({ comic }: { comic: PostType }) {
   const [page, setPage] = useState(-1);
 
   useEffect(() => {

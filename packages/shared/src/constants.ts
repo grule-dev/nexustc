@@ -37,3 +37,5 @@ export const DOCUMENT_STATUS_LABELS: Record<
   draft: "Borrador",
   trash: "Basura",
 } as const;
+
+export const RATING_REVIEW_MAX_LENGTH = 512;

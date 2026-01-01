@@ -1,4 +1,8 @@
-import { Bookmark02Icon, FavouriteIcon } from "@hugeicons/core-free-icons";
+import {
+  Bookmark02Icon,
+  FavouriteIcon,
+  StarIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import type { PostType } from "@/lib/types";
@@ -121,11 +125,8 @@ export function PostCard({
         <CardContent className="gap-4 space-y-2">
           <h3 className="line-clamp-2 font-semibold text-lg">{post.title}</h3>
           <Separator orientation="horizontal" />
-          {/* Favorites overlay */}
+          {/* Stats overlay */}
           <div className="bottom-2 left-2 flex items-center gap-2 rounded-lg">
-            {/* <StarIcon className="h-4 w-4 fill-amber-400 text-amber-400" />
-            <span className="text-sm text-white">{game.likes}</span> */}
-
             <HugeiconsIcon
               className="size-5 fill-red-500 text-red-500"
               icon={FavouriteIcon}
@@ -136,6 +137,17 @@ export function PostCard({
               icon={Bookmark02Icon}
             />
             <span className="text-sm text-white">{post.favorites}</span>
+            {post.ratingCount !== undefined && post.ratingCount > 0 && (
+              <>
+                <HugeiconsIcon
+                  className="size-5 fill-amber-400 text-amber-400"
+                  icon={StarIcon}
+                />
+                <span className="text-sm text-white">
+                  {post.averageRating?.toFixed(1)}
+                </span>
+              </>
+            )}
           </div>
 
           {withTags && tags && tags.length > 0 && (

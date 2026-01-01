@@ -19,10 +19,9 @@ function BookmarkButtonUI({
   onClick?: () => void;
 }) {
   return (
-    <Button loading={isLoading} onClick={onClick} variant="outline">
+    <Button loading={isLoading} onClick={onClick} size="sm" variant="outline">
       <HugeiconsIcon
         className={cn(
-          "size-6",
           isBookmarked ? "fill-blue-500 stroke-blue-500" : "fill-none"
         )}
         icon={Bookmark02Icon}

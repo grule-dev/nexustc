@@ -41,6 +41,7 @@ import { Route as MainUserIdRouteImport } from './routes/_main/user.$id'
 import { Route as MainPostIdRouteImport } from './routes/_main/post.$id'
 import { Route as MainComicIdRouteImport } from './routes/_main/comic.$id'
 import { Route as AdminPostsEditIdRouteImport } from './routes/admin/posts/edit.$id'
+import { Route as MainPostIdReviewsRouteImport } from './routes/_main/post.$id.reviews'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
@@ -201,6 +202,11 @@ const AdminPostsEditIdRoute = AdminPostsEditIdRouteImport.update({
   path: '/posts/edit/$id',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const MainPostIdReviewsRoute = MainPostIdReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => MainPostIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
@@ -220,7 +226,7 @@ export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
-  '/post/$id': typeof MainPostIdRoute
+  '/post/$id': typeof MainPostIdRouteWithChildren
   '/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/admin/posts': typeof AdminPostsIndexRoute
   '/admin/terms': typeof AdminTermsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/post/$id/reviews': typeof MainPostIdReviewsRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRoutesByTo {
@@ -252,7 +259,7 @@ export interface FileRoutesByTo {
   '/': typeof MainIndexRoute
   '/admin': typeof AdminIndexRoute
   '/comic/$id': typeof MainComicIdRoute
-  '/post/$id': typeof MainPostIdRoute
+  '/post/$id': typeof MainPostIdRouteWithChildren
   '/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/admin/posts': typeof AdminPostsIndexRoute
   '/admin/terms': typeof AdminTermsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/post/$id/reviews': typeof MainPostIdReviewsRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRoutesById {
@@ -287,7 +295,7 @@ export interface FileRoutesById {
   '/_main/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/_main/comic/$id': typeof MainComicIdRoute
-  '/_main/post/$id': typeof MainPostIdRoute
+  '/_main/post/$id': typeof MainPostIdRouteWithChildren
   '/_main/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/admin/posts/': typeof AdminPostsIndexRoute
   '/admin/terms/': typeof AdminTermsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/_main/post/$id/reviews': typeof MainPostIdReviewsRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRouteTypes {
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/admin/posts'
     | '/admin/terms'
     | '/admin/users'
+    | '/post/$id/reviews'
     | '/admin/posts/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -367,6 +377,7 @@ export interface FileRouteTypes {
     | '/admin/posts'
     | '/admin/terms'
     | '/admin/users'
+    | '/post/$id/reviews'
     | '/admin/posts/edit/$id'
   id:
     | '__root__'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/admin/posts/'
     | '/admin/terms/'
     | '/admin/users/'
+    | '/_main/post/$id/reviews'
     | '/admin/posts/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -638,8 +650,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPostsEditIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/_main/post/$id/reviews': {
+      id: '/_main/post/$id/reviews'
+      path: '/reviews'
+      fullPath: '/post/$id/reviews'
+      preLoaderRoute: typeof MainPostIdReviewsRouteImport
+      parentRoute: typeof MainPostIdRoute
+    }
   }
 }
+
+interface MainPostIdRouteChildren {
+  MainPostIdReviewsRoute: typeof MainPostIdReviewsRoute
+}
+
+const MainPostIdRouteChildren: MainPostIdRouteChildren = {
+  MainPostIdReviewsRoute: MainPostIdReviewsRoute,
+}
+
+const MainPostIdRouteWithChildren = MainPostIdRoute._addFileChildren(
+  MainPostIdRouteChildren,
+)
 
 interface MainRouteRouteChildren {
   MainAboutRoute: typeof MainAboutRoute
@@ -656,7 +687,7 @@ interface MainRouteRouteChildren {
   MainTutorialsRoute: typeof MainTutorialsRoute
   MainIndexRoute: typeof MainIndexRoute
   MainComicIdRoute: typeof MainComicIdRoute
-  MainPostIdRoute: typeof MainPostIdRoute
+  MainPostIdRoute: typeof MainPostIdRouteWithChildren
   MainUserIdRoute: typeof MainUserIdRoute
 }
 
@@ -675,7 +706,7 @@ const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainTutorialsRoute: MainTutorialsRoute,
   MainIndexRoute: MainIndexRoute,
   MainComicIdRoute: MainComicIdRoute,
-  MainPostIdRoute: MainPostIdRoute,
+  MainPostIdRoute: MainPostIdRouteWithChildren,
   MainUserIdRoute: MainUserIdRoute,
 }
 

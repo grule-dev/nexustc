@@ -219,6 +219,27 @@ export const postLikes = pgTable(
   ]
 );
 
+export const postRating = pgTable(
+  "post_rating",
+  {
+    id: text("id").notNull().$defaultFn(generateId),
+    postId: text("post_id")
+      .references(() => post.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: text("user_id")
+      .references(() => user.id, { onDelete: "cascade" })
+      .notNull(),
+    rating: integer("rating").notNull(),
+    review: text("review").notNull().default(""),
+    ...timestamps,
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.postId] }),
+    index("post_rating_post_id_idx").on(table.postId),
+    index("post_rating_created_at_idx").on(table.createdAt),
+  ]
+);
+
 export const tutorials = pgTable("tutorial", {
   id: text("id").primaryKey().$defaultFn(generateId),
   title: text("title").notNull(),
@@ -232,6 +253,7 @@ export const postRelations = relations(post, ({ many }) => ({
   comments: many(comment),
   favorites: many(postBookmark),
   likes: many(postLikes),
+  ratings: many(postRating),
 }));
 
 export const termRelations = relations(term, ({ many }) => ({
@@ -263,5 +285,16 @@ export const postBookmarkRelations = relations(postBookmark, ({ one }) => ({
   post: one(post, {
     fields: [postBookmark.postId],
     references: [post.id],
+  }),
+}));
+
+export const postRatingRelations = relations(postRating, ({ one }) => ({
+  post: one(post, {
+    fields: [postRating.postId],
+    references: [post.id],
+  }),
+  user: one(user, {
+    fields: [postRating.userId],
+    references: [user.id],
   }),
 }));

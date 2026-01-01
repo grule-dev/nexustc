@@ -9,10 +9,10 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { orpc, queryClient },
+    defaultPreload: "intent",
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
     defaultPendingComponent: () => <LoadingSpinner />,
-    defaultNotFoundComponent: () => <div>Not Found</div>,
+    defaultNotFoundComponent: () => <div>404 - Not Found</div>,
     Wrap: ({ children }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),

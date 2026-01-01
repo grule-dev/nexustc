@@ -1,5 +1,9 @@
 import * as z from "zod";
-import { DOCUMENT_STATUSES, TAXONOMIES } from "./constants";
+import {
+  DOCUMENT_STATUSES,
+  RATING_REVIEW_MAX_LENGTH,
+  TAXONOMIES,
+} from "./constants";
 
 export const termCreateSchema = z.object({
   name: z
@@ -59,4 +63,28 @@ export const comicCreateSchema = z.object({
   tags: z.array(z.string()),
   languages: z.array(z.string()),
   documentStatus: z.enum(DOCUMENT_STATUSES),
+});
+
+export const ratingCreateSchema = z.object({
+  postId: z.string().min(1),
+  rating: z.number().int().min(1).max(10),
+  review: z
+    .string()
+    .trim()
+    .max(RATING_REVIEW_MAX_LENGTH)
+    .transform((val) => val.trim())
+    .optional()
+    .default(""),
+});
+
+export const ratingUpdateSchema = z.object({
+  postId: z.string().min(1),
+  rating: z.number().int().min(1).max(10),
+  review: z
+    .string()
+    .trim()
+    .max(RATING_REVIEW_MAX_LENGTH)
+    .transform((val) => val.trim())
+    .optional()
+    .default(""),
 });

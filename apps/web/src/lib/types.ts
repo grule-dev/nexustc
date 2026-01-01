@@ -1,4 +1,4 @@
-import type { post, term } from "@repo/db/schema/app";
+import type { post, postRating, term } from "@repo/db/schema/app";
 
 export type TermType = typeof term.$inferSelect;
 
@@ -9,4 +9,17 @@ export type PostType = Omit<
   likes: number;
   favorites: number;
   terms: Omit<TermType, "createdAt" | "updatedAt">[];
+  averageRating?: number;
+  ratingCount?: number;
+};
+
+export type RatingType = typeof postRating.$inferSelect;
+
+export type RatingWithAuthor = RatingType & {
+  author: {
+    id: string;
+    name: string;
+    image: string | null;
+    role: string;
+  } | null;
 };

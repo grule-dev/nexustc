@@ -1,11 +1,34 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { ComicPage } from "@/components/posts/comic-page";
 import { CommentSection } from "@/components/posts/comment-section";
-import { orpcClient } from "@/lib/orpc";
-import { Post } from "../../components/posts/post";
+import { RatingSection } from "@/components/ratings/rating-section";
+import { safeOrpcClient } from "@/lib/orpc";
+import { GamePage } from "../../components/posts/game-page";
 
 export const Route = createFileRoute("/_main/post/$id")({
   component: RouteComponent,
-  loader: ({ params }) => orpcClient.post.getPostById(params.id),
+  loader: async ({ params }) => {
+    const [error, data, isDefined] = await safeOrpcClient.post.getPostById(
+      params.id
+    );
+
+    if (isDefined) {
+      if (error.code === "NOT_FOUND") {
+        throw notFound();
+      }
+
+      if (error.code === "RATE_LIMITED") {
+        throw new Error("RATE_LIMITED", { cause: error.data.retryAfter });
+      }
+    }
+
+    if (error) {
+      console.error(error);
+      throw error;
+    }
+
+    return data;
+  },
   head: ({ loaderData }) => ({
     meta: [
       {
@@ -18,14 +41,15 @@ export const Route = createFileRoute("/_main/post/$id")({
 function RouteComponent() {
   const post = Route.useLoaderData();
 
-  if (!post) {
-    throw notFound();
-  }
-
   return (
     <main className="grid w-full grid-cols-1 lg:grid-cols-5">
       <div className="space-y-8 lg:col-span-3 lg:col-start-2">
-        <Post post={post} />
+        {post.type === "post" ? (
+          <GamePage post={post} />
+        ) : (
+          <ComicPage comic={post} />
+        )}
+        <RatingSection postId={post.id} />
         <CommentSection postId={post.id} />
       </div>
     </main>

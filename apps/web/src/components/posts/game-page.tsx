@@ -1,6 +1,8 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Zoom from "react-medium-image-zoom";
+import { RatingButton } from "@/components/ratings/rating-button";
+import { RatingDisplay } from "@/components/ratings/rating-display";
 import { TermBadge } from "@/components/term-badge";
 import type { PostType } from "@/lib/types";
 import { cn, getBucketUrl } from "@/lib/utils";
@@ -12,9 +14,12 @@ import { BookmarkButton } from "./bookmark-button";
 export type PostProps = Omit<
   PostType,
   "likes" | "favorites" | "isWeekly" | "type" | "status"
->;
+> & {
+  averageRating?: number;
+  ratingCount?: number;
+};
 
-export function Post({ post }: { post: PostProps }) {
+export function GamePage({ post }: { post: PostProps }) {
   const groupedTerms = Object.groupBy(post.terms, (term) => term.taxonomy);
 
   return (
@@ -32,11 +37,21 @@ export function Post({ post }: { post: PostProps }) {
 
       <Separator />
 
-      <div className="flex w-full flex-row items-center justify-between">
-        <Badge className="flex flex-row items-center justify-center gap-2 rounded-full px-3 py-1 text-sm">
-          <p>{format(post.createdAt, "PPP", { locale: es })}</p>
-        </Badge>
+      <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-4">
+          <Badge className="flex flex-row items-center justify-center gap-2 rounded-full px-3 py-1 text-sm">
+            <p>{format(post.createdAt, "PPP", { locale: es })}</p>
+          </Badge>
+          {post.ratingCount !== undefined && post.ratingCount > 0 && (
+            <RatingDisplay
+              averageRating={post.averageRating ?? 0}
+              ratingCount={post.ratingCount}
+              variant="compact"
+            />
+          )}
+        </div>
         <div className="flex flex-row items-center gap-4">
+          <RatingButton postId={post.id} />
           <BookmarkButton postId={post.id} />
         </div>
       </div>
