@@ -1,3 +1,4 @@
+import { getLogger } from "@orpc/experimental-pino";
 import { and, eq, sql } from "@repo/db";
 import { postBookmark, user } from "@repo/db/schema/app";
 import * as z from "zod";
@@ -20,19 +21,29 @@ const recentUserSchema = z.object({
 const recentUsersListSchema = z.array(recentUserSchema);
 
 export default {
-  getBookmarks: protectedProcedure.handler(({ context: { db, session } }) =>
-    db.query.postBookmark.findMany({
-      where: (b, { eq: equals }) => equals(b.userId, session.user.id),
-      columns: {
-        postId: true,
-      },
-    })
+  getBookmarks: protectedProcedure.handler(
+    ({ context: { db, session, ...ctx } }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Fetching bookmarks for user: ${session.user.id}`);
+
+      return db.query.postBookmark.findMany({
+        where: (b, { eq: equals }) => equals(b.userId, session.user.id),
+        columns: {
+          postId: true,
+        },
+      });
+    }
   ),
 
   toggleBookmark: protectedProcedure
     .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
     .input(z.object({ bookmarked: z.boolean(), postId: z.string() }))
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `User ${session.user.id} toggling bookmark for post ${input.postId} to ${input.bookmarked}`
+      );
+
       if (input.bookmarked) {
         await db
           .insert(postBookmark)
@@ -41,6 +52,10 @@ export default {
             userId: session.user.id,
           })
           .onConflictDoNothing();
+
+        logger?.debug(
+          `Bookmark added for user ${session.user.id} on post ${input.postId}`
+        );
       } else {
         await db
           .delete(postBookmark)
@@ -50,16 +65,27 @@ export default {
               eq(postBookmark.userId, session.user.id)
             )
           );
+        logger?.debug(
+          `Bookmark removed for user ${session.user.id} on post ${input.postId}`
+        );
       }
+      logger?.info(
+        `Bookmark toggle completed for user ${session.user.id} on post ${input.postId}`
+      );
     }),
 
-  getLikes: protectedProcedure.handler(({ context: { db, session } }) =>
-    db.query.postLikes.findMany({
-      where: (b, { eq: equals }) => equals(b.userId, session.user.id),
-      columns: {
-        postId: true,
-      },
-    })
+  getLikes: protectedProcedure.handler(
+    ({ context: { db, session, ...ctx } }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Fetching likes for user: ${session.user.id}`);
+
+      return db.query.postLikes.findMany({
+        where: (b, { eq: equals }) => equals(b.userId, session.user.id),
+        columns: {
+          postId: true,
+        },
+      });
+    }
   ),
 
   // Cache recent users in KV to avoid hitting the database too often
@@ -75,7 +101,7 @@ export default {
 
   getRecentUsers: publicProcedure.handler(
     async ({
-      context: { cache, db, session },
+      context: { cache, db, session, ...ctx },
     }): Promise<
       {
         id: string;
@@ -84,12 +110,16 @@ export default {
         role: string;
       }[]
     > => {
+      const logger = getLogger(ctx);
+      logger?.info("Fetching recent users list");
+
       const cachedList = await cache.get("recent-users");
 
       const currentUser = session?.user;
 
       if (currentUser) {
         // If the user is authenticated, update their lastSeenAt
+        logger?.debug(`Updating lastSeenAt for user ${currentUser.id}`);
         await db
           .update(user)
           .set({ lastSeenAt: new Date() })
@@ -97,30 +127,33 @@ export default {
       }
 
       if (cachedList) {
-        try {
-          const result = recentUsersListSchema.safeParse(cachedList);
+        const result = recentUsersListSchema.safeParse(cachedList);
 
-          if (result.success) {
-            const list = result.data;
+        if (result.success) {
+          const list = result.data;
 
-            if (currentUser && !list.find((u) => u.id === currentUser.id)) {
-              // If the user is not in the cached list, add them
-              list.push({
-                id: currentUser.id,
-                name: currentUser.name,
-                role: currentUser.role ?? "user",
-                image: currentUser.image ?? null,
-              });
-            }
-
-            return list;
+          if (currentUser && !list.find((u) => u.id === currentUser.id)) {
+            // If the user is not in the cached list, add them
+            list.push({
+              id: currentUser.id,
+              name: currentUser.name,
+              role: currentUser.role ?? "user",
+              image: currentUser.image ?? null,
+            });
           }
 
-          console.error("Invalid cached list format", result.error);
-        } catch (e) {
-          console.error("Error parsing cached list", e);
+          logger?.debug(
+            `Returning cached recent users list with ${list.length} users`
+          );
+          return list;
         }
+
+        logger?.error("Invalid cached list format, will fetch from database");
       }
+
+      logger?.debug(
+        "Cache miss or invalid, fetching recent users from database"
+      );
 
       const users = await db.query.user.findMany({
         where: (u, { gte }) =>
@@ -142,14 +175,18 @@ export default {
         JSON.stringify(users)
       );
 
+      logger?.debug(`Fetched and cached ${users.length} recent users`);
       return users;
     }
   ),
 
   getUser: publicProcedure
     .input(z.object({ id: z.string() }))
-    .handler(({ context: { db }, input }) =>
-      db.query.user.findFirst({
+    .handler(({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Fetching user profile: ${input.id}`);
+
+      return db.query.user.findFirst({
         where: (u, { eq: equals }) => equals(u.id, input.id),
         columns: {
           id: true,
@@ -158,24 +195,30 @@ export default {
           image: true,
           createdAt: true,
         },
-      })
-    ),
+      });
+    }),
 
   getDashboardList: permissionProcedure({
     user: ["list"],
-  }).handler(({ context: { db } }) =>
-    db.query.user.findMany({
+  }).handler(({ context: { db, ...ctx } }) => {
+    const logger = getLogger(ctx);
+    logger?.info("Fetching user dashboard list");
+
+    return db.query.user.findMany({
       columns: {
         id: true,
         name: true,
         role: true,
       },
-    })
-  ),
+    });
+  }),
 
   getDashboard: permissionProcedure({
     user: ["list"],
-  }).handler(async ({ context: { db } }) => {
+  }).handler(async ({ context: { db, ...ctx } }) => {
+    const logger = getLogger(ctx);
+    logger?.info("Fetching user dashboard analytics");
+
     const registeredLastWeekPromise = db
       .select({
         time: sql<string>`t.d`,
@@ -224,10 +267,15 @@ export default {
         userCountPromise,
       ]);
 
+    const totalUsers = userCount[0]?.count ?? 0;
+    logger?.debug(
+      `Dashboard: Total users=${totalUsers}, Last week entries=${registeredLastWeek.length}, All time entries=${registeredAllTime.length}`
+    );
+
     return {
       registeredLastWeek,
       registeredAllTime,
-      userCount: userCount[0]?.count,
+      userCount: totalUsers,
     };
   }),
 };

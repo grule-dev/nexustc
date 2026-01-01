@@ -1,3 +1,4 @@
+import { getLogger } from "@orpc/experimental-pino";
 import type { tutorials as TutorialTable } from "@repo/db/schema/app";
 import { tutorials } from "@repo/db/schema/app";
 import z from "zod";
@@ -7,8 +8,15 @@ type Tutorial = typeof TutorialTable.$inferSelect;
 
 export default {
   getTutorials: publicProcedure.handler(
-    async ({ context: { db } }): Promise<Tutorial[]> =>
-      await db.query.tutorials.findMany()
+    async ({ context: { db, ...ctx } }): Promise<Tutorial[]> => {
+      const logger = getLogger(ctx);
+      logger?.info("Fetching tutorials");
+
+      const result = await db.query.tutorials.findMany();
+
+      logger?.debug(`Retrieved ${result.length} tutorials`);
+      return result;
+    }
   ),
 
   createTutorial: permissionProcedure({
@@ -21,7 +29,11 @@ export default {
         embedUrl: z.url(),
       })
     )
-    .handler(async ({ context: { db }, input }): Promise<void> => {
+    .handler(async ({ context: { db, ...ctx }, input }): Promise<void> => {
+      const logger = getLogger(ctx);
+      logger?.info(`Creating new tutorial: "${input.title}"`);
+
       await db.insert(tutorials).values(input);
+      logger?.info(`Tutorial successfully created: ${input.title}`);
     }),
 };

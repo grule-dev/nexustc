@@ -1,5 +1,6 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getLogger } from "@orpc/experimental-pino";
 import { generateId } from "@repo/db/utils";
 import { env } from "@repo/env";
 import z from "zod";
@@ -37,9 +38,18 @@ export default {
         ),
       })
     )
-    .handler(({ input }) =>
-      Promise.all(
-        input.objects.map(async (object) => {
+    .handler(async ({ context: { ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `Generating presigned URLs for ${input.objects.length} post images for post: ${input.postId}`
+      );
+
+      const urls = await Promise.all(
+        input.objects.map(async (object, index) => {
+          logger?.debug(
+            `Generating presigned URL ${index + 1}/${input.objects.length} for extension: ${object.extension}`
+          );
+
           const objectKey = `images/${input.postId}/${generateId()}.${object.extension}`;
           return {
             objectKey,
@@ -54,8 +64,13 @@ export default {
             ),
           };
         })
-      )
-    ),
+      );
+
+      logger?.info(
+        `Successfully generated ${urls.length} presigned URLs for post ${input.postId}`
+      );
+      return urls;
+    }),
 
   getAvatarUploadUrl: protectedProcedure
     .input(
@@ -64,8 +79,13 @@ export default {
         contentLength: z.number().max(AVATAR_MAX_SIZE_BYTES),
       })
     )
-    .handler(async ({ context, input }) => {
-      const key = `avatar/${context.session.user.id}.webp`;
+    .handler(async ({ context: { session, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `Generating presigned URL for avatar upload for user: ${session.user.id}`
+      );
+
+      const key = `avatar/${session.user.id}.webp`;
       const url = await getSignedUrl(
         S3(),
         new PutObjectCommand({
@@ -75,6 +95,10 @@ export default {
           ContentType: "image/webp",
         }),
         { expiresIn: 3600 }
+      );
+
+      logger?.debug(
+        `Avatar presigned URL generated for user ${session.user.id}`
       );
       return url;
     }),

@@ -1,3 +1,4 @@
+import { getLogger } from "@orpc/experimental-pino";
 import { eq } from "@repo/db";
 import { post, termPostRelation } from "@repo/db/schema/app";
 import { comicCreateSchema } from "@repo/shared/schemas";
@@ -7,8 +8,11 @@ import { permissionProcedure } from "../../index";
 export default {
   getDashboardList: permissionProcedure({
     comics: ["list"],
-  }).handler(({ context: { db } }) =>
-    db.query.post.findMany({
+  }).handler(({ context: { db, ...ctx } }) => {
+    const logger = getLogger(ctx);
+    logger?.info("Fetching comic dashboard list");
+
+    return db.query.post.findMany({
       columns: {
         id: true,
         title: true,
@@ -23,15 +27,18 @@ export default {
         },
       },
       orderBy: (p, { desc }) => [desc(p.createdAt)],
-    })
-  ),
+    });
+  }),
 
   getEdit: permissionProcedure({
     comics: ["update"],
   })
     .input(z.string())
-    .handler(({ context: { db }, input }) =>
-      db.query.post.findFirst({
+    .handler(({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Fetching comic for editing: ${input}`);
+
+      return db.query.post.findFirst({
         where: (p, { eq: equals }) => equals(p.id, input),
         with: {
           terms: {
@@ -40,13 +47,18 @@ export default {
             },
           },
         },
-      })
-    ),
+      });
+    }),
 
   createComicPrerequisites: permissionProcedure({
     comics: ["create"],
-  }).handler(async ({ context: { db } }) => {
+  }).handler(async ({ context: { db, ...ctx } }) => {
+    const logger = getLogger(ctx);
+    logger?.info("Fetching comic creation prerequisites");
+
     const terms = await db.query.term.findMany();
+    logger?.debug(`Retrieved ${terms.length} terms for prerequisites`);
+
     return {
       terms,
     };
@@ -56,7 +68,12 @@ export default {
     comics: ["create"],
   })
     .input(comicCreateSchema)
-    .handler(async ({ context: { db, session }, input, errors }) => {
+    .handler(async ({ context: { db, session, ...ctx }, input, errors }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `User ${session.user.id} creating new comic: "${input.title}"`
+      );
+
       const [postData] = await db
         .insert(post)
         .values({
@@ -70,6 +87,7 @@ export default {
         });
 
       if (!postData) {
+        logger?.error(`Failed to create comic for user ${session.user.id}`);
         throw errors.NOT_FOUND();
       }
 
@@ -83,8 +101,12 @@ export default {
 
       if (termIds.length > 0) {
         await db.insert(termPostRelation).values(termIds);
+        logger?.debug(
+          `Inserted ${termIds.length} term relations for comic ${postData.postId}`
+        );
       }
 
+      logger?.info(`Comic successfully created with ID: ${postData.postId}`);
       return postData.postId;
     }),
 
@@ -97,14 +119,18 @@ export default {
         images: z.array(z.string()),
       })
     )
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `Inserting ${input.images.length} images for comic: ${input.postId}`
+      );
+
       await db
         .update(post)
         .set({
           imageObjectKeys: input.images,
         })
         .where(eq(post.id, input.postId));
-
-      // await env.KV_STORE.delete("all-posts");
+      logger?.info(`Images successfully inserted for comic ${input.postId}`);
     }),
 };

@@ -1,12 +1,22 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
+import z from "zod";
 import { ComicPage } from "@/components/posts/comic-page";
 import { CommentSection } from "@/components/posts/comment-section";
 import { RatingSection } from "@/components/ratings/rating-section";
 import { safeOrpcClient } from "@/lib/orpc";
 import { GamePage } from "../../components/posts/game-page";
 
+const comicPageSchema = z.object({
+  page: z
+    .number()
+    .optional()
+    .transform((val) => val ?? -1),
+});
+
 export const Route = createFileRoute("/_main/post/$id")({
   component: RouteComponent,
+  staleTime: 1000 * 60 * 5, // 5 minutes
   loader: async ({ params }) => {
     const [error, data, isDefined] = await safeOrpcClient.post.getPostById(
       params.id
@@ -36,6 +46,7 @@ export const Route = createFileRoute("/_main/post/$id")({
       },
     ],
   }),
+  validateSearch: zodValidator(comicPageSchema),
 });
 
 function RouteComponent() {
@@ -49,7 +60,7 @@ function RouteComponent() {
         ) : (
           <ComicPage comic={post} />
         )}
-        <RatingSection postId={post.id} />
+        <RatingSection stats={post} />
         <CommentSection postId={post.id} />
       </div>
     </main>
