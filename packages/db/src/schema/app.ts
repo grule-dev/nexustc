@@ -222,7 +222,6 @@ export const postLikes = pgTable(
 export const postRating = pgTable(
   "post_rating",
   {
-    id: text("id").notNull().$defaultFn(generateId),
     postId: text("post_id")
       .references(() => post.id, { onDelete: "cascade" })
       .notNull(),

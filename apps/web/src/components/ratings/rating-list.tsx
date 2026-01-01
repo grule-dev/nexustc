@@ -110,7 +110,7 @@ export function RatingList({ postId }: RatingListProps) {
           const canDelete = isOwnRating;
 
           return (
-            <Card key={rating.id}>
+            <Card key={rating.userId}>
               <CardContent>
                 <div className="flex flex-row gap-4">
                   {author ? (

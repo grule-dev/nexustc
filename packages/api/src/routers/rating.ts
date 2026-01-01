@@ -92,7 +92,6 @@ export default {
     .handler(async ({ context: { db }, input }) => {
       const ratings = await db
         .select({
-          id: postRating.id,
           postId: postRating.postId,
           userId: postRating.userId,
           rating: postRating.rating,
@@ -138,7 +137,6 @@ export default {
     .handler(async ({ context: { db }, input }) => {
       const ratings = await db
         .select({
-          id: postRating.id,
           postId: postRating.postId,
           userId: postRating.userId,
           rating: postRating.rating,
@@ -205,7 +203,6 @@ export default {
 
       const result = await db
         .select({
-          id: postRating.id,
           postId: postRating.postId,
           userId: postRating.userId,
           rating: postRating.rating,

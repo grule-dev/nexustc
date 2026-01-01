@@ -1,5 +1,4 @@
 CREATE TABLE "post_rating" (
-	"id" text NOT NULL,
 	"post_id" text NOT NULL,
 	"user_id" text NOT NULL,
 	"rating" integer NOT NULL,
