@@ -1,5 +1,5 @@
 import { and, eq, sql } from "@repo/db";
-import { postBookmark, postLikes, user } from "@repo/db/schema/app";
+import { postBookmark, user } from "@repo/db/schema/app";
 import * as z from "zod";
 import {
   fixedWindowRatelimitMiddleware,
@@ -9,6 +9,15 @@ import {
 } from "../index";
 
 const RECENT_USERS_CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
+
+const recentUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  image: z.string().nullable(),
+  role: z.string(),
+});
+
+const recentUsersListSchema = z.array(recentUserSchema);
 
 export default {
   getBookmarks: protectedProcedure.handler(({ context: { db, session } }) =>
@@ -53,29 +62,6 @@ export default {
     })
   ),
 
-  toggleLike: protectedProcedure
-    .input(z.object({ liked: z.boolean(), postId: z.string() }))
-    .handler(async ({ context: { db, session }, input }) => {
-      if (input.liked) {
-        await db
-          .insert(postLikes)
-          .values({
-            postId: input.postId,
-            userId: session.user.id,
-          })
-          .onConflictDoNothing();
-      } else {
-        await db
-          .delete(postLikes)
-          .where(
-            and(
-              eq(postLikes.postId, input.postId),
-              eq(postLikes.userId, session.user.id)
-            )
-          );
-      }
-    }),
-
   // Cache recent users in KV to avoid hitting the database too often
   // This is a best-effort cache, so we don't need to be super strict about it
   // The list is not guaranteed to be perfectly up-to-date
@@ -110,24 +96,30 @@ export default {
           .where(eq(user.id, currentUser.id));
       }
 
-      try {
-        if (cachedList) {
-          const list: typeof users = JSON.parse(cachedList);
+      if (cachedList) {
+        try {
+          const result = recentUsersListSchema.safeParse(cachedList);
 
-          if (currentUser && !list.find((u) => u.id === currentUser.id)) {
-            // If the user is not in the cached list, add them
-            list.push({
-              id: currentUser.id,
-              name: currentUser.name,
-              role: currentUser.role ?? "user",
-              image: currentUser.image ?? null,
-            });
+          if (result.success) {
+            const list = result.data;
+
+            if (currentUser && !list.find((u) => u.id === currentUser.id)) {
+              // If the user is not in the cached list, add them
+              list.push({
+                id: currentUser.id,
+                name: currentUser.name,
+                role: currentUser.role ?? "user",
+                image: currentUser.image ?? null,
+              });
+            }
+
+            return list;
           }
 
-          return list;
+          console.error("Invalid cached list format", result.error);
+        } catch (e) {
+          console.error("Error parsing cached list", e);
         }
-      } catch (e) {
-        console.error("Error parsing cached list", e);
       }
 
       const users = await db.query.user.findMany({
@@ -168,16 +160,6 @@ export default {
         },
       })
     ),
-
-  isUsernameAvailable: publicProcedure
-    .input(z.string())
-    .handler(async ({ context: { db }, input }) => {
-      const found = await db.query.user.findFirst({
-        where: (u, { eq: equals }) => equals(u.name, input),
-        columns: {},
-      });
-      return !found;
-    }),
 
   getDashboardList: permissionProcedure({
     user: ["list"],

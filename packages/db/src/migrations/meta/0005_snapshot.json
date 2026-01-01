@@ -110,12 +110,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -190,12 +186,8 @@
           "name": "comment_post_id_post_id_fk",
           "tableFrom": "comment",
           "tableTo": "post",
-          "columnsFrom": [
-            "post_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["post_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -203,12 +195,8 @@
           "name": "comment_author_id_user_id_fk",
           "tableFrom": "comment",
           "tableTo": "user",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["author_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -417,12 +405,8 @@
           "name": "post_bookmark_user_id_user_id_fk",
           "tableFrom": "post_bookmark",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -430,12 +414,8 @@
           "name": "post_bookmark_post_id_post_id_fk",
           "tableFrom": "post_bookmark",
           "tableTo": "post",
-          "columnsFrom": [
-            "post_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["post_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -443,10 +423,7 @@
       "compositePrimaryKeys": {
         "post_bookmark_user_id_post_id_pk": {
           "name": "post_bookmark_user_id_post_id_pk",
-          "columns": [
-            "user_id",
-            "post_id"
-          ]
+          "columns": ["user_id", "post_id"]
         }
       },
       "uniqueConstraints": {},
@@ -493,12 +470,8 @@
           "name": "post_like_user_id_user_id_fk",
           "tableFrom": "post_like",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -506,12 +479,8 @@
           "name": "post_like_post_id_post_id_fk",
           "tableFrom": "post_like",
           "tableTo": "post",
-          "columnsFrom": [
-            "post_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["post_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -519,10 +488,7 @@
       "compositePrimaryKeys": {
         "post_like_user_id_post_id_pk": {
           "name": "post_like_user_id_post_id_pk",
-          "columns": [
-            "user_id",
-            "post_id"
-          ]
+          "columns": ["user_id", "post_id"]
         }
       },
       "uniqueConstraints": {},
@@ -610,12 +576,8 @@
           "name": "post_rating_post_id_post_id_fk",
           "tableFrom": "post_rating",
           "tableTo": "post",
-          "columnsFrom": [
-            "post_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["post_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -623,12 +585,8 @@
           "name": "post_rating_user_id_user_id_fk",
           "tableFrom": "post_rating",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -636,10 +594,7 @@
       "compositePrimaryKeys": {
         "post_rating_user_id_post_id_pk": {
           "name": "post_rating_user_id_post_id_pk",
-          "columns": [
-            "user_id",
-            "post_id"
-          ]
+          "columns": ["user_id", "post_id"]
         }
       },
       "uniqueConstraints": {},
@@ -744,12 +699,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -759,9 +710,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -857,12 +806,8 @@
           "name": "term_post_relation_term_id_term_id_fk",
           "tableFrom": "term_post_relation",
           "tableTo": "term",
-          "columnsFrom": [
-            "term_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["term_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -870,12 +815,8 @@
           "name": "term_post_relation_post_id_post_id_fk",
           "tableFrom": "term_post_relation",
           "tableTo": "post",
-          "columnsFrom": [
-            "post_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["post_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -883,10 +824,7 @@
       "compositePrimaryKeys": {
         "term_post_relation_term_id_post_id_pk": {
           "name": "term_post_relation_term_id_post_id_pk",
-          "columns": [
-            "term_id",
-            "post_id"
-          ]
+          "columns": ["term_id", "post_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1063,9 +1001,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1143,20 +1079,12 @@
     "public.document_status": {
       "name": "document_status",
       "schema": "public",
-      "values": [
-        "publish",
-        "pending",
-        "draft",
-        "trash"
-      ]
+      "values": ["publish", "pending", "draft", "trash"]
     },
     "public.post_type": {
       "name": "post_type",
       "schema": "public",
-      "values": [
-        "post",
-        "comic"
-      ]
+      "values": ["post", "comic"]
     }
   },
   "schemas": {},

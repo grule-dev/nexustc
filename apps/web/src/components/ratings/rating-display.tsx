@@ -58,7 +58,10 @@ export function RatingDisplay({
                   ? "fill-amber-400 text-amber-400"
                   : "fill-none text-gray-400"
               )}
-              key={`star-${i}`}
+              key={`star-${
+                // biome-ignore lint/suspicious/noArrayIndexKey: keys are stable
+                i
+              }`}
               stroke="currentColor"
               strokeWidth={1.5}
               viewBox="0 0 24 24"
