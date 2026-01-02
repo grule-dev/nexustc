@@ -39,7 +39,6 @@ import { Route as AdminExtrasTutorialsRouteImport } from './routes/admin/extras/
 import { Route as AdminComicsCreateRouteImport } from './routes/admin/comics/create'
 import { Route as MainUserIdRouteImport } from './routes/_main/user.$id'
 import { Route as MainPostIdRouteImport } from './routes/_main/post.$id'
-import { Route as MainComicIdRouteImport } from './routes/_main/comic.$id'
 import { Route as AdminPostsEditIdRouteImport } from './routes/admin/posts/edit.$id'
 import { Route as MainPostIdReviewsRouteImport } from './routes/_main/post.$id.reviews'
 
@@ -192,11 +191,6 @@ const MainPostIdRoute = MainPostIdRouteImport.update({
   path: '/post/$id',
   getParentRoute: () => MainRouteRoute,
 } as any)
-const MainComicIdRoute = MainComicIdRouteImport.update({
-  id: '/comic/$id',
-  path: '/comic/$id',
-  getParentRoute: () => MainRouteRoute,
-} as any)
 const AdminPostsEditIdRoute = AdminPostsEditIdRouteImport.update({
   id: '/posts/edit/$id',
   path: '/posts/edit/$id',
@@ -225,7 +219,6 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
-  '/comic/$id': typeof MainComicIdRoute
   '/post/$id': typeof MainPostIdRouteWithChildren
   '/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
@@ -258,7 +251,6 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/': typeof MainIndexRoute
   '/admin': typeof AdminIndexRoute
-  '/comic/$id': typeof MainComicIdRoute
   '/post/$id': typeof MainPostIdRouteWithChildren
   '/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
@@ -294,7 +286,6 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/_main/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
-  '/_main/comic/$id': typeof MainComicIdRoute
   '/_main/post/$id': typeof MainPostIdRouteWithChildren
   '/_main/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
@@ -330,7 +321,6 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/'
     | '/admin/'
-    | '/comic/$id'
     | '/post/$id'
     | '/user/$id'
     | '/admin/comics/create'
@@ -363,7 +353,6 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/'
     | '/admin'
-    | '/comic/$id'
     | '/post/$id'
     | '/user/$id'
     | '/admin/comics/create'
@@ -398,7 +387,6 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/_main/'
     | '/admin/'
-    | '/_main/comic/$id'
     | '/_main/post/$id'
     | '/_main/user/$id'
     | '/admin/comics/create'
@@ -636,13 +624,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainPostIdRouteImport
       parentRoute: typeof MainRouteRoute
     }
-    '/_main/comic/$id': {
-      id: '/_main/comic/$id'
-      path: '/comic/$id'
-      fullPath: '/comic/$id'
-      preLoaderRoute: typeof MainComicIdRouteImport
-      parentRoute: typeof MainRouteRoute
-    }
     '/admin/posts/edit/$id': {
       id: '/admin/posts/edit/$id'
       path: '/posts/edit/$id'
@@ -686,7 +667,6 @@ interface MainRouteRouteChildren {
   MainTermsRoute: typeof MainTermsRoute
   MainTutorialsRoute: typeof MainTutorialsRoute
   MainIndexRoute: typeof MainIndexRoute
-  MainComicIdRoute: typeof MainComicIdRoute
   MainPostIdRoute: typeof MainPostIdRouteWithChildren
   MainUserIdRoute: typeof MainUserIdRoute
 }
@@ -705,7 +685,6 @@ const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainTermsRoute: MainTermsRoute,
   MainTutorialsRoute: MainTutorialsRoute,
   MainIndexRoute: MainIndexRoute,
-  MainComicIdRoute: MainComicIdRoute,
   MainPostIdRoute: MainPostIdRouteWithChildren,
   MainUserIdRoute: MainUserIdRoute,
 }

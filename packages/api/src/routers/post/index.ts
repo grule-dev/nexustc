@@ -1,3 +1,4 @@
+import { getLogger } from "@orpc/experimental-pino";
 import { and, asc, desc, eq, sql } from "@repo/db";
 import {
   comment,
@@ -7,7 +8,6 @@ import {
   postRating,
   term,
   termPostRelation,
-  user,
 } from "@repo/db/schema/app";
 import type { TAXONOMIES } from "@repo/shared/constants";
 import z from "zod";
@@ -19,110 +19,12 @@ import {
 import admin from "./admin";
 
 export default {
-  getAll: publicProcedure.handler(
-    async ({ context: { db, session, cache } }) => {
-      const cached = await cache.get("all-posts");
-
-      if (cached) {
-        return JSON.parse(cached) as typeof posts;
-      }
-
-      const likesAgg = db
-        .select({
-          postId: postLikes.postId,
-          count: sql<number>`COUNT(*)`.as("likes_count"),
-        })
-        .from(postLikes)
-        .groupBy(postLikes.postId)
-        .as("likes_agg");
-
-      const favoritesAgg = db
-        .select({
-          postId: postBookmark.postId,
-          count: sql<number>`COUNT(*)`.as("favorites_count"),
-        })
-        .from(postBookmark)
-        .groupBy(postBookmark.postId)
-        .as("favorites_agg");
-
-      const termsAgg = db
-        .select({
-          postId: termPostRelation.postId,
-          terms: sql`
-      json_agg(
-        json_build_object(
-          'id', ${term.id},
-          'name', ${term.name},
-          'taxonomy', ${term.taxonomy},
-          'color', ${term.color}
-        )
-      )
-    `.as("terms"),
-        })
-        .from(termPostRelation)
-        .innerJoin(term, eq(term.id, termPostRelation.termId))
-        .groupBy(termPostRelation.postId)
-        .as("terms_agg");
-
-      const ratingsAgg = db
-        .select({
-          postId: postRating.postId,
-          averageRating:
-            sql<number>`COALESCE(AVG(${postRating.rating})::numeric(10,1), 0)`.as(
-              "average_rating"
-            ),
-          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
-        })
-        .from(postRating)
-        .groupBy(postRating.postId)
-        .as("ratings_agg");
-
-      const posts = await db
-        .select({
-          id: post.id,
-          title: post.title,
-          type: post.type,
-          version: post.version,
-          content: post.content,
-          isWeekly: post.isWeekly,
-          imageObjectKeys: post.imageObjectKeys,
-          adsLinks: post.adsLinks,
-          authorContent: post.authorContent,
-
-          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
-          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
-
-          terms: sql<string>`COALESCE(${termsAgg.terms}, '[]'::json)`,
-
-          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
-          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
-
-          createdAt: post.createdAt,
-        })
-        .from(post)
-        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
-        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
-        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
-        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
-        .where(eq(post.status, "publish"));
-
-      const u = session?.user;
-      if (u) {
-        await db
-          .update(user)
-          .set({ lastSeenAt: new Date() })
-          .where(eq(user.id, u.id));
-      }
-
-      await cache.setEx("all-posts", 5 * 60, JSON.stringify(posts));
-
-      return posts;
-    }
-  ),
-
   getRecent: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(24).default(12) }))
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(`Fetching recent posts with limit: ${input.limit}`);
+
       const likesAgg = db
         .select({
           postId: postLikes.postId,
@@ -207,36 +109,41 @@ export default {
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
         .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
         .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
-        .where(eq(post.status, "publish"))
+        .where(and(eq(post.status, "publish"), eq(post.type, "post")))
         .orderBy(desc(post.createdAt))
         .limit(input.limit);
 
+      logger?.debug(`Successfully fetched ${posts.length} recent posts`);
       return posts;
     }),
 
-  getWeekly: publicProcedure.handler(async ({ context: { db } }) => {
-    const likesAgg = db
-      .select({
-        postId: postLikes.postId,
-        count: sql<number>`COUNT(*)`.as("likes_count"),
-      })
-      .from(postLikes)
-      .groupBy(postLikes.postId)
-      .as("likes_agg");
+  getWeekly: publicProcedure.handler(
+    async ({ context: { db, ...context } }) => {
+      const logger = getLogger(context);
+      logger?.info("Fetching weekly posts");
 
-    const favoritesAgg = db
-      .select({
-        postId: postBookmark.postId,
-        count: sql<number>`COUNT(*)`.as("favorites_count"),
-      })
-      .from(postBookmark)
-      .groupBy(postBookmark.postId)
-      .as("favorites_agg");
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
 
-    const termsAgg = db
-      .select({
-        postId: termPostRelation.postId,
-        terms: sql`
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
           json_agg(
             json_build_object(
               'id', ${term.id},
@@ -246,64 +153,66 @@ export default {
             )
           )
         `.as("terms"),
-      })
-      .from(termPostRelation)
-      .innerJoin(term, eq(term.id, termPostRelation.termId))
-      .groupBy(termPostRelation.postId)
-      .as("terms_agg");
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
 
-    const ratingsAgg = db
-      .select({
-        postId: postRating.postId,
-        averageRating:
-          sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
-            "average_rating"
-          ),
-        ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
-      })
-      .from(postRating)
-      .groupBy(postRating.postId)
-      .as("ratings_agg");
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
 
-    const posts = await db
-      .select({
-        id: post.id,
-        title: post.title,
-        type: post.type,
-        version: post.version,
-        content: post.content,
-        isWeekly: post.isWeekly,
-        imageObjectKeys: post.imageObjectKeys,
-        adsLinks: post.adsLinks,
-        authorContent: post.authorContent,
+      const posts = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          version: post.version,
+          content: post.content,
+          isWeekly: post.isWeekly,
+          imageObjectKeys: post.imageObjectKeys,
+          adsLinks: post.adsLinks,
+          authorContent: post.authorContent,
 
-        favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
-        likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
 
-        terms: sql<
-          {
-            id: string;
-            name: string;
-            taxonomy: (typeof TAXONOMIES)[number];
-            color: string;
-          }[]
-        >`COALESCE(${termsAgg.terms}, '[]'::json)`,
+          terms: sql<
+            {
+              id: string;
+              name: string;
+              taxonomy: (typeof TAXONOMIES)[number];
+              color: string;
+            }[]
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
-        averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
-        ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
 
-        createdAt: post.createdAt,
-      })
-      .from(post)
-      .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
-      .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
-      .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
-      .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
-      .where(and(eq(post.status, "publish"), eq(post.isWeekly, true)))
-      .orderBy(asc(post.title));
+          createdAt: post.createdAt,
+        })
+        .from(post)
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
+        .where(and(eq(post.status, "publish"), eq(post.isWeekly, true)))
+        .orderBy(asc(post.title));
 
-    return posts;
-  }),
+      logger?.debug(`Successfully fetched ${posts.length} weekly posts`);
+      return posts;
+    }
+  ),
 
   search: publicProcedure
     .input(
@@ -313,7 +222,12 @@ export default {
         termIds: z.array(z.string()).optional(),
       })
     )
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(
+        `Searching posts with type: ${input.type}, query: ${input.query || "none"}, termIds: ${input.termIds?.length || 0}`
+      );
+
       const likesAgg = db
         .select({
           postId: postLikes.postId,
@@ -440,13 +354,70 @@ export default {
       );
 
       // Remove similarity field from the final result
-      return posts.map(({ similarity, ...postData }) => postData);
+      const result = posts.map(({ similarity, ...postData }) => postData);
+      logger?.debug(`Search returned ${result.length} posts`);
+
+      return result;
     }),
 
   getPostById: publicProcedure
     .use(fixedWindowRatelimitMiddleware({ limit: 20, windowSeconds: 60 }))
     .input(z.string())
-    .handler(async ({ context: { db }, input, errors }) => {
+    .handler(async ({ context: { db, ...context }, input, errors }) => {
+      const logger = getLogger(context);
+
+      logger?.info(`Fetching post by ID: ${input}`);
+
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
+
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
+            json_agg(
+              json_build_object(
+                'id', ${term.id},
+                'name', ${term.name},
+                'taxonomy', ${term.taxonomy},
+                'color', ${term.color}
+              )
+            )
+          `.as("terms"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
+
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
+
       const result = await db
         .select({
           id: post.id,
@@ -460,21 +431,8 @@ export default {
           authorContent: post.authorContent,
           createdAt: post.createdAt,
 
-          favorites: sql<number>`
-      (
-        SELECT COUNT(*)
-        FROM ${postBookmark}
-        WHERE ${postBookmark.postId} = ${post.id}
-      )
-    `,
-
-          likes: sql<number>`
-      (
-        SELECT COUNT(*)
-        FROM ${postLikes}
-        WHERE ${postLikes.postId} = ${post.id}
-      )
-    `,
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
 
           terms: sql<
             {
@@ -483,59 +441,34 @@ export default {
               taxonomy: (typeof TAXONOMIES)[number];
               color: string;
             }[]
-          >`
-      COALESCE(
-        (
-          SELECT json_agg(
-            json_build_object(
-              'id', ${term.id},
-              'name', ${term.name},
-              'taxonomy', ${term.taxonomy},
-              'color', ${term.color}
-            )
-          )
-          FROM ${termPostRelation}
-          JOIN ${term}
-            ON ${term.id} = ${termPostRelation.termId}
-          WHERE ${termPostRelation.postId} = ${post.id}
-        ),
-        '[]'::json
-      )
-    `,
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
-          averageRating: sql<number>`
-      COALESCE(
-        (
-          SELECT AVG(${postRating.rating})::float
-          FROM ${postRating}
-          WHERE ${postRating.postId} = ${post.id}
-        ),
-        0
-      )
-    `,
-
-          ratingCount: sql<number>`
-      (
-        SELECT COUNT(*)::integer
-        FROM ${postRating}
-        WHERE ${postRating.postId} = ${post.id}
-      )
-    `,
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
         })
         .from(post)
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(and(eq(post.status, "publish"), eq(post.id, input)))
         .limit(1);
 
       if (!result.length) {
+        logger?.warn(`Post not found with ID: ${input}`);
         throw errors.NOT_FOUND();
       }
 
+      logger?.debug(`Successfully retrieved post with ID: ${input}`);
       return result[0];
     }),
 
   getLikes: publicProcedure
     .input(z.string())
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(`Fetching likes count for post: ${input}`);
+
       const { count } = await db
         .select({
           count: sql<number>`COUNT(*)`,
@@ -544,12 +477,16 @@ export default {
         .where(eq(postLikes.postId, input))
         .then((r) => r[0] ?? { count: 0 });
 
+      logger?.debug(`Post ${input} has ${count} likes`);
       return count;
     }),
 
   likePost: protectedProcedure
     .input(z.string())
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(`User ${session.user.id} attempting to like post: ${input}`);
+
       const existing = await db
         .select()
         .from(postLikes)
@@ -563,6 +500,9 @@ export default {
 
       if (existing) {
         // already liked
+        logger?.debug(
+          `User ${session.user.id} has already liked post ${input}`
+        );
         return;
       }
 
@@ -570,11 +510,17 @@ export default {
         postId: input,
         userId: session.user.id,
       });
+      logger?.info(`User ${session.user.id} successfully liked post ${input}`);
     }),
 
   unlikePost: protectedProcedure
     .input(z.string())
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(
+        `User ${session.user.id} attempting to unlike post: ${input}`
+      );
+
       await db
         .delete(postLikes)
         .where(
@@ -583,6 +529,9 @@ export default {
             eq(postLikes.userId, session.user.id)
           )
         );
+      logger?.info(
+        `User ${session.user.id} successfully unliked post ${input}`
+      );
     }),
 
   toggleLike: protectedProcedure
@@ -592,7 +541,12 @@ export default {
         liked: z.boolean(),
       })
     )
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(
+        `User ${session.user.id} toggling like for post ${input.postId} to ${input.liked}`
+      );
+
       if (input.liked) {
         await db
           .insert(postLikes)
@@ -601,6 +555,10 @@ export default {
             userId: session.user.id,
           })
           .onConflictDoNothing();
+
+        logger?.debug(
+          `Like insert completed for user ${session.user.id} on post ${input.postId}`
+        );
       } else {
         await db
           .delete(postLikes)
@@ -610,7 +568,13 @@ export default {
               eq(postLikes.userId, session.user.id)
             )
           );
+        logger?.debug(
+          `Like delete completed for user ${session.user.id} on post ${input.postId}`
+        );
       }
+      logger?.info(
+        `Like toggle completed for user ${session.user.id} on post ${input.postId}`
+      );
     }),
 
   createComment: protectedProcedure
@@ -620,17 +584,28 @@ export default {
         content: z.string().min(10).max(2048),
       })
     )
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(
+        `User ${session.user.id} creating comment on post ${input.postId}`
+      );
+
       await db.insert(comment).values({
         postId: input.postId,
         authorId: session.user.id,
         content: input.content,
       });
+      logger?.info(
+        `Comment successfully created by user ${session.user.id} on post ${input.postId}`
+      );
     }),
 
   getComments: publicProcedure
     .input(z.object({ postId: z.string() }))
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(`Fetching comments for post: ${input.postId}`);
+
       const comments = await db.query.comment.findMany({
         orderBy: (c, { desc: descSql }) => [descSql(c.createdAt)],
         where: (c, { eq: equals }) => equals(c.postId, input.postId),
@@ -661,6 +636,10 @@ export default {
         .set({ views: sql`${post.views} + 1` })
         .where(eq(post.id, input.postId));
 
+      logger?.debug(
+        `Retrieved ${comments.length} comments for post ${input.postId} with ${authors.length} unique authors`
+      );
+      logger?.info(`View count incremented for post ${input.postId}`);
       return { comments, authors };
     }),
 

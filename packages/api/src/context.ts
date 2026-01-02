@@ -1,12 +1,30 @@
+import {
+  CONTEXT_LOGGER_SYMBOL,
+  type LoggerContext,
+} from "@orpc/experimental-pino";
 import { auth } from "@repo/auth";
 import { db, getRedis } from "@repo/db";
+import { pino } from "pino";
 
 export type Context = {
   headers: Headers;
   session: Awaited<ReturnType<typeof auth.api.getSession>>;
   db: typeof db;
   cache: Awaited<ReturnType<typeof getRedis>>;
-};
+} & LoggerContext;
+
+const logger = pino({
+  level: process.env.LOG_LEVEL || "error",
+  transport:
+    process.env.NODE_ENV === "development"
+      ? {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+          },
+        }
+      : undefined,
+});
 
 export async function createContext(headers: Headers): Promise<Context> {
   const session = await auth.api.getSession({
@@ -18,5 +36,6 @@ export async function createContext(headers: Headers): Promise<Context> {
     session,
     db,
     cache: await getRedis(),
+    [CONTEXT_LOGGER_SYMBOL]: logger,
   };
 }

@@ -1,3 +1,4 @@
+import { getLogger } from "@orpc/experimental-pino";
 import { and, desc, eq, sql } from "@repo/db";
 import { post, postRating, user } from "@repo/db/schema/app";
 import { ratingCreateSchema, ratingUpdateSchema } from "@repo/shared/schemas";
@@ -12,7 +13,12 @@ export default {
   // Create or update a rating (upsert)
   create: protectedProcedure
     .input(ratingCreateSchema)
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `User ${session.user.id} creating/updating rating for post ${input.postId}: ${input.rating} stars`
+      );
+
       await db
         .insert(postRating)
         .values({
@@ -30,13 +36,21 @@ export default {
           },
         });
 
+      logger?.debug(
+        `Rating upserted for user ${session.user.id} on post ${input.postId}`
+      );
       return { success: true };
     }),
 
   // Update own rating
   update: protectedProcedure
     .input(ratingUpdateSchema)
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `User ${session.user.id} updating rating for post ${input.postId}: ${input.rating} stars`
+      );
+
       await db
         .update(postRating)
         .set({
@@ -51,13 +65,21 @@ export default {
           )
         );
 
+      logger?.debug(
+        `Rating updated for user ${session.user.id} on post ${input.postId}`
+      );
       return { success: true };
     }),
 
   // Delete own rating
   delete: protectedProcedure
     .input(z.object({ postId: z.string() }))
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `User ${session.user.id} deleting rating for post ${input.postId}`
+      );
+
       await db
         .delete(postRating)
         .where(
@@ -67,13 +89,21 @@ export default {
           )
         );
 
+      logger?.debug(
+        `Rating deleted for user ${session.user.id} on post ${input.postId}`
+      );
       return { success: true };
     }),
 
   // Admin delete any rating
   deleteAny: permissionProcedure({ ratings: ["delete"] })
     .input(z.object({ postId: z.string(), userId: z.string() }))
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `Admin deleting rating: user ${input.userId} on post ${input.postId}`
+      );
+
       await db
         .delete(postRating)
         .where(
@@ -83,13 +113,19 @@ export default {
           )
         );
 
+      logger?.debug(
+        `Rating deleted by admin for user ${input.userId} on post ${input.postId}`
+      );
       return { success: true };
     }),
 
   // Get all ratings for a post
   getByPostId: publicProcedure
     .input(z.object({ postId: z.string() }))
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Fetching all ratings for post: ${input.postId}`);
+
       const ratings = await db
         .select({
           postId: postRating.postId,
@@ -123,6 +159,9 @@ export default {
               )
           : [];
 
+      logger?.debug(
+        `Retrieved ${ratings.length} ratings with ${authors.length} unique authors for post ${input.postId}`
+      );
       return { ratings, authors };
     }),
 
@@ -134,7 +173,12 @@ export default {
         offset: z.number().min(0).default(0),
       })
     )
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `Fetching recent ratings with limit: ${input.limit}, offset: ${input.offset}`
+      );
+
       const ratings = await db
         .select({
           postId: postRating.postId,
@@ -190,16 +234,26 @@ export default {
               )
           : [];
 
+      logger?.debug(
+        `Retrieved ${ratings.length} recent ratings with ${authors.length} authors and ${posts.length} posts`
+      );
       return { ratings, authors, posts };
     }),
 
   // Get current user's rating for a post
   getUserRating: publicProcedure
     .input(z.object({ postId: z.string() }))
-    .handler(async ({ context: { db, session }, input }) => {
+    .handler(async ({ context: { db, session, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+
       if (!session?.user) {
+        logger?.debug("User not authenticated, cannot fetch user rating");
         return null;
       }
+
+      logger?.info(
+        `Fetching user ${session.user.id} rating for post ${input.postId}`
+      );
 
       const result = await db
         .select({
@@ -219,13 +273,26 @@ export default {
         )
         .limit(1);
 
+      if (result.length > 0) {
+        logger?.debug(
+          `Found rating for user ${session.user.id} on post ${input.postId}`
+        );
+      } else {
+        logger?.debug(
+          `No rating found for user ${session.user.id} on post ${input.postId}`
+        );
+      }
+
       return result[0] ?? null;
     }),
 
   // Get rating stats for a post (average and count)
   getStats: publicProcedure
     .input(z.object({ postId: z.string() }))
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Fetching rating stats for post: ${input.postId}`);
+
       const result = await db
         .select({
           averageRating: sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`,
@@ -234,9 +301,15 @@ export default {
         .from(postRating)
         .where(eq(postRating.postId, input.postId));
 
+      const averageRating = result[0]?.averageRating ?? 0;
+      const ratingCount = result[0]?.ratingCount ?? 0;
+
+      logger?.debug(
+        `Post ${input.postId} stats: avg=${averageRating.toFixed(2)}, count=${ratingCount}`
+      );
       return {
-        averageRating: result[0]?.averageRating ?? 0,
-        ratingCount: result[0]?.ratingCount ?? 0,
+        averageRating,
+        ratingCount,
       };
     }),
 };

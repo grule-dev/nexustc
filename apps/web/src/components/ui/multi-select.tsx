@@ -295,7 +295,6 @@ export function MultiSelectContent({
           <CommandList>
             {!!canSearch && (
               <CommandEmpty>
-                {/** biome-ignore lint/nursery/noLeakedRender: false positive */}
                 {typeof search === "object" ? search.emptyMessage : undefined}
               </CommandEmpty>
             )}

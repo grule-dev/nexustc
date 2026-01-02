@@ -1,294 +1,1118 @@
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
   ArrowLeft01Icon,
   ArrowLeftDoubleIcon,
   ArrowRight01Icon,
   ArrowRightDoubleIcon,
+  Book02Icon,
+  Calendar03Icon,
+  Cancel01Icon,
+  FullScreenIcon,
+  GridViewIcon,
+  Home01Icon,
+  Image02Icon,
+  MinimizeScreenIcon,
+  Share08Icon,
+  StarIcon,
+  Tag01Icon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Navigate } from "@tanstack/react-router";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { getRouteApi, Navigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { useEffect, useRef, useState } from "react";
-import Zoom from "react-medium-image-zoom";
+import {
+  type TouchEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
 import type { PostType } from "@/lib/types";
 import { cn, getBucketUrl } from "@/lib/utils";
-import { RatingButton, RatingDisplay, RatingSection } from "../ratings";
+import { RatingButton } from "../ratings/rating-button";
+import { RatingDisplay } from "../ratings/rating-display";
 import { TermBadge } from "../term-badge";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import {
-  Carousel,
-  type CarouselApi,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "../ui/carousel";
+import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { BookmarkButton } from "./bookmark-button";
 
+const postPageApi = getRouteApi("/_main/post/$id");
+
 export function ComicPage({ comic }: { comic: PostType }) {
-  const [page, setPage] = useState(-1);
+  const { page } = postPageApi.useSearch();
+  const navigate = postPageApi.useNavigate();
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      console.log("Page:", page);
-      switch (event.key) {
-        case "ArrowLeft": {
-          if (page > -1) {
-            setPage(page - 1);
-          }
-          break;
-        }
-        case "ArrowRight": {
-          if (page < (comic.imageObjectKeys?.length ?? 0)) {
-            setPage(page + 1);
-          }
-          break;
-        }
-        default: {
-          break;
-        }
+  const setPage = useMemo(
+    () => (page: number) => {
+      if (page < 0) {
+        navigate({});
+        return;
       }
-    };
 
-    document.addEventListener("keydown", handleKeyDown, {
-      signal: controller.signal,
-    });
-
-    return () => controller.abort();
-  }, [comic.imageObjectKeys?.length, page]);
+      navigate({ search: () => ({ page }) });
+    },
+    [navigate]
+  );
 
   if (!comic || comic.imageObjectKeys === null) {
     return <Navigate to="/" />;
   }
 
-  const groupedTerms = Object.groupBy(comic.terms, (term) => term.taxonomy);
-
-  if (page > -1) {
+  // When page >= 0, show the reader
+  if (page !== undefined && page >= 0) {
     return (
-      <main className="flex w-full justify-center">
-        <div className="w-full max-w-6xl">
-          <ComicReader
-            images={comic.imageObjectKeys}
-            page={page}
-            setPage={setPage}
-          />
-        </div>
-      </main>
+      <ComicReader
+        comic={comic}
+        images={comic.imageObjectKeys}
+        page={page}
+        setPage={setPage}
+      />
     );
   }
 
-  return (
-    <main className="grid w-full grid-cols-1 md:grid-cols-4">
-      <div className="flex flex-col gap-4 px-4 md:col-span-2 md:col-start-2">
-        <section className="grid grid-cols-3 gap-4">
-          <img
-            alt={`Imagen de portada de ${comic.title}`}
-            src={getBucketUrl(comic.imageObjectKeys[0])}
-          />
-          <div className="col-span-2 flex flex-col gap-4">
-            <div className="flex w-full flex-row items-center justify-between gap-4">
-              <div className="flex flex-col items-start gap-2">
-                <h1 className="font-bold text-4xl">{comic.title}</h1>
-                <p className="text-muted-foreground">
-                  {format(comic.createdAt, "PPPP", { locale: es })}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <div className="flex flex-row items-center gap-4">
-                  <RatingButton postId={comic.id} />
-                  <BookmarkButton postId={comic.id} />
-                </div>
-              </div>
-            </div>
-            {comic.ratingCount !== undefined && comic.ratingCount > 0 && (
-              <RatingDisplay
-                averageRating={comic.averageRating ?? 0}
-                ratingCount={comic.ratingCount}
-                variant="compact"
-              />
-            )}
-            <div className="flex flex-col gap-4">
-              <PostBadges label="Tags: " terms={groupedTerms.tag ?? []} />
-              <PostBadges
-                label="Idiomas: "
-                terms={groupedTerms.language ?? []}
-              />
-              <PostBadges
-                label="Censura: "
-                terms={groupedTerms.censorship ?? []}
-              />
-              <div className="flex flex-row gap-2">
-                <h3 className="font-bold">Páginas: </h3>
-                <div className="flex flex-wrap gap-2">
-                  {((comic.imageObjectKeys?.length ?? 0) + 1).toString()}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <Separator orientation="horizontal" />
-
-        <div className="grid grid-cols-6 gap-4">
-          {comic.imageObjectKeys?.slice(0, 11).map((image, index) => (
-            <button
-              className="ring-primary hover:ring"
-              key={image}
-              onClick={() => setPage(index)}
-              type="button"
-            >
-              <img
-                alt={`Imagen adjunta de ${comic.title}`}
-                src={getBucketUrl(image)}
-              />
-            </button>
-          ))}
-        </div>
-
-        <Separator orientation="horizontal" />
-
-        <RatingSection postId={comic.id} />
-      </div>
-    </main>
-  );
+  // Otherwise show the info page
+  return <ComicInfoPage comic={comic} setPage={setPage} />;
 }
 
-function ComicReader({
-  page,
-  setPage,
-  images,
-}: {
-  page: number;
-  setPage: React.Dispatch<React.SetStateAction<number>>;
-  images: string[];
-}) {
-  const carouselApiRef = useRef<CarouselApi>(null);
+/* ============================================================================
+   Comic Info Page - Beautiful Landing Page
+   ============================================================================ */
 
-  useEffect(() => {
-    if (!carouselApiRef.current) {
-      return;
+function ComicInfoPage({
+  comic,
+  setPage,
+}: {
+  comic: PostType;
+  setPage: (page: number) => void;
+}) {
+  const groupedTerms = Object.groupBy(comic.terms, (term) => term.taxonomy);
+  const mainImage = comic.imageObjectKeys?.[0];
+  const allImages = comic.imageObjectKeys ?? [];
+  const hasTags = comic.terms.length > 0;
+  const totalPages = allImages.length;
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Enlace copiado al portapapeles");
+    } catch {
+      toast.error("No se pudo copiar el enlace");
     }
-    carouselApiRef.current.scrollTo(page);
-  }, [page]);
+  };
 
   return (
-    <div className="flex w-full flex-col items-center gap-4">
-      {!!images[page] && (
-        <Zoom>
-          <img
-            alt={`Página ${page + 1}`}
-            className="h-full max-h-dvh w-full object-contain"
-            src={getBucketUrl(images[page])}
-          />
-        </Zoom>
-      )}
-      <Carousel
-        className="w-full p-4"
-        opts={{
-          align: "start",
-          loop: false,
-          dragFree: true,
-        }}
-        setApi={(api) => {
-          carouselApiRef.current = api;
-        }}
-      >
-        <CarouselContent>
-          {images.map((image, index) => (
-            <CarouselItem
-              className="basis-1/4 cursor-pointer md:basis-1/9"
-              key={image}
-              onClick={() => setPage(index)}
-            >
-              <img
-                alt={`Miniatura de página ${index}`}
-                className={cn(
-                  "rounded border-2 transition",
-                  page === index
-                    ? "border-primary"
-                    : "border-transparent hover:border-muted"
+    <div className="flex flex-col gap-8">
+      {/* Hero Section */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="relative overflow-hidden rounded-3xl">
+          {mainImage && (
+            <div className="relative">
+              <div className="aspect-3/4 w-full overflow-hidden">
+                <img
+                  alt={`Portada de ${comic.title}`}
+                  className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                  src={getBucketUrl(mainImage)}
+                />
+              </div>
+              {/* Gradient overlay for text readability */}
+              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+              {/* Content overlay */}
+              <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
+                <div className="flex flex-col gap-4">
+                  {/* Title */}
+                  <div className="flex flex-wrap items-end gap-3">
+                    <h1 className="font-bold text-3xl text-white drop-shadow-lg md:text-5xl">
+                      {comic.title}
+                    </h1>
+                    <Badge
+                      className="mb-1 border-white/30 bg-white/20 text-white backdrop-blur-sm md:mb-2"
+                      variant="outline"
+                    >
+                      <HugeiconsIcon className="size-3.5" icon={Book02Icon} />
+                      {totalPages} páginas
+                    </Badge>
+                  </div>
+                  {/* Meta Row */}
+                  <div className="flex flex-wrap items-center gap-4">
+                    <MetaBadge icon={Calendar03Icon}>
+                      {format(comic.createdAt, "d 'de' MMMM, yyyy", {
+                        locale: es,
+                      })}
+                    </MetaBadge>
+                    {comic.ratingCount !== undefined &&
+                      comic.ratingCount > 0 && (
+                        <div className="flex items-center gap-1.5 text-white">
+                          <HugeiconsIcon
+                            className="size-4 fill-amber-400 text-amber-400"
+                            icon={StarIcon}
+                          />
+                          <span className="font-semibold">
+                            {comic.averageRating?.toFixed(1)}
+                          </span>
+                          <span className="text-white/70">
+                            ({comic.ratingCount} votos)
+                          </span>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+              {/* Start Reading Button - Floating */}
+              <button
+                className="absolute top-6 right-6 flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-xl transition-all hover:scale-105 hover:shadow-2xl md:top-10 md:right-10"
+                onClick={() => setPage(0)}
+                type="button"
+              >
+                <HugeiconsIcon className="size-5" icon={Book02Icon} />
+                Comenzar a Leer
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Sidebar */}
+        <div className="flex flex-col gap-6">
+          {/* Tags Section */}
+          {hasTags && (
+            <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
+              <h3 className="flex items-center gap-2 font-semibold text-lg">
+                <HugeiconsIcon className="size-5" icon={Tag01Icon} />
+                Etiquetas
+              </h3>
+
+              <div className="flex flex-col gap-4">
+                {/* Main Tags */}
+                {groupedTerms.tag && groupedTerms.tag.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {groupedTerms.tag.map((term) => (
+                      <TermBadge key={term.id} tag={term} />
+                    ))}
+                  </div>
                 )}
-                src={getBucketUrl(image)}
+
+                <Separator />
+
+                {/* Categorized Tags */}
+                <div className="flex flex-col gap-3">
+                  <TagCategory label="Idiomas" terms={groupedTerms.language} />
+                  <TagCategory
+                    label="Censura"
+                    terms={groupedTerms.censorship}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Info Card */}
+          <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
+            <h3 className="flex items-center gap-2 font-semibold text-lg">
+              <HugeiconsIcon className="size-5" icon={Book02Icon} />
+              Información
+            </h3>
+
+            <div className="flex flex-col gap-3">
+              <InfoRow label="Publicado">
+                {format(comic.createdAt, "d MMM yyyy", { locale: es })}
+              </InfoRow>
+
+              <InfoRow label="Páginas">{totalPages}</InfoRow>
+
+              {comic.ratingCount !== undefined && comic.ratingCount > 0 && (
+                <InfoRow label="Valoración">
+                  <RatingDisplay
+                    averageRating={comic.averageRating ?? 0}
+                    ratingCount={comic.ratingCount}
+                    variant="compact"
+                  />
+                </InfoRow>
+              )}
+            </div>
+          </div>
+
+          {/* Start Reading CTA */}
+          <Button
+            className="w-full gap-2 py-6 text-lg"
+            onClick={() => setPage(0)}
+            size="lg"
+          >
+            <HugeiconsIcon className="size-5" icon={Book02Icon} />
+            Comenzar a Leer
+          </Button>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <RatingButton postId={comic.id} />
+          <BookmarkButton postId={comic.id} />
+          <Tooltip>
+            <TooltipTrigger
+              onClick={handleShare}
+              render={
+                <Button size="sm" variant="ghost">
+                  <HugeiconsIcon className="size-4" icon={Share08Icon} />
+                  Compartir
+                </Button>
+              }
+            />
+            <TooltipContent>Copiar enlace al portapapeles</TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="flex items-center gap-4 text-muted-foreground text-sm">
+          <span className="flex items-center gap-1.5">
+            <HugeiconsIcon className="size-4" icon={Image02Icon} />
+            {totalPages} {totalPages === 1 ? "página" : "páginas"}
+          </span>
+          {hasTags && (
+            <span className="flex items-center gap-1.5">
+              <HugeiconsIcon className="size-4" icon={Tag01Icon} />
+              {comic.terms.length} tags
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Left Column - Page Thumbnails */}
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          {/* Section Header */}
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-bold text-xl">
+              <HugeiconsIcon
+                className="size-5 text-primary"
+                icon={GridViewIcon}
               />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
-      <div className="flex w-full flex-row items-center justify-between gap-4">
-        <Button
-          disabled={page <= 0}
-          onClick={() => {
-            setPage(0);
-          }}
-          size="icon"
-          variant="outline"
-        >
-          <HugeiconsIcon icon={ArrowLeftDoubleIcon} />
-        </Button>
-        <Button
-          className="grow"
-          disabled={page <= 0}
-          onClick={() => {
-            if (page > 0) {
-              setPage(page - 1);
-            }
-          }}
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} />
-        </Button>
-        <p>
-          {page + 1} / {images.length}
-        </p>
-        <Button
-          className="grow"
-          disabled={page >= images.length - 1}
-          onClick={() => {
-            if (page < images.length - 1) {
-              setPage(page + 1);
-            }
-          }}
-        >
-          <HugeiconsIcon icon={ArrowRight01Icon} />
-        </Button>
-        <Button
-          disabled={page >= images.length - 1}
-          onClick={() => {
-            setPage(images.length - 1);
-          }}
-          size="icon"
-          variant="outline"
-        >
-          <HugeiconsIcon icon={ArrowRightDoubleIcon} />
-        </Button>
+              Páginas
+            </h2>
+            <Button onClick={() => setPage(0)} size="sm" variant="outline">
+              <HugeiconsIcon className="size-4" icon={Book02Icon} />
+              Leer desde el inicio
+            </Button>
+          </div>
+
+          {/* Thumbnails Grid */}
+          <div className="grid grid-cols-3 gap-3 md:grid-cols-4 lg:grid-cols-5">
+            {allImages.map((image, index) => (
+              <button
+                className="group relative aspect-3/4 overflow-hidden rounded-xl border-2 border-transparent transition-all hover:border-primary hover:shadow-lg"
+                key={image}
+                onClick={() => setPage(index)}
+                type="button"
+              >
+                <img
+                  alt={`Página ${index + 1}`}
+                  className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                  loading="lazy"
+                  src={getBucketUrl(image)}
+                />
+                {/* Page number overlay */}
+                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent p-2">
+                  <span className="font-medium text-sm text-white">
+                    {index + 1}
+                  </span>
+                </div>
+                {/* Hover overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-primary/0 transition-colors group-hover:bg-primary/10">
+                  <span className="rounded-full bg-black/60 px-3 py-1 font-medium text-sm text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                    Leer
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function PostBadges({
+/* ============================================================================
+   Comic Reader - Immersive Full-Screen Experience
+   ============================================================================ */
+
+function ComicReader({
+  comic,
+  page,
+  setPage,
+  images,
+}: {
+  comic: PostType;
+  page: number;
+  setPage: (page: number) => void;
+  images: string[];
+}) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [showThumbnails, setShowThumbnails] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [scale, setScale] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0 });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(
+    null
+  );
+  const lastTouchDistanceRef = useRef<number | null>(null);
+
+  const totalPages = images.length;
+  const currentImage = images[page];
+  const progress = ((page + 1) / totalPages) * 100;
+
+  // Check if image is already cached/loaded on mount
+  useEffect(() => {
+    if (imageRef.current?.complete) {
+      setIsImageLoading(false);
+    }
+  }, []);
+
+  const canGoPrev = page > 0;
+  const canGoNext = page < totalPages - 1;
+
+  // Zoom functions (defined first since navigation depends on them)
+  const resetZoom = useCallback(() => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
+  // Navigation functions
+  const goToPrevious = useCallback(() => {
+    if (canGoPrev) {
+      setIsImageLoading(true);
+      resetZoom();
+      setPage(page - 1);
+    }
+  }, [canGoPrev, page, setPage, resetZoom]);
+
+  const goToNext = useCallback(() => {
+    if (canGoNext) {
+      setIsImageLoading(true);
+      resetZoom();
+      setPage(page + 1);
+    }
+  }, [canGoNext, page, setPage, resetZoom]);
+
+  const goToFirst = useCallback(() => {
+    setIsImageLoading(true);
+    resetZoom();
+    setPage(0);
+  }, [setPage, resetZoom]);
+
+  const goToLast = useCallback(() => {
+    setIsImageLoading(true);
+    resetZoom();
+    setPage(totalPages - 1);
+  }, [setPage, totalPages, resetZoom]);
+
+  const goToInfo = useCallback(() => {
+    setPage(-1);
+  }, [setPage]);
+
+  const zoomIn = useCallback(() => {
+    setScale((prev) => Math.min(prev + 0.5, 4));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setScale((prev) => {
+      const newScale = Math.max(prev - 0.5, 1);
+      if (newScale === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return newScale;
+    });
+  }, []);
+
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    } else {
+      containerRef.current?.requestFullscreen();
+      setIsFullscreen(true);
+    }
+  }, []);
+
+  // Auto-hide controls
+  const showControlsTemporarily = useCallback(() => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (!showThumbnails) {
+        setShowControls(false);
+      }
+    }, 3000);
+  }, [showThumbnails]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          goToPrevious();
+          showControlsTemporarily();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          goToNext();
+          showControlsTemporarily();
+          break;
+        case "Home":
+          e.preventDefault();
+          goToFirst();
+          showControlsTemporarily();
+          break;
+        case "End":
+          e.preventDefault();
+          goToLast();
+          showControlsTemporarily();
+          break;
+        case "Escape":
+          if (scale > 1) {
+            resetZoom();
+          } else if (showThumbnails) {
+            setShowThumbnails(false);
+          } else {
+            goToInfo();
+          }
+          break;
+        case "+":
+        case "=":
+          e.preventDefault();
+          zoomIn();
+          break;
+        case "-":
+          e.preventDefault();
+          zoomOut();
+          break;
+        case "f":
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    goToPrevious,
+    goToNext,
+    goToFirst,
+    goToLast,
+    goToInfo,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    toggleFullscreen,
+    showControlsTemporarily,
+    scale,
+    showThumbnails,
+  ]);
+
+  // Mouse movement for auto-hide
+  useEffect(() => {
+    const handleMouseMove = () => showControlsTemporarily();
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [showControlsTemporarily]);
+
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  // Touch handlers for swipe and pinch-to-zoom
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 1) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      };
+      if (scale > 1) {
+        setIsDragging(true);
+        dragStartRef.current = {
+          x: e.touches[0].clientX - position.x,
+          y: e.touches[0].clientY - position.y,
+        };
+      }
+    } else if (e.touches.length === 2) {
+      // Pinch to zoom
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lastTouchDistanceRef.current = distance;
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && lastTouchDistanceRef.current !== null) {
+      // Pinch to zoom
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = distance - lastTouchDistanceRef.current;
+      setScale((prev) => Math.max(1, Math.min(4, prev + delta * 0.01)));
+      lastTouchDistanceRef.current = distance;
+    } else if (e.touches.length === 1 && isDragging && scale > 1) {
+      // Pan while zoomed
+      setPosition({
+        x: e.touches[0].clientX - dragStartRef.current.x,
+        y: e.touches[0].clientY - dragStartRef.current.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 0) {
+      lastTouchDistanceRef.current = null;
+      setIsDragging(false);
+
+      // Handle swipe for page navigation (only when not zoomed)
+      if (touchStartRef.current && scale === 1) {
+        const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
+        const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
+        const deltaTime = Date.now() - touchStartRef.current.time;
+
+        // Only swipe if horizontal movement is greater than vertical
+        if (Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 300) {
+          const threshold = 50;
+          if (deltaX > threshold) {
+            goToPrevious();
+          } else if (deltaX < -threshold) {
+            goToNext();
+          }
+        }
+      }
+      touchStartRef.current = null;
+    }
+  };
+
+  // Mouse handlers for drag when zoomed
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (scale > 1) {
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      };
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && scale > 1) {
+      setPosition({
+        x: e.clientX - dragStartRef.current.x,
+        y: e.clientY - dragStartRef.current.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Double click to zoom
+  const handleDoubleClick = () => {
+    if (scale > 1) {
+      resetZoom();
+    } else {
+      setScale(2);
+    }
+  };
+
+  // Wheel to zoom
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.2 : 0.2;
+    setScale((prev) => {
+      const newScale = Math.max(1, Math.min(4, prev + delta));
+      if (newScale === 1) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return newScale;
+    });
+  };
+
+  return (
+    /* biome-ignore lint/a11y/noStaticElementInteractions: comic reader container needs mouse events for drag/zoom */
+    /* biome-ignore lint/a11y/noNoninteractiveElementInteractions: comic reader container needs mouse events for drag/zoom */
+    <div
+      className={cn(
+        "fixed inset-0 z-50 flex flex-col bg-background",
+        !showControls && "cursor-none"
+      )}
+      onMouseLeave={handleMouseUp}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      ref={containerRef}
+    >
+      {/* Top Bar */}
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 z-20 flex items-center justify-between bg-linear-to-b from-black/80 to-transparent p-4 transition-all duration-300",
+          showControls
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-full opacity-0"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <Button
+            className="text-white hover:bg-white/10 hover:text-white"
+            onClick={goToInfo}
+            size="sm"
+            variant="ghost"
+          >
+            <HugeiconsIcon className="size-4" icon={Home01Icon} />
+            Volver
+          </Button>
+          <Separator className="bg-white/20" orientation="vertical" />
+          <h1 className="line-clamp-1 max-w-xs px-2 font-medium text-sm text-white md:max-w-md">
+            {comic.title}
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Page Counter */}
+          <span className="rounded-full bg-white/10 px-3 py-1 font-medium text-sm text-white backdrop-blur-sm">
+            {page + 1} / {totalPages}
+          </span>
+
+          {/* Thumbnail Toggle */}
+          <Tooltip>
+            <TooltipTrigger
+              onClick={() => setShowThumbnails(!showThumbnails)}
+              render={
+                <Button
+                  className={cn(
+                    "text-white hover:bg-white/10 hover:text-white",
+                    showThumbnails && "bg-white/20"
+                  )}
+                  size="icon-sm"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeiconsIcon icon={ViewIcon} />
+            </TooltipTrigger>
+            <TooltipContent>Mostrar miniaturas</TooltipContent>
+          </Tooltip>
+
+          {/* Fullscreen Toggle */}
+          <Tooltip>
+            <TooltipTrigger
+              onClick={toggleFullscreen}
+              render={
+                <Button
+                  className="text-white hover:bg-white/10 hover:text-white"
+                  size="icon-sm"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeiconsIcon
+                className="size-4"
+                icon={isFullscreen ? MinimizeScreenIcon : FullScreenIcon}
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              {isFullscreen
+                ? "Salir de pantalla completa"
+                : "Pantalla completa"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Main Image Area */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: image area needs touch/mouse events for zoom/pan */}
+      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: image area needs touch/mouse events for zoom/pan */}
+      <div
+        className="relative flex flex-1 items-center justify-center overflow-hidden"
+        onDoubleClick={handleDoubleClick}
+        onMouseDown={handleMouseDown}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
+        onTouchStart={handleTouchStart}
+        onWheel={handleWheel}
+      >
+        {/* Navigation Zones - Click areas for prev/next */}
+        <button
+          aria-label="Página anterior"
+          className={cn(
+            "absolute top-0 left-0 z-10 h-full cursor-pointer opacity-0 transition-opacity hover:opacity-100",
+            !canGoPrev && "cursor-not-allowed"
+          )}
+          disabled={!canGoPrev}
+          onClick={goToPrevious}
+          type="button"
+        >
+          <div className="flex h-full items-center justify-start pl-4">
+            <div className="rounded-full bg-white/10 p-3 backdrop-blur-sm">
+              <HugeiconsIcon
+                className="size-8 text-white"
+                icon={ArrowLeft01Icon}
+              />
+            </div>
+          </div>
+        </button>
+
+        <button
+          aria-label="Página siguiente"
+          className={cn(
+            "absolute top-0 right-0 z-10 h-full cursor-pointer opacity-0 transition-opacity hover:opacity-100",
+            !canGoNext && "cursor-not-allowed"
+          )}
+          disabled={!canGoNext}
+          onClick={goToNext}
+          type="button"
+        >
+          <div className="flex h-full items-center justify-end pr-4">
+            <div className="rounded-full bg-white/10 p-3 backdrop-blur-sm">
+              <HugeiconsIcon
+                className="size-8 text-white"
+                icon={ArrowRight01Icon}
+              />
+            </div>
+          </div>
+        </button>
+
+        {/* Loading Spinner */}
+        {isImageLoading && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center">
+            <div className="size-12 animate-spin rounded-full border-4 border-white/20 border-t-white" />
+          </div>
+        )}
+
+        {/* Main Image */}
+        {currentImage && (
+          // biome-ignore lint/a11y/noNoninteractiveElementInteractions: image needs onLoad for loading state
+          <img
+            alt={`Página ${page + 1}`}
+            className={cn(
+              "max-h-full max-w-full select-none object-contain",
+              isImageLoading ? "opacity-0" : "opacity-100",
+              isDragging
+                ? "cursor-grabbing"
+                : scale > 1
+                  ? showControls
+                    ? "cursor-grab"
+                    : "cursor-none"
+                  : ""
+            )}
+            draggable={false}
+            onLoad={() => setIsImageLoading(false)}
+            ref={imageRef}
+            src={getBucketUrl(currentImage)}
+            style={{
+              transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+            }}
+          />
+        )}
+      </div>
+
+      {/* Bottom Navigation Bar */}
+      <div
+        className={cn(
+          "absolute inset-x-0 bottom-0 z-20 flex flex-col gap-3 bg-linear-to-t from-black/80 to-transparent p-4 transition-all duration-300",
+          showControls
+            ? "translate-y-0 opacity-100"
+            : "translate-y-full opacity-0"
+        )}
+      >
+        {/* Progress Bar */}
+        <div className="mx-auto w-full max-w-3xl">
+          <Progress className="h-1.5" value={progress} />
+        </div>
+
+        {/* Navigation Controls */}
+        <div className="flex items-center justify-center gap-2">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  className="text-white hover:bg-white/10 hover:text-white disabled:opacity-30"
+                  disabled={!canGoPrev}
+                  onClick={goToFirst}
+                  size="icon"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeiconsIcon className="size-5" icon={ArrowLeftDoubleIcon} />
+            </TooltipTrigger>
+            <TooltipContent>Primera página (Home)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  className="text-white hover:bg-white/10 hover:text-white disabled:opacity-30"
+                  disabled={!canGoPrev}
+                  onClick={goToPrevious}
+                  size="lg"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeiconsIcon className="size-6" icon={ArrowLeft01Icon} />
+            </TooltipTrigger>
+            <TooltipContent>Página anterior (←)</TooltipContent>
+          </Tooltip>
+
+          {/* Page indicator button - opens thumbnail view */}
+          <Button
+            className="min-w-24 gap-2 text-white hover:bg-white/10 hover:text-white"
+            onClick={() => setShowThumbnails(!showThumbnails)}
+            size="sm"
+            variant="ghost"
+          >
+            <HugeiconsIcon className="size-4" icon={GridViewIcon} />
+            {page + 1} / {totalPages}
+          </Button>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  className="text-white hover:bg-white/10 hover:text-white disabled:opacity-30"
+                  disabled={!canGoNext}
+                  onClick={goToNext}
+                  size="lg"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeiconsIcon className="size-6" icon={ArrowRight01Icon} />
+            </TooltipTrigger>
+            <TooltipContent>Página siguiente (→)</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  className="text-white hover:bg-white/10 hover:text-white disabled:opacity-30"
+                  disabled={!canGoNext}
+                  onClick={goToLast}
+                  size="icon"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeiconsIcon className="size-5" icon={ArrowRightDoubleIcon} />
+            </TooltipTrigger>
+            <TooltipContent>Última página (End)</TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* Keyboard shortcuts hint */}
+        <div className="hidden items-center justify-center gap-4 text-white/50 text-xs md:flex">
+          <span>← → Navegar</span>
+          <span>F Pantalla completa</span>
+          <span>+/- Zoom</span>
+          <span>ESC Salir</span>
+        </div>
+      </div>
+
+      {/* Thumbnail Panel */}
+      <ThumbnailPanel
+        currentPage={page}
+        images={images}
+        onClose={() => setShowThumbnails(false)}
+        onSelectPage={(p) => {
+          setIsImageLoading(true);
+          resetZoom();
+          setPage(p);
+          setShowThumbnails(false);
+        }}
+        open={showThumbnails}
+      />
+    </div>
+  );
+}
+
+/* ============================================================================
+   Thumbnail Panel - Slide-up panel for page selection
+   ============================================================================ */
+
+function ThumbnailPanel({
+  open,
+  onClose,
+  images,
+  currentPage,
+  onSelectPage,
+}: {
+  open: boolean;
+  onClose: () => void;
+  images: string[];
+  currentPage: number;
+  onSelectPage: (page: number) => void;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const selectedRef = useRef<HTMLButtonElement>(null);
+
+  // Scroll to current page when panel opens
+  useEffect(() => {
+    if (open && selectedRef.current) {
+      selectedRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
+    }
+  }, [open]);
+
+  return (
+    <DialogPrimitive.Root onOpenChange={(o) => !o && onClose()} open={open}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop className="data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 z-40 bg-black/60 backdrop-blur-sm duration-200 data-closed:animate-out data-open:animate-in" />
+        <DialogPrimitive.Popup
+          className="data-closed:slide-out-to-bottom data-open:slide-in-from-bottom fixed inset-x-0 bottom-0 z-50 max-h-[60vh] overflow-hidden rounded-t-3xl bg-zinc-900/95 backdrop-blur-xl duration-300 data-closed:animate-out data-open:animate-in"
+          ref={panelRef}
+        >
+          {/* Header */}
+          <div className="sticky top-0 z-10 flex items-center justify-between border-white/10 border-b bg-zinc-900/80 p-4 backdrop-blur-sm">
+            <h3 className="font-semibold text-lg text-white">
+              Todas las páginas
+            </h3>
+            <DialogPrimitive.Close
+              render={
+                <Button
+                  className="text-white hover:bg-white/10 hover:text-white"
+                  size="icon-sm"
+                  variant="ghost"
+                />
+              }
+            >
+              <HugeiconsIcon className="size-5" icon={Cancel01Icon} />
+            </DialogPrimitive.Close>
+          </div>
+
+          {/* Thumbnail Grid */}
+          <div className="overflow-y-auto p-4">
+            <div className="grid grid-cols-4 gap-3 md:grid-cols-6 lg:grid-cols-8">
+              {images.map((image, index) => (
+                <button
+                  className={cn(
+                    "group relative aspect-3/4 overflow-hidden rounded-lg transition-all",
+                    currentPage === index
+                      ? "ring-2 ring-primary ring-offset-2 ring-offset-zinc-900"
+                      : "opacity-60 hover:opacity-100"
+                  )}
+                  key={image}
+                  onClick={() => onSelectPage(index)}
+                  ref={currentPage === index ? selectedRef : null}
+                  type="button"
+                >
+                  <img
+                    alt={`Página ${index + 1}`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    src={getBucketUrl(image)}
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent p-1">
+                    <span className="font-medium text-white text-xs">
+                      {index + 1}
+                    </span>
+                  </div>
+                  {currentPage === index && (
+                    <div className="absolute inset-0 bg-primary/20" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
+
+/* ============================================================================
+   Helper Components
+   ============================================================================ */
+
+function MetaBadge({
+  icon,
+  children,
+}: {
+  icon: IconSvgElement;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="flex items-center gap-1.5 text-sm text-white/90">
+      <HugeiconsIcon className="size-4" icon={icon} />
+      {children}
+    </span>
+  );
+}
+
+function TagCategory({
   label,
   terms,
 }: {
   label: string;
-  terms: { id: string; name: string; color: string | null | undefined }[];
+  terms:
+    | { id: string; name: string; color: string | null | undefined }[]
+    | undefined;
 }) {
-  if (terms.length === 0) {
+  if (!terms || terms.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex flex-row gap-2">
-      <h3 className="font-bold">{label}</h3>
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-1.5">
+      <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-1.5">
         {terms.map((term) => (
-          <TermBadge key={term.id} tag={term} />
+          <TermBadge className="text-xs" key={term.id} tag={term} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function InfoRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{children}</span>
     </div>
   );
 }

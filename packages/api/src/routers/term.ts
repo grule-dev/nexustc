@@ -1,3 +1,4 @@
+import { getLogger } from "@orpc/experimental-pino";
 import { eq } from "@repo/db";
 import { term } from "@repo/db/schema/app";
 import { TAXONOMIES } from "@repo/shared/constants";
@@ -5,16 +6,18 @@ import z from "zod";
 import { permissionProcedure, publicProcedure } from "../index";
 
 export default {
-  getAll: publicProcedure.handler(({ context: { db } }) =>
-    db.query.term.findMany({
+  getAll: publicProcedure.handler(({ context: { db, ...ctx } }) => {
+    const logger = getLogger(ctx);
+    logger?.info("Fetching all terms");
+    return db.query.term.findMany({
       columns: {
         id: true,
         name: true,
         taxonomy: true,
         color: true,
       },
-    })
-  ),
+    });
+  }),
 
   create: permissionProcedure({ terms: ["create"] })
     .input(
@@ -29,7 +32,12 @@ export default {
         taxonomy: z.enum(TAXONOMIES),
       })
     )
-    .handler(async ({ context: { db }, input, errors }) => {
+    .handler(async ({ context: { db, ...ctx }, input, errors }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `Creating new term: "${input.name}" (taxonomy: ${input.taxonomy})`
+      );
+
       try {
         if (input.color === "") {
           await db.insert(term).values({
@@ -37,10 +45,17 @@ export default {
             taxonomy: input.taxonomy,
             color: null,
           });
+
+          logger?.debug(`Term created without color: ${input.name}`);
         } else {
           await db.insert(term).values(input);
+          logger?.debug(
+            `Term created with color: ${input.name} (${input.color})`
+          );
         }
+        logger?.info(`Term successfully created: ${input.name}`);
       } catch (error) {
+        logger?.error(`Failed to create term "${input.name}": ${error}`);
         throw errors.INTERNAL_SERVER_ERROR({
           message: `Error desconocido. Info: ${error}`,
         });
@@ -60,17 +75,30 @@ export default {
         color: z.string().trim(),
       })
     )
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Editing term ${input.id}: "${input.name}"`);
+
       await db.update(term).set(input).where(eq(term.id, input.id));
+      logger?.debug(`Term ${input.id} updated successfully`);
     }),
 
   getDashboardList: permissionProcedure({ terms: ["list"] }).handler(
-    ({ context: { db } }) => db.query.term.findMany()
+    ({ context: { db, ...ctx } }) => {
+      const logger = getLogger(ctx);
+      logger?.info("Fetching term dashboard list");
+
+      return db.query.term.findMany();
+    }
   ),
 
   delete: permissionProcedure({ terms: ["delete"] })
     .input(z.object({ id: z.string() }))
-    .handler(async ({ context: { db }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Deleting term: ${input.id}`);
+
       await db.delete(term).where(eq(term.id, input.id));
+      logger?.debug(`Term ${input.id} deleted successfully`);
     }),
 };

@@ -1,3 +1,4 @@
+import { LoggingHandlerPlugin } from "@orpc/experimental-pino";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
@@ -14,6 +15,7 @@ const rpcHandler = new RPCHandler(appRouter, {
       console.error(error);
     }),
   ],
+  plugins: [new LoggingHandlerPlugin()],
 });
 
 const apiHandler = new OpenAPIHandler(appRouter, {
