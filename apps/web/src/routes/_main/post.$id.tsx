@@ -49,7 +49,6 @@ export const Route = createFileRoute("/_main/post/$id")({
 function RouteComponent() {
   const post = Route.useLoaderData();
 
-  console.log(post);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8">
