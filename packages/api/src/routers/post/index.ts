@@ -368,6 +368,56 @@ export default {
 
       logger?.info(`Fetching post by ID: ${input}`);
 
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
+
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
+            json_agg(
+              json_build_object(
+                'id', ${term.id},
+                'name', ${term.name},
+                'taxonomy', ${term.taxonomy},
+                'color', ${term.color}
+              )
+            )
+          `.as("terms"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
+
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
+
       const result = await db
         .select({
           id: post.id,
@@ -381,21 +431,8 @@ export default {
           authorContent: post.authorContent,
           createdAt: post.createdAt,
 
-          favorites: sql<number>`
-      (
-        SELECT COUNT(*)
-        FROM ${postBookmark}
-        WHERE ${postBookmark.postId} = ${post.id}
-      )
-    `,
-
-          likes: sql<number>`
-      (
-        SELECT COUNT(*)
-        FROM ${postLikes}
-        WHERE ${postLikes.postId} = ${post.id}
-      )
-    `,
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
 
           terms: sql<
             {
@@ -404,46 +441,16 @@ export default {
               taxonomy: (typeof TAXONOMIES)[number];
               color: string;
             }[]
-          >`
-      COALESCE(
-        (
-          SELECT json_agg(
-            json_build_object(
-              'id', ${term.id},
-              'name', ${term.name},
-              'taxonomy', ${term.taxonomy},
-              'color', ${term.color}
-            )
-          )
-          FROM ${termPostRelation}
-          JOIN ${term}
-            ON ${term.id} = ${termPostRelation.termId}
-          WHERE ${termPostRelation.postId} = ${post.id}
-        ),
-        '[]'::json
-      )
-    `,
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
-          averageRating: sql<number>`
-      COALESCE(
-        (
-          SELECT AVG(${postRating.rating})::float
-          FROM ${postRating}
-          WHERE ${postRating.postId} = ${post.id}
-        ),
-        0
-      )
-    `,
-
-          ratingCount: sql<number>`
-      (
-        SELECT COUNT(*)::integer
-        FROM ${postRating}
-        WHERE ${postRating.postId} = ${post.id}
-      )
-    `,
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
         })
         .from(post)
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(and(eq(post.status, "publish"), eq(post.id, input)))
         .limit(1);
 

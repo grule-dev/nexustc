@@ -1,4 +1,4 @@
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, StarIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { UserLabel } from "@/components/users/user-label";
 import { authClient } from "@/lib/auth-client";
 import { orpcClient } from "@/lib/orpc";
@@ -93,9 +92,17 @@ export function RatingList({ postId }: RatingListProps) {
 
   if (!data || data.ratings.length === 0) {
     return (
-      <p className="py-8 text-center text-muted-foreground">
-        Aún no hay valoraciones. ¡Sé el primero en valorar!
-      </p>
+      <div className="flex flex-col items-center gap-2 py-8 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="size-6 text-muted-foreground"
+            icon={StarIcon}
+          />
+        </div>
+        <p className="text-muted-foreground">
+          Aún no hay valoraciones. ¡Sé el primero!
+        </p>
+      </div>
     );
   }
 
@@ -103,114 +110,120 @@ export function RatingList({ postId }: RatingListProps) {
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {data.ratings.map((rating) => {
           const author = authorMap.get(rating.userId);
           const isOwnRating = session?.user?.id === rating.userId;
           const canDelete = isOwnRating;
 
           return (
-            <Card key={rating.userId}>
-              <CardContent>
-                <div className="flex flex-row gap-4">
+            <div
+              className="group flex gap-4 rounded-2xl border bg-background p-4 transition-colors hover:bg-muted/30"
+              key={rating.userId}
+            >
+              {author ? (
+                <Link params={{ id: author.id }} to="/user/$id">
+                  <Avatar className="size-10 ring-2 ring-background transition-transform group-hover:scale-105">
+                    <AvatarImage
+                      src={
+                        author.image ? getBucketUrl(author.image) : undefined
+                      }
+                    />
+                    <AvatarFallback className="bg-amber-500/10 font-medium text-amber-600">
+                      {author.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+              ) : (
+                <Avatar className="size-10 ring-2 ring-background">
+                  <AvatarFallback className="bg-muted">?</AvatarFallback>
+                </Avatar>
+              )}
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                {/* Header row */}
+                <div className="flex flex-wrap items-center gap-2">
                   {author ? (
                     <Link params={{ id: author.id }} to="/user/$id">
-                      <Avatar className="size-12">
-                        <AvatarImage
-                          src={
-                            author.image
-                              ? getBucketUrl(author.image)
-                              : undefined
-                          }
-                        />
-                        <AvatarFallback>
-                          {author.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserLabel
+                        className="font-semibold transition-colors hover:text-primary"
+                        user={author}
+                      />
                     </Link>
                   ) : (
-                    <Avatar className="size-12">
-                      <AvatarFallback>?</AvatarFallback>
-                    </Avatar>
+                    <span className="text-muted-foreground">
+                      Usuario eliminado
+                    </span>
                   )}
-                  <div className="flex w-full flex-col gap-3">
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-2">
-                        {author ? (
-                          <Link params={{ id: author.id }} to="/user/$id">
-                            <UserLabel
-                              className="font-semibold"
-                              user={author}
-                            />
-                          </Link>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            Usuario eliminado
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-muted-foreground text-sm">
-                          {format(rating.createdAt, "PPP", { locale: es })}
-                        </p>
-                        {canDelete && (
-                          <Button
-                            onClick={() =>
-                              setDeleteTarget({
-                                postId: rating.postId,
-                                userId: rating.userId,
-                                isOwnRating: true,
-                              })
-                            }
-                            size="icon-xs"
-                            variant="ghost"
-                          >
-                            <HugeiconsIcon
-                              className="size-4 text-destructive"
-                              icon={Delete02Icon}
-                            />
-                          </Button>
-                        )}
-                        {!isOwnRating && (
-                          <HasPermissions permissions={{ ratings: ["delete"] }}>
-                            <Button
-                              onClick={() =>
-                                setDeleteTarget({
-                                  postId: rating.postId,
-                                  userId: rating.userId,
-                                  isOwnRating: false,
-                                })
-                              }
-                              size="icon-xs"
-                              variant="ghost"
-                            >
-                              <HugeiconsIcon
-                                className="size-4 text-destructive"
-                                icon={Delete02Icon}
-                              />
-                            </Button>
-                          </HasPermissions>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StarRatingInput
-                        disabled
-                        onChange={() => {
-                          // Read-only display
-                        }}
-                        size="sm"
-                        value={rating.rating}
+                  <span className="text-muted-foreground text-xs">•</span>
+                  <time className="text-muted-foreground text-xs">
+                    {format(rating.createdAt, "d MMM yyyy", { locale: es })}
+                  </time>
+                  {/* Delete buttons */}
+                  {canDelete && (
+                    <Button
+                      className="ml-auto opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={() =>
+                        setDeleteTarget({
+                          postId: rating.postId,
+                          userId: rating.userId,
+                          isOwnRating: true,
+                        })
+                      }
+                      size="icon-xs"
+                      variant="ghost"
+                    >
+                      <HugeiconsIcon
+                        className="size-4 text-destructive"
+                        icon={Delete02Icon}
                       />
-                      <span className="font-bold">{rating.rating}/10</span>
-                    </div>
-                    {rating.review && (
-                      <ReviewMarkdown>{rating.review}</ReviewMarkdown>
-                    )}
-                  </div>
+                    </Button>
+                  )}
+                  {!isOwnRating && (
+                    <HasPermissions permissions={{ ratings: ["delete"] }}>
+                      <Button
+                        className="ml-auto opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={() =>
+                          setDeleteTarget({
+                            postId: rating.postId,
+                            userId: rating.userId,
+                            isOwnRating: false,
+                          })
+                        }
+                        size="icon-xs"
+                        variant="ghost"
+                      >
+                        <HugeiconsIcon
+                          className="size-4 text-destructive"
+                          icon={Delete02Icon}
+                        />
+                      </Button>
+                    </HasPermissions>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Star rating display */}
+                <div className="flex items-center gap-2">
+                  <StarRatingInput
+                    disabled
+                    onChange={() => {
+                      // Read-only display
+                    }}
+                    size="sm"
+                    value={rating.rating}
+                  />
+                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 font-semibold text-amber-600 text-sm">
+                    {rating.rating}/10
+                  </span>
+                </div>
+
+                {/* Review content */}
+                {rating.review && (
+                  <div className="mt-1 text-foreground/90 text-sm leading-relaxed">
+                    <ReviewMarkdown>{rating.review}</ReviewMarkdown>
+                  </div>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>

@@ -4,6 +4,7 @@ import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
+import "react-medium-image-zoom/dist/styles.css";
 
 export const Route = createRootRoute({
   head: () => ({
