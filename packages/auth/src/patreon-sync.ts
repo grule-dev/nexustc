@@ -73,11 +73,12 @@ export async function syncPatreonMembership(
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(
         `Failed to fetch Patreon membership for user ${userId}:`,
-        await response.text()
+        errorText
       );
-      return;
+      throw new Error(`Patreon API error: ${response.status}`);
     }
 
     const data = (await response.json()) as PatreonIdentityResponse;
@@ -132,5 +133,6 @@ export async function syncPatreonMembership(
       `Error syncing Patreon membership for user ${userId}:`,
       error
     );
+    throw error;
   }
 }
