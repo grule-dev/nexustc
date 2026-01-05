@@ -7,6 +7,8 @@ export const env = createEnv({
     BETTER_AUTH_URL: z.url(),
     PATREON_CLIENT_ID: z.string(),
     PATREON_CLIENT_SECRET: z.string(),
+    PATREON_CAMPAIGN_ID: z.string(),
+    PATREON_WEBHOOK_SECRET: z.string(),
     TURNSTILE_SECRET_KEY: z.string(),
     CLOUDFLARE_ACCOUNT_ID: z.string(),
     R2_ACCESS_KEY_ID: z.string(),

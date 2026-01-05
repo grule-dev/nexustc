@@ -43,6 +43,13 @@
       "when": 1767296457296,
       "tag": "0005_lovely_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1767575060664,
+      "tag": "0006_bizarre_ultimatum",
+      "breakpoints": true
     }
   ]
 }

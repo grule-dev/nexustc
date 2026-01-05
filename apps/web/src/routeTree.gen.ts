@@ -31,6 +31,7 @@ import { Route as AdminTermsIndexRouteImport } from './routes/admin/terms/index'
 import { Route as AdminPostsIndexRouteImport } from './routes/admin/posts/index'
 import { Route as AdminComicsIndexRouteImport } from './routes/admin/comics/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
+import { Route as ApiPatreonWebhookRouteImport } from './routes/api/patreon/webhook'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/create'
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
@@ -151,6 +152,11 @@ const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   path: '/api/rpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPatreonWebhookRoute = ApiPatreonWebhookRouteImport.update({
+  id: '/api/patreon/webhook',
+  path: '/api/patreon/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics': typeof AdminComicsIndexRoute
   '/admin/posts': typeof AdminPostsIndexRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics': typeof AdminComicsIndexRoute
   '/admin/posts': typeof AdminPostsIndexRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics/': typeof AdminComicsIndexRoute
   '/admin/posts/': typeof AdminPostsIndexRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
+    | '/api/patreon/webhook'
     | '/api/rpc/$'
     | '/admin/comics'
     | '/admin/posts'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
+    | '/api/patreon/webhook'
     | '/api/rpc/$'
     | '/admin/comics'
     | '/admin/posts'
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
+    | '/api/patreon/webhook'
     | '/api/rpc/$'
     | '/admin/comics/'
     | '/admin/posts/'
@@ -409,6 +421,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiPatreonWebhookRoute: typeof ApiPatreonWebhookRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/api/rpc/$'
       fullPath: '/api/rpc/$'
       preLoaderRoute: typeof ApiRpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/patreon/webhook': {
+      id: '/api/patreon/webhook'
+      path: '/api/patreon/webhook'
+      fullPath: '/api/patreon/webhook'
+      preLoaderRoute: typeof ApiPatreonWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -730,6 +750,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiPatreonWebhookRoute: ApiPatreonWebhookRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
 export const routeTree = rootRouteImport

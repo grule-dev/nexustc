@@ -93,7 +93,10 @@ export function CommentSection({ postId }: { postId: string }) {
   const commentCount = commentsQuery.data.length;
 
   return (
-    <div className="flex flex-col gap-6 rounded-3xl border bg-card p-6" ref={ref}>
+    <div
+      className="flex flex-col gap-6 rounded-3xl border bg-card p-6"
+      ref={ref}
+    >
       {/* Header with icon and title */}
       <div className="flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
@@ -143,9 +146,7 @@ export function CommentSection({ postId }: { postId: string }) {
       {/* Sign in prompt for logged out users */}
       <SignedOut>
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-muted/30 p-6 text-center">
-          <p className="text-muted-foreground">
-            ¿Quieres dejar un comentario?
-          </p>
+          <p className="text-muted-foreground">¿Quieres dejar un comentario?</p>
           <Link to="/auth">
             <Button size="sm" variant="outline">
               Iniciar sesión

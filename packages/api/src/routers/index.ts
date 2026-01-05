@@ -2,6 +2,7 @@ import type { RouterClient } from "@orpc/server";
 import comic from "./comic";
 import extras from "./extras";
 import file from "./file";
+import patreon from "./patreon";
 import post from "./post";
 import rating from "./rating";
 import term from "./term";
@@ -15,6 +16,7 @@ export const appRouter = {
   file,
   extras,
   rating,
+  patreon,
 };
 
 export type AppRouter = typeof appRouter;

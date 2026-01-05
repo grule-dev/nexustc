@@ -52,7 +52,10 @@ export function RatingSection({ stats }: RatingSectionProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-3xl border bg-card p-6" ref={ref}>
+    <div
+      className="flex flex-col gap-6 rounded-3xl border bg-card p-6"
+      ref={ref}
+    >
       {/* Header with icon and title */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
