@@ -16,11 +16,14 @@ import {
   HelpCircleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Suspense } from "react";
 import { HoverReveal } from "@/components/hover-reveal";
+import { PostCard } from "@/components/landing/post-card";
 import { AvatarSection } from "@/components/profile/avatar-section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { UserLabel } from "@/components/users/user-label";
+import { orpc } from "@/lib/orpc";
 import { authMiddleware } from "@/middleware/auth";
 
 export const Route = createFileRoute("/_main/profile")({
@@ -51,7 +54,7 @@ function RouteComponent() {
   const session = auth.data;
 
   return (
-    <div className="grid w-full grid-cols-1 md:grid-cols-5">
+    <div className="flex max-w-4xl flex-col gap-4">
       <Card className="col-span-1 col-start-1 w-full md:col-span-3 md:col-start-2">
         <CardHeader>
           <CardTitle className="font-bold text-2xl">Perfil</CardTitle>
@@ -97,6 +100,9 @@ function RouteComponent() {
           </section>
         </CardContent>
       </Card>
+      <Suspense fallback={<Spinner />}>
+        <UserBookmarks />
+      </Suspense>
     </div>
   );
 }
@@ -259,4 +265,21 @@ function matchProvider(provider: string) {
         label: provider,
       };
   }
+}
+
+function UserBookmarks() {
+  const { data } = useSuspenseQuery(orpc.user.getBookmarksFull.queryOptions());
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Tus Favoritos</CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-3 gap-4">
+        {data.map((bookmark) => (
+          <PostCard key={bookmark.id} post={bookmark} />
+        ))}
+      </CardContent>
+    </Card>
+  );
 }
