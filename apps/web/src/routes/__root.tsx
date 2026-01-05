@@ -5,6 +5,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import "react-medium-image-zoom/dist/styles.css";
+import { AgeVerificationDialog } from "@/components/age-verification-dialog";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -44,7 +45,28 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
-        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+        <ConfirmDialogProvider
+          defaultOptions={{
+            confirmButton: {
+              variant: "destructive",
+            },
+            cancelButton: {
+              variant: "outline",
+            },
+            alertDialogContent: {
+              className: "sm:max-w-[425px] rounded-md",
+            },
+            alertDialogOverlay: {
+              className: "bg-black/50 backdrop-blur",
+            },
+            alertDialogFooter: {
+              className: "gap-2",
+            },
+          }}
+        >
+          {children}
+        </ConfirmDialogProvider>
+        <AgeVerificationDialog />
         <Toaster richColors />
         <TanStackDevtools
           config={{

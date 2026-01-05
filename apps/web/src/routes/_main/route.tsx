@@ -6,6 +6,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { Suspense } from "react";
+import { AdblockBlockerDialog } from "@/components/adblock-blocker-dialog";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { LoadingSpinner } from "@/components/loading-spinner";
@@ -27,6 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useAdblockDetector } from "@/hooks/use-adblock-detector";
 
 export const Route = createFileRoute("/_main")({
   component: MainLayout,
@@ -45,8 +47,11 @@ export const Route = createFileRoute("/_main")({
 });
 
 function MainLayout() {
+  const { detected } = useAdblockDetector();
+
   return (
     <Wrapper>
+      <AdblockBlockerDialog open={detected} />
       <Suspense fallback={<LoadingSpinner />}>
         <Outlet />
       </Suspense>
