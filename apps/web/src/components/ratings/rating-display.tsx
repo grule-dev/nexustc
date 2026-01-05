@@ -34,7 +34,9 @@ export function RatingDisplay({
             strokeLinejoin="round"
           />
         </svg>
-        <span className="font-semibold text-sm">{averageRating.toFixed(1)}</span>
+        <span className="font-semibold text-sm">
+          {averageRating.toFixed(1)}
+        </span>
         <span className="text-muted-foreground text-xs">({ratingCount})</span>
       </div>
     );
@@ -61,7 +63,10 @@ export function RatingDisplay({
           const isPartial = i === filledStars && partialFill > 0;
 
           return (
-            <div className="relative" key={`star-display-${i}-${averageRating}`}>
+            <div
+              className="relative"
+              key={`star-display-${i}-${averageRating}`}
+            >
               {/* Background star (empty) */}
               <svg
                 aria-hidden="true"

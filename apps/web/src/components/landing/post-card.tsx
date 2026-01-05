@@ -5,7 +5,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
-import type { PostType } from "@/lib/types";
 import { getBucketUrl, getTierColor } from "@/lib/utils";
 import { AndroidLogo } from "../icons/android";
 import { IOSLogo } from "../icons/ios";
@@ -15,13 +14,26 @@ import { Card, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
-export function PostCard({
-  post,
-  withTags = true,
-}: {
-  post: PostType;
+type PostCardProps = {
+  post: {
+    id: string;
+    title: string;
+    type: "post" | "comic";
+    imageObjectKeys: string[] | null;
+    favorites: number;
+    likes: number;
+    ratingCount?: number;
+    averageRating?: number;
+    terms: {
+      name: string;
+      taxonomy: string;
+      color: string | null;
+    }[];
+  };
   withTags?: boolean;
-}) {
+};
+
+export function PostCard({ post, withTags = true }: PostCardProps) {
   const groupedTerms = Object.groupBy(post.terms, (term) => term.taxonomy);
   const platforms = groupedTerms.platform?.map((t) => t.name);
   const tags = groupedTerms.tag?.map((t) => ({ name: t.name, color: t.color }));
@@ -50,7 +62,7 @@ export function PostCard({
             </div>
           )}
           {post.type === "post" && (
-            <div className="aspect-video w-full">
+            <div className="aspect-4/3 w-full">
               {count === 1 && (
                 <img
                   alt={post.title}
@@ -75,22 +87,22 @@ export function PostCard({
               )}
 
               {count === 3 && (
-                <div className="grid h-full w-full grid-cols-3 gap-1">
-                  <div className="col-span-2 grid grid-rows-2 gap-1">
+                <div className="grid h-full w-full grid-cols-2 gap-1">
+                  <div className="grid min-h-0 grid-rows-2 gap-1">
                     <img
                       alt={post.title}
-                      className="h-full w-full rounded object-cover"
+                      className="h-full w-full object-cover"
                       src={images[0]}
                     />
                     <img
                       alt={post.title}
-                      className="h-full w-full rounded object-cover"
+                      className="h-full w-full object-cover"
                       src={images[1]}
                     />
                   </div>
                   <img
                     alt={post.title}
-                    className="row-span-2 h-full w-full rounded object-cover"
+                    className="h-full w-full object-cover"
                     src={images[2]}
                   />
                 </div>

@@ -4,6 +4,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { resend } from "./email";
+import { syncPatreonMembership } from "./patreon-sync";
 import { adminPlugin } from "./plugins/admin";
 import { patreonPlugin } from "./plugins/patreon";
 import { turnstilePlugin } from "./plugins/turnstile";
@@ -12,6 +13,22 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
+  databaseHooks: {
+    account: {
+      create: {
+        after: async (account) => {
+          // Sync Patreon membership after account is linked
+          if (account.providerId === "patreon" && account.accessToken) {
+            await syncPatreonMembership(
+              account.userId,
+              account.accountId,
+              account.accessToken
+            );
+          }
+        },
+      },
+    },
+  },
 
   emailAndPassword: {
     enabled: true,
@@ -38,12 +55,12 @@ export const auth = betterAuth({
     },
   },
 
-  // session: {
-  //   cookieCache: {
-  //     enabled: true,
-  //     maxAge: 60,
-  //   },
-  // },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 60,
+    },
+  },
 
   user: {
     additionalFields: {

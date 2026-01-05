@@ -1,7 +1,7 @@
 import { Dialog } from "@base-ui/react/dialog";
 import { SquareLock01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getCookie } from "@/lib/utils";
 import { Button } from "./ui/button";
 import {
@@ -15,7 +15,12 @@ import {
 import { ScrollArea } from "./ui/scroll-area";
 
 export function AgeVerificationDialog() {
-  const [open, setOpen] = useState(!getCookie("age_verified"));
+  const [open, setOpen] = useState(false);
+
+  // getCookie only works on browser environments, so we avoid ssr with this
+  useEffect(() => {
+    setOpen(!getCookie("age_verified"));
+  }, []);
 
   return (
     <Dialog.Root open={open}>
@@ -37,7 +42,7 @@ export function AgeVerificationDialog() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="prose dark:prose-invert h-[300px] w-full rounded-md border p-4">
+              <ScrollArea className="prose dark:prose-invert h-75 w-full rounded-md border p-4">
                 <h1>Verificación de Edad</h1>
                 <p>
                   Este sitio web contiene contenido para adultos que incluye

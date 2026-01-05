@@ -1,10 +1,15 @@
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 import { DiscordLogo } from "@/components/icons/discord";
 import { PatreonLogo } from "@/components/icons/patreon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppForm } from "@/hooks/use-app-form";
@@ -14,13 +19,17 @@ import "react-image-crop/dist/ReactCrop.css";
 import {
   CheckmarkCircle02Icon,
   HelpCircleIcon,
+  RefreshIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Suspense } from "react";
 import { HoverReveal } from "@/components/hover-reveal";
+import { PostCard } from "@/components/landing/post-card";
 import { AvatarSection } from "@/components/profile/avatar-section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { UserLabel } from "@/components/users/user-label";
+import { orpc } from "@/lib/orpc";
 import { authMiddleware } from "@/middleware/auth";
 
 export const Route = createFileRoute("/_main/profile")({
@@ -51,7 +60,7 @@ function RouteComponent() {
   const session = auth.data;
 
   return (
-    <div className="grid w-full grid-cols-1 md:grid-cols-5">
+    <div className="flex max-w-4xl flex-col gap-4">
       <Card className="col-span-1 col-start-1 w-full md:col-span-3 md:col-start-2">
         <CardHeader>
           <CardTitle className="font-bold text-2xl">Perfil</CardTitle>
@@ -97,6 +106,12 @@ function RouteComponent() {
           </section>
         </CardContent>
       </Card>
+      <Suspense fallback={<Spinner />}>
+        <PatreonStatusSection />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <UserBookmarks />
+      </Suspense>
     </div>
   );
 }
@@ -132,7 +147,7 @@ function AccountsSection() {
             <Button
               key={provider}
               onClick={() => {
-                authClient.linkSocial({ provider });
+                authClient.linkSocial({ provider, callbackURL: "/profile" });
               }}
             >
               {providerData.Icon}
@@ -259,4 +274,135 @@ function matchProvider(provider: string) {
         label: provider,
       };
   }
+}
+
+function UserBookmarks() {
+  const { data } = useSuspenseQuery(orpc.user.getBookmarksFull.queryOptions());
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Tus Favoritos</CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-3 gap-4">
+        {data.map((bookmark) => (
+          <PostCard key={bookmark.id} post={bookmark} />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+const TIER_LABELS: Record<string, string> = {
+  none: "Sin membresía",
+  tier1: "Supporter",
+  tier2: "Patron",
+  tier3: "Champion",
+};
+
+const TIER_STYLES: Record<string, string> = {
+  tier1: "bg-amber-100 text-amber-800 border-amber-200",
+  tier2: "bg-purple-100 text-purple-800 border-purple-200",
+  tier3:
+    "bg-gradient-to-r from-amber-400 to-amber-600 text-white border-amber-500",
+};
+
+function PatreonStatusSection() {
+  const { data: status } = useSuspenseQuery(
+    orpc.patreon.getStatus.queryOptions()
+  );
+  const syncMutation = useMutation(
+    orpc.patreon.syncMembership.mutationOptions()
+  );
+  const queryClient = useQueryClient();
+
+  const handleSync = async () => {
+    try {
+      await syncMutation.mutateAsync({});
+      await queryClient.invalidateQueries({
+        queryKey: orpc.patreon.getStatus.queryOptions().queryKey,
+      });
+      toast.success("Estado de Patreon sincronizado");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Error al sincronizar"
+      );
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <PatreonLogo className="size-5" />
+          Estado de Patreon
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {status.isPatron ? (
+          <>
+            <div className="flex items-center gap-2">
+              <Badge className={TIER_STYLES[status.tier] ?? ""}>
+                {TIER_LABELS[status.tier] ?? status.tier}
+              </Badge>
+              {status.patronSince && (
+                <span className="text-muted-foreground text-sm">
+                  Miembro desde{" "}
+                  {new Date(status.patronSince).toLocaleDateString("es", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              )}
+            </div>
+            <div className="text-sm">
+              <p className="mb-2 font-medium">Beneficios activos:</p>
+              <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+                {status.benefits.badge && (
+                  <li>Badge: {TIER_LABELS[status.tier]}</li>
+                )}
+                {status.benefits.adFree && <li>Experiencia sin anuncios</li>}
+                {status.benefits.premiumLinks && (
+                  <li>Acceso a enlaces premium</li>
+                )}
+              </ul>
+            </div>
+          </>
+        ) : (
+          <p className="text-muted-foreground">
+            No eres un Patron activo. Vincula tu cuenta de Patreon en la sección
+            "Cuentas" y sincroniza para ver tus beneficios.
+          </p>
+        )}
+
+        <div className="flex items-center gap-4">
+          <Button
+            disabled={syncMutation.isPending}
+            onClick={handleSync}
+            size="sm"
+            variant="outline"
+          >
+            {syncMutation.isPending ? (
+              <Spinner className="size-4" />
+            ) : (
+              <HugeiconsIcon className="size-4" icon={RefreshIcon} />
+            )}
+            Sincronizar Patreon
+          </Button>
+          {status.lastSyncAt && (
+            <p className="text-muted-foreground text-xs">
+              Última sincronización:{" "}
+              {new Date(status.lastSyncAt).toLocaleString("es", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

@@ -22,6 +22,16 @@ const timestamps = {
     .notNull(),
 };
 
+export const patronTierEnum = pgEnum("patron_tier", [
+  "none",
+  "level1",
+  "level3",
+  "level5",
+  "level8",
+  "level12",
+  "level69",
+]);
+
 export const user = pgTable(
   "user",
   {
@@ -100,9 +110,41 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 );
 
-export const userRelations = relations(user, ({ many }) => ({
+export const patron = pgTable(
+  "patron",
+  {
+    id: text("id").primaryKey().$defaultFn(generateId),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" })
+      .unique(),
+    patreonUserId: text("patreon_user_id").notNull().unique(),
+    tier: patronTierEnum("tier").notNull().default("none"),
+    pledgeAmountCents: integer("pledge_amount_cents").notNull().default(0),
+    isActivePatron: boolean("is_active_patron").notNull().default(false),
+    patronSince: timestamp("patron_since", { withTimezone: true }),
+    lastSyncAt: timestamp("last_sync_at", { withTimezone: true }).notNull(),
+    lastWebhookAt: timestamp("last_webhook_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index("patron_user_id_idx").on(table.userId),
+    index("patron_patreon_user_id_idx").on(table.patreonUserId),
+    index("patron_tier_idx").on(table.tier),
+  ]
+);
+
+export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
+  patron: one(patron),
+}));
+
+export const patronRelations = relations(patron, ({ one }) => ({
+  user: one(user, {
+    fields: [patron.userId],
+    references: [user.id],
+  }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
