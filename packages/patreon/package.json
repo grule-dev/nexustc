@@ -1,5 +1,6 @@
 {
-  "name": "@repo/auth",
+  "name": "@repo/patreon",
+  "type": "module",
   "exports": {
     ".": {
       "default": "./src/index.ts"
@@ -8,8 +9,6 @@
       "default": "./src/*.ts"
     }
   },
-  "type": "module",
-  "scripts": {},
   "devDependencies": {
     "@repo/config": "workspace:*"
   },
@@ -17,13 +16,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@repo/db": "workspace:*",
-    "@repo/env": "workspace:*",
-    "@repo/patreon": "workspace:*",
-    "@repo/shared": "workspace:*",
-    "better-auth": "catalog:",
-    "dotenv": "catalog:",
-    "resend": "^6.6.0",
     "zod": "catalog:"
   }
 }

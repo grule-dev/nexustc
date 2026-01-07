@@ -1,12 +1,11 @@
 import { createHmac } from "node:crypto";
 import { env } from "@repo/env";
+import { PatreonIdentity } from "@repo/patreon";
 import {
   PATREON_TIER_MAPPING,
   PATRON_TIERS,
   type PatronTier,
 } from "@repo/shared/constants";
-
-const PATREON_API_BASE = "https://www.patreon.com/api/oauth2/v2";
 
 export type PatreonTokenResponse = {
   accessToken: string;
@@ -56,77 +55,37 @@ export async function refreshPatreonToken(
   };
 }
 
-type PatreonIdentityResponse = {
-  data: {
-    id: string;
-    type: "user";
-  };
-  included?: Array<{
-    id: string;
-    type: "member" | "tier" | "campaign";
-    attributes?: {
-      patron_status?: string;
-      pledge_amount_cents?: number;
-      pledge_relationship_start?: string;
-      title?: string;
-    };
-    relationships?: {
-      campaign?: { data: { id: string; type: "campaign" } };
-      currently_entitled_tiers?: { data: Array<{ id: string; type: "tier" }> };
-    };
-  }>;
-};
-
 /**
  * Fetch membership data for a user from the Patreon API.
- * Returns null if the user is not a member of the specified campaign.
+ * Returns null if the user has no membership.
  */
 export async function fetchPatreonMembership(
   accessToken: string,
-  campaignId: string
+  _campaignId: string
 ): Promise<PatreonMembership | null> {
-  const url = new URL(`${PATREON_API_BASE}/identity`);
-  url.searchParams.set(
-    "include",
-    "memberships.currently_entitled_tiers,memberships.campaign"
-  );
-  url.searchParams.set(
-    "fields[member]",
-    "patron_status,pledge_amount_cents,pledge_relationship_start"
-  );
-  url.searchParams.set("fields[tier]", "title");
+  const patreonIdentity = new PatreonIdentity(accessToken);
+  const [error, data, success] = await patreonIdentity.fetchIdentity();
 
-  const response = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to fetch Patreon identity: ${error}`);
+  if (!success) {
+    console.error("Error fetching Patreon identity:", error);
+    throw new Error("Failed to fetch Patreon identity");
   }
 
-  const data = (await response.json()) as PatreonIdentityResponse;
+  // Find the first membership (user should only have one to our campaign)
+  const membership = data.included?.find((item) => item.type === "member");
 
-  // Find membership for our campaign
-  const memberships =
-    data.included?.filter((item) => item.type === "member") ?? [];
-
-  const ourMembership = memberships.find((m) => {
-    const memberCampaignId = m.relationships?.campaign?.data?.id;
-    return memberCampaignId === campaignId;
-  });
-
-  if (!ourMembership) {
+  if (!membership) {
     return null;
   }
 
   const entitledTiers =
-    ourMembership.relationships?.currently_entitled_tiers?.data ?? [];
+    membership.relationships?.currently_entitled_tiers?.data ?? [];
 
   return {
-    isActive: ourMembership.attributes?.patron_status === "active_patron",
-    pledgeAmountCents: ourMembership.attributes?.pledge_amount_cents ?? 0,
-    patronSince: ourMembership.attributes?.pledge_relationship_start ?? null,
+    isActive: membership.attributes?.patron_status === "active_patron",
+    pledgeAmountCents:
+      membership.attributes?.currently_entitled_amount_cents ?? 0,
+    patronSince: membership.attributes?.pledge_relationship_start ?? null,
     entitledTierIds: entitledTiers.map((t) => t.id),
   };
 }

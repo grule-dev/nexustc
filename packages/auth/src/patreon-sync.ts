@@ -1,33 +1,11 @@
 import { db } from "@repo/db";
 import { patron } from "@repo/db/schema/app";
-import { env } from "@repo/env";
+import { PatreonIdentity } from "@repo/patreon";
 import {
   PATREON_TIER_MAPPING,
   PATRON_TIERS,
   type PatronTier,
 } from "@repo/shared/constants";
-
-const PATREON_API_BASE = "https://www.patreon.com/api/oauth2/v2";
-
-type PatreonIdentityResponse = {
-  data: {
-    id: string;
-    type: "user";
-  };
-  included?: Array<{
-    id: string;
-    type: "member" | "tier" | "campaign";
-    attributes?: {
-      patron_status?: string;
-      pledge_amount_cents?: number;
-      pledge_relationship_start?: string;
-    };
-    relationships?: {
-      campaign?: { data: { id: string; type: "campaign" } };
-      currently_entitled_tiers?: { data: Array<{ id: string; type: "tier" }> };
-    };
-  }>;
-};
 
 function determineTierFromIds(tierIds: string[]): PatronTier {
   let highestTier: PatronTier = "none";
@@ -57,49 +35,24 @@ export async function syncPatreonMembership(
   accessToken: string
 ): Promise<void> {
   try {
-    const url = new URL(`${PATREON_API_BASE}/identity`);
-    url.searchParams.set(
-      "include",
-      "memberships.currently_entitled_tiers,memberships.campaign"
-    );
-    url.searchParams.set(
-      "fields[member]",
-      "patron_status,pledge_amount_cents,pledge_relationship_start"
-    );
-    url.searchParams.set("fields[tier]", "title");
+    const patreonIdentity = new PatreonIdentity(accessToken);
+    const [error, data, success] = await patreonIdentity.fetchIdentity();
 
-    const response = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        `Failed to fetch Patreon membership for user ${userId}:`,
-        errorText
-      );
-      throw new Error(`Patreon API error: ${response.status}`);
+    if (!success) {
+      console.error("Error fetching Patreon identity:", error);
+      throw new Error("Failed to fetch Patreon identity");
     }
 
-    const data = (await response.json()) as PatreonIdentityResponse;
+    // Find the first membership (user should only have one to our campaign)
+    const membership = data.included?.find((item) => item.type === "member");
 
-    // Find membership for our campaign
-    const memberships =
-      data.included?.filter((item) => item.type === "member") ?? [];
-
-    const ourMembership = memberships.find((m) => {
-      const memberCampaignId = m.relationships?.campaign?.data?.id;
-      return memberCampaignId === env.PATREON_CAMPAIGN_ID;
-    });
-
-    const isActive =
-      ourMembership?.attributes?.patron_status === "active_patron";
-    const pledgeAmountCents =
-      ourMembership?.attributes?.pledge_amount_cents ?? 0;
+    const isActive = membership?.attributes?.patron_status === "active_patron";
     const patronSince =
-      ourMembership?.attributes?.pledge_relationship_start ?? null;
+      membership?.attributes?.pledge_relationship_start ?? null;
     const entitledTiers =
-      ourMembership?.relationships?.currently_entitled_tiers?.data ?? [];
+      membership?.relationships?.currently_entitled_tiers?.data ?? [];
+    const pledgeAmountCents =
+      membership?.attributes?.currently_entitled_amount_cents ?? 0;
     const tier = determineTierFromIds(entitledTiers.map((t) => t.id));
 
     // Upsert patron record
@@ -118,7 +71,7 @@ export async function syncPatreonMembership(
         target: patron.userId,
         set: {
           tier,
-          pledgeAmountCents,
+          pledgeAmountCents: 0,
           isActivePatron: isActive,
           patronSince: patronSince ? new Date(patronSince) : null,
           lastSyncAt: new Date(),
