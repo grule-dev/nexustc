@@ -21,7 +21,7 @@
       "!**/.source"
     ]
   },
-  "extends": ["ultracite/core", "ultracite/react"],
+  "extends": ["ultracite/core", "ultracite/react", "ultracite/remix"],
   "linter": {
     "rules": {
       "a11y": {

@@ -63,7 +63,8 @@ export async function checkSlidingWindowRateLimit(
   // Get current request count
   const count = await cache.zCard(key);
 
-  if (isLimitExceeded(count, limit)) {
+  // Check if adding this request would exceed the limit
+  if (count >= limit) {
     return { exceeded: true, count };
   }
 

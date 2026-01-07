@@ -8,17 +8,17 @@
   "devDependencies": {
     "@react-email/preview-server": "5.1.0",
     "@repo/config": "workspace:*",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "react-email": "5.1.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "catalog:"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@react-email/components": "1.0.2",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }

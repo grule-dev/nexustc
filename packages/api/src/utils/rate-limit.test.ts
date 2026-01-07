@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   calculateRetryAfter,
   getCurrentWindow,
@@ -82,25 +82,15 @@ describe("getRateLimitKey", () => {
 });
 
 describe("getCurrentWindow", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("calculates window correctly for 60 second window", () => {
     // 90 seconds since epoch
-    vi.setSystemTime(new Date(90_000));
-    const result = getCurrentWindow(60);
+    const result = getCurrentWindow(60, 90_000);
     expect(result).toBe(1); // 90 / 60 = 1
   });
 
   it("calculates window correctly at window boundary", () => {
     // Exactly 120 seconds
-    vi.setSystemTime(new Date(120_000));
-    const result = getCurrentWindow(60);
+    const result = getCurrentWindow(60, 120_000);
     expect(result).toBe(2); // 120 / 60 = 2
   });
 
@@ -110,33 +100,23 @@ describe("getCurrentWindow", () => {
   });
 
   it("handles different window sizes", () => {
-    vi.setSystemTime(new Date(300_000)); // 300 seconds
-    expect(getCurrentWindow(60)).toBe(5);
-    expect(getCurrentWindow(30)).toBe(10);
-    expect(getCurrentWindow(120)).toBe(2);
+    // 300 seconds
+    expect(getCurrentWindow(60, 300_000)).toBe(5);
+    expect(getCurrentWindow(30, 300_000)).toBe(10);
+    expect(getCurrentWindow(120, 300_000)).toBe(2);
   });
 });
 
 describe("calculateRetryAfter", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("calculates correct retry time within window", () => {
     // 45 seconds since epoch
-    vi.setSystemTime(new Date(45_000));
-    const result = calculateRetryAfter(60);
+    const result = calculateRetryAfter(60, 45_000);
     expect(result).toBe(15); // 60 - (45 % 60) = 15
   });
 
   it("returns full window at window boundary", () => {
     // Exactly 60 seconds
-    vi.setSystemTime(new Date(60_000));
-    const result = calculateRetryAfter(60);
+    const result = calculateRetryAfter(60, 60_000);
     expect(result).toBe(60); // 60 - (60 % 60) = 60
   });
 
@@ -146,11 +126,11 @@ describe("calculateRetryAfter", () => {
   });
 
   it("handles various positions within window", () => {
-    vi.setSystemTime(new Date(10_000)); // 10 seconds
-    expect(calculateRetryAfter(60)).toBe(50);
+    // 10 seconds
+    expect(calculateRetryAfter(60, 10_000)).toBe(50);
 
-    vi.setSystemTime(new Date(59_000)); // 59 seconds
-    expect(calculateRetryAfter(60)).toBe(1);
+    // 59 seconds
+    expect(calculateRetryAfter(60, 59_000)).toBe(1);
   });
 });
 
