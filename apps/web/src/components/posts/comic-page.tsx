@@ -18,7 +18,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { getRouteApi, Navigate } from "@tanstack/react-router";
+import { getRouteApi, Link, Navigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -32,7 +32,6 @@ import {
 import { toast } from "sonner";
 import type { PostType } from "@/lib/types";
 import { cn, getBucketUrl } from "@/lib/utils";
-import { RatingButton } from "../ratings/rating-button";
 import { RatingDisplay } from "../ratings/rating-display";
 import { TermBadge } from "../term-badge";
 import { Badge } from "../ui/badge";
@@ -251,13 +250,20 @@ function ComicInfoPage({
       {/* Action Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-3">
-          <RatingButton postId={comic.id} />
           <BookmarkButton postId={comic.id} />
+          <Button
+            render={<Link params={{ id: comic.id }} to={"/post/reviews/$id"} />}
+            size="sm"
+            variant="outline"
+          >
+            <HugeiconsIcon className="size-4" icon={StarIcon} />
+            Valoraciones
+          </Button>
           <Tooltip>
             <TooltipTrigger
               onClick={handleShare}
               render={
-                <Button size="sm" variant="ghost">
+                <Button size="sm" variant="outline">
                   <HugeiconsIcon className="size-4" icon={Share08Icon} />
                   Compartir
                 </Button>
@@ -295,10 +301,6 @@ function ComicInfoPage({
               />
               Páginas
             </h2>
-            <Button onClick={() => setPage(0)} size="sm" variant="outline">
-              <HugeiconsIcon className="size-4" icon={Book02Icon} />
-              Leer desde el inicio
-            </Button>
           </div>
 
           {/* Thumbnails Grid */}

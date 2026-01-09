@@ -11,6 +11,7 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState } from "react";
@@ -19,7 +20,7 @@ import { TermBadge } from "@/components/term-badge";
 import type { PostType } from "@/lib/types";
 import { cn, getBucketUrl } from "@/lib/utils";
 import { Markdown } from "../markdown";
-import { RatingButton, RatingDisplay } from "../ratings";
+import { RatingDisplay } from "../ratings";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { ImageGallery } from "../ui/image-gallery";
@@ -147,13 +148,20 @@ export function PostActionBar({ post }: { post: PostProps }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <RatingButton postId={post.id} />
         <BookmarkButton postId={post.id} />
+        <Button
+          render={<Link params={{ id: post.id }} to={"/post/reviews/$id"} />}
+          size="sm"
+          variant="outline"
+        >
+          <HugeiconsIcon className="size-4" icon={StarIcon} />
+          Valoraciones
+        </Button>
         <Tooltip>
           <TooltipTrigger
             onClick={handleShare}
             render={
-              <Button size="sm" variant="ghost">
+              <Button size="sm" variant="outline">
                 <HugeiconsIcon className="size-4" icon={Share08Icon} />
                 Compartir
               </Button>

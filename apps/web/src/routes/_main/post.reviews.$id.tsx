@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { orpcClient } from "@/lib/orpc";
 
-export const Route = createFileRoute("/_main/post/$id/reviews")({
+export const Route = createFileRoute("/_main/post/reviews/$id")({
   component: ReviewsPage,
   head: () => ({
     meta: [
