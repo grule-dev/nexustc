@@ -1,10 +1,11 @@
 import { Comment01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpcClient } from "@/lib/orpc";
@@ -19,6 +20,7 @@ import { UserLabel } from "../users/user-label";
 export function CommentSection({ postId }: { postId: string }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
 
   const form = useAppForm({
     validators: {
@@ -33,10 +35,18 @@ export function CommentSection({ postId }: { postId: string }) {
       content: "",
     },
     onSubmit: async (formData) => {
-      await orpcClient.post.createComment({
-        postId,
-        content: formData.value.content,
-      });
+      try {
+        await orpcClient.post.createComment({
+          postId,
+          content: formData.value.content,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["comments", postId],
+        });
+        form.reset();
+      } catch (error) {
+        toast.error(`Ocurrió un error. ${error}`);
+      }
     },
   });
 

@@ -3,7 +3,6 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import { ComicPage } from "@/components/posts/comic-page";
 import { CommentSection } from "@/components/posts/comment-section";
-import { RatingSection } from "@/components/ratings/rating-section";
 import { safeOrpcClient } from "@/lib/orpc";
 import { GamePage } from "../../components/posts/game-page";
 
@@ -59,11 +58,7 @@ function RouteComponent() {
           <ComicPage comic={post} />
         )}
 
-        {/* Ratings & Comments Section */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <RatingSection stats={post} />
-          <CommentSection postId={post.id} />
-        </div>
+        <CommentSection postId={post.id} />
       </div>
     </main>
   );

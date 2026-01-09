@@ -9,7 +9,8 @@ import { Activity, useState } from "react";
 import { toast } from "sonner";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
 import { Markdown } from "@/components/markdown";
-import { GamePage, type PostProps } from "@/components/posts/game-page";
+import { GamePage } from "@/components/posts/game-page";
+import type { PostProps } from "@/components/posts/post-components";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,14 +21,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
 import { orpcClient } from "@/lib/orpc";
-import { uploadBlobWithProgress } from "@/lib/utils";
 
 const statusDisplayMap = {
   queued: "En cola",
@@ -49,17 +58,19 @@ function RouteComponent() {
     uploadProgress,
     handleFileChange,
     removeFile,
-    setUploadProgress,
   } = useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [tagsContent, setTagsContent] = useState("");
+  const [tagsDialogVisible, setTagsDialogVisible] = useState(false);
 
   const form = useAppForm({
     validators: {
       onSubmit: postCreateSchema,
     },
     defaultValues: {
+      type: "post" as const,
       title: "",
       version: "",
       censorship: "",
@@ -77,82 +88,21 @@ function RouteComponent() {
     },
     onSubmit: async (formData) => {
       try {
-        const { postId } = await toast
-          .promise(orpcClient.post.admin.create(formData.value), {
-            loading: "Creando post...",
-            success: "Post creado!",
-            error: (error) => ({
-              message: `Error al crear post: ${error}`,
-            }),
-          })
-          .unwrap();
-
-        const presignedUrls = await orpcClient.file.getPostPresignedUrls({
-          postId,
-          objects: selectedFiles.map((file) => ({
-            contentLength: file.size,
-            extension: file.name.split(".").pop() ?? "",
-          })),
-        });
-
-        const attachments = await toast
+        await toast
           .promise(
-            Promise.all(
-              selectedFiles.map(async (file, index) => {
-                const object = presignedUrls[index];
-
-                await uploadBlobWithProgress(
-                  file,
-                  object.presignedUrl,
-                  (percent) => {
-                    setUploadProgress((prev) => ({
-                      ...prev,
-                      [file.name]: {
-                        status: "uploading",
-                        progress: percent,
-                      },
-                    }));
-                  }
-                );
-
-                setUploadProgress((prev) => ({
-                  ...prev,
-                  [file.name]: {
-                    status: "uploaded",
-                    progress: 100,
-                  },
-                }));
-
-                return object.objectKey;
-              })
-            ),
+            orpcClient.post.admin.create({
+              ...formData.value,
+              files: selectedFiles,
+            }),
             {
-              loading: "Subiendo archivos...",
-              success: "Archivos subidos!",
+              loading: "Creando post...",
+              success: "Post creado!",
               error: (error) => ({
-                message: `Error al subir archivos: ${error}`,
-                duration: 10_000,
+                message: `Error al crear post: ${error}`,
               }),
             }
           )
           .unwrap();
-
-        if (attachments.length > 0) {
-          await toast.promise(
-            orpcClient.post.admin.insertImages({
-              postId,
-              images: attachments,
-            }),
-            {
-              loading: "Insertando imágenes...",
-              success: "Imágenes insertadas!",
-              error: (error) => ({
-                message: `Error al insertar imágenes: ${error}`,
-                duration: 10_000,
-              }),
-            }
-          );
-        }
 
         navigate({
           to: "/admin/posts/create",
@@ -178,6 +128,42 @@ function RouteComponent() {
   );
 
   const post = useStore(form.store, (state) => state.values);
+
+  const extractTags = () => {
+    if (tagsContent.trim() === "") {
+      setTagsDialogVisible(false);
+      return;
+    }
+
+    const tags = tagsContent.split(",").map((tag) => tag.trim());
+    const foundTags: string[] = [];
+    const notFoundTags: string[] = [];
+
+    for (const tag of tags) {
+      const foundTag = groupedTerms.tag?.find(
+        (t) => t.name.toLowerCase() === tag.toLowerCase()
+      );
+      if (foundTag) {
+        foundTags.push(foundTag.id);
+      } else {
+        notFoundTags.push(tag);
+      }
+    }
+
+    form.setFieldValue("tags", foundTags);
+    setTagsContent("");
+    setTagsDialogVisible(false);
+    if (notFoundTags.length > 0) {
+      toast.error(
+        `No se encontraron los siguientes tags: ${notFoundTags.join(", ")}`,
+        {
+          dismissible: true,
+          duration: Number.POSITIVE_INFINITY,
+          closeButton: true,
+        }
+      );
+    }
+  };
 
   return (
     <form
@@ -313,19 +299,40 @@ function RouteComponent() {
             )}
           </form.AppField>
 
-          <form.AppField name="tags">
-            {(field) => (
-              <field.MultiSelectField
-                label="Tags"
-                options={
-                  groupedTerms.tag?.map((term) => ({
-                    value: term.id,
-                    label: term.name,
-                  })) ?? []
-                }
-              />
-            )}
-          </form.AppField>
+          <div className="flex flex-row items-end gap-2">
+            <form.AppField name="tags">
+              {(field) => (
+                <field.MultiSelectField
+                  className="w-full"
+                  label="Tags"
+                  options={
+                    groupedTerms.tag?.map((term) => ({
+                      value: term.id,
+                      label: term.name,
+                    })) ?? []
+                  }
+                />
+              )}
+            </form.AppField>
+            <Dialog
+              onOpenChange={(value) => setTagsDialogVisible(value)}
+              open={tagsDialogVisible}
+            >
+              <DialogTrigger render={<Button />}>Insertar Tags</DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Insertar Tags</DialogTitle>
+                </DialogHeader>
+                <Textarea
+                  onChange={(e) => setTagsContent(e.target.value)}
+                  value={tagsContent}
+                />
+                <DialogFooter>
+                  <Button onClick={extractTags}>Extraer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
 
           <form.AppField name="languages">
             {(field) => (

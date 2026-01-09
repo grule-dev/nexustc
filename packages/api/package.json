@@ -26,8 +26,8 @@
     "@aws-sdk/client-s3": "^3.947.0",
     "@aws-sdk/s3-request-presigner": "^3.947.0",
     "@orpc/client": "catalog:",
-    "@orpc/openapi": "catalog:",
     "@orpc/experimental-pino": "catalog:",
+    "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@repo/auth": "workspace:*",
@@ -39,6 +39,7 @@
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "pino": "catalog:",
+    "sharp": "^0.34.5",
     "zod": "catalog:"
   }
 }

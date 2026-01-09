@@ -88,9 +88,8 @@ export function RatingSection({ stats }: RatingSectionProps) {
         <div className="flex flex-wrap items-center gap-3">
           <RatingButton postId={stats.id} />
           {stats.ratingCount > 0 && (
-            <Link params={{ id: stats.id }} to="/post/$id/reviews">
-              <Button className="gap-2" size="sm" variant="ghost">
-                Ver todas
+            <Link params={{ id: stats.id }} to="/post/reviews/$id">
+              <Button>
                 <HugeiconsIcon className="size-4" icon={ArrowRight01Icon} />
               </Button>
             </Link>
