@@ -284,9 +284,14 @@ export default {
         eq(post.type, input.type),
       ];
 
-      // Add fuzzy search filter using pg_trgm
+      // Add search filter combining exact substring match (ILIKE) and fuzzy match (pg_trgm)
       if (input.query && input.query.trim() !== "") {
-        conditions.push(sql`${post.title} % ${input.query.trim()}`);
+        const trimmedQuery = input.query.trim();
+        // Combine ILIKE for exact substring matches with trigram similarity for fuzzy matching
+        // This ensures short queries (1-2 chars) work while still providing fuzzy matching for longer queries
+        conditions.push(
+          sql`(${post.title} ILIKE ${`%${trimmedQuery}%`} OR ${post.title} % ${trimmedQuery})`
+        );
       }
 
       // Add term filter - posts must have ALL specified terms
@@ -460,6 +465,19 @@ export default {
       }
 
       logger?.debug(`Successfully retrieved post with ID: ${input}`);
+
+      try {
+        await db
+          .update(post)
+          .set({ views: sql`${post.views} + 1` })
+          .where(eq(post.id, input));
+
+        logger?.info(`View count incremented for post ${input}`);
+      } catch (error) {
+        logger?.error(`Failed to increment view count for post ${input}`);
+        logger?.error(error);
+      }
+
       return result[0];
     }),
 
