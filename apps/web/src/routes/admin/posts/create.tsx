@@ -9,7 +9,8 @@ import { Activity, useState } from "react";
 import { toast } from "sonner";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
 import { Markdown } from "@/components/markdown";
-import { GamePage, type PostProps } from "@/components/posts/game-page";
+import { GamePage } from "@/components/posts/game-page";
+import type { PostProps } from "@/components/posts/post-components";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,10 +21,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
 import { orpcClient } from "@/lib/orpc";
@@ -52,6 +62,8 @@ function RouteComponent() {
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [tagsContent, setTagsContent] = useState("");
+  const [tagsDialogVisible, setTagsDialogVisible] = useState(false);
 
   const form = useAppForm({
     validators: {
@@ -116,6 +128,42 @@ function RouteComponent() {
   );
 
   const post = useStore(form.store, (state) => state.values);
+
+  const extractTags = () => {
+    if (tagsContent.trim() === "") {
+      setTagsDialogVisible(false);
+      return;
+    }
+
+    const tags = tagsContent.split(",").map((tag) => tag.trim());
+    const foundTags: string[] = [];
+    const notFoundTags: string[] = [];
+
+    for (const tag of tags) {
+      const foundTag = groupedTerms.tag?.find(
+        (t) => t.name.toLowerCase() === tag.toLowerCase()
+      );
+      if (foundTag) {
+        foundTags.push(foundTag.id);
+      } else {
+        notFoundTags.push(tag);
+      }
+    }
+
+    form.setFieldValue("tags", foundTags);
+    setTagsContent("");
+    setTagsDialogVisible(false);
+    if (notFoundTags.length > 0) {
+      toast.error(
+        `No se encontraron los siguientes tags: ${notFoundTags.join(", ")}`,
+        {
+          dismissible: true,
+          duration: Number.POSITIVE_INFINITY,
+          closeButton: true,
+        }
+      );
+    }
+  };
 
   return (
     <form
@@ -251,19 +299,40 @@ function RouteComponent() {
             )}
           </form.AppField>
 
-          <form.AppField name="tags">
-            {(field) => (
-              <field.MultiSelectField
-                label="Tags"
-                options={
-                  groupedTerms.tag?.map((term) => ({
-                    value: term.id,
-                    label: term.name,
-                  })) ?? []
-                }
-              />
-            )}
-          </form.AppField>
+          <div className="flex flex-row items-end gap-2">
+            <form.AppField name="tags">
+              {(field) => (
+                <field.MultiSelectField
+                  className="w-full"
+                  label="Tags"
+                  options={
+                    groupedTerms.tag?.map((term) => ({
+                      value: term.id,
+                      label: term.name,
+                    })) ?? []
+                  }
+                />
+              )}
+            </form.AppField>
+            <Dialog
+              onOpenChange={(value) => setTagsDialogVisible(value)}
+              open={tagsDialogVisible}
+            >
+              <DialogTrigger render={<Button />}>Insertar Tags</DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Insertar Tags</DialogTitle>
+                </DialogHeader>
+                <Textarea
+                  onChange={(e) => setTagsContent(e.target.value)}
+                  value={tagsContent}
+                />
+                <DialogFooter>
+                  <Button onClick={extractTags}>Extraer</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
 
           <form.AppField name="languages">
             {(field) => (
