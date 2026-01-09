@@ -123,8 +123,11 @@ export async function createContent({
           version:
             input.type === "post" ? input.version : (input.version ?? ""),
           authorId: session.user?.id,
+          authorContent: input.authorContent,
           status: input.documentStatus,
           imageObjectKeys: successfulImageUploads,
+          views: 0,
+          isWeekly: false,
         })
         .returning({ postId: post.id });
 
