@@ -1,21 +1,15 @@
-import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import { getLogger } from "@orpc/experimental-pino";
 import { and, eq, inArray, sql } from "@repo/db";
-import { post, termPostRelation } from "@repo/db/schema/app";
-import { env } from "@repo/env";
-import { postCreateSchema } from "@repo/shared/schemas";
+import { post } from "@repo/db/schema/app";
+import { contentCreateSchema, contentEditSchema } from "@repo/shared/schemas";
 import z from "zod";
 import { permissionProcedure } from "../../index";
-
-const S3 = () =>
-  new S3Client({
-    region: "auto",
-    endpoint: `https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: env.R2_ACCESS_KEY_ID,
-      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-    },
-  });
+import {
+  createContent,
+  deleteContent,
+  editContent,
+  insertContentImages,
+} from "../../utils/content-handlers";
 
 export default {
   getEdit: permissionProcedure({
@@ -79,148 +73,20 @@ export default {
   create: permissionProcedure({
     posts: ["create"],
   })
-    .input(postCreateSchema)
-    .handler(async ({ context: { db, session, ...ctx }, input, errors }) => {
-      const logger = getLogger(ctx);
-      logger?.info(
-        `User ${session.user?.id} creating new post: "${input.title}"`
-      );
-
-      const [postData] = await db
-        .insert(post)
-        .values({
-          title: input.title,
-          content: input.content,
-          adsLinks: input.adsLinks,
-          premiumLinks: input.premiumLinks,
-          version: input.version,
-          authorId: session.user?.id,
-          status: input.documentStatus,
-        })
-        .returning({ postId: post.id });
-
-      if (!postData) {
-        logger?.error(`Failed to create post for user ${session.user?.id}`);
-        throw errors.NOT_FOUND();
-      }
-
-      const termIds = input.platforms
-        .concat(input.tags, input.languages, [
-          input.censorship,
-          input.engine,
-          input.status,
-          input.graphics,
-        ])
-        .filter((term) => term !== "")
-        .map((termId) => ({
-          postId: postData.postId,
-          termId,
-        }));
-
-      if (termIds.length > 0) {
-        await db.insert(termPostRelation).values(termIds);
-        logger?.debug(
-          `Inserted ${termIds.length} term relations for post ${postData.postId}`
-        );
-      }
-
-      logger?.info(`Post successfully created with ID: ${postData.postId}`);
-      return postData;
-    }),
+    .input(contentCreateSchema)
+    .handler(createContent),
 
   edit: permissionProcedure({
     posts: ["update"],
   })
-    .input(postCreateSchema.extend({ id: z.string() }))
-    .handler(async ({ context: { db, ...ctx }, input, errors }) => {
-      const logger = getLogger(ctx);
-      logger?.info(`Editing post: ${input.id}`);
-
-      const [postData] = await db
-        .update(post)
-        .set({
-          title: input.title,
-          content: input.content,
-          status: input.documentStatus,
-          version: input.version,
-          adsLinks: input.adsLinks,
-          premiumLinks: input.premiumLinks,
-        })
-        .where(eq(post.id, input.id))
-        .returning({ postId: post.id });
-
-      if (!postData) {
-        logger?.error(`Post not found for edit: ${input.id}`);
-        throw errors.NOT_FOUND();
-      }
-
-      await db
-        .delete(termPostRelation)
-        .where(eq(termPostRelation.postId, postData.postId));
-
-      const termIds = input.platforms
-        .concat(input.tags, input.languages, [
-          input.censorship,
-          input.engine,
-          input.status,
-          input.graphics,
-        ])
-        .filter((term) => term !== "")
-        .map((termId) => ({
-          postId: postData.postId,
-          termId,
-        }));
-
-      if (termIds.length > 0) {
-        await db.insert(termPostRelation).values(termIds);
-        logger?.debug(
-          `Updated ${termIds.length} term relations for post ${postData.postId}`
-        );
-      }
-
-      logger?.info(`Post ${input.id} successfully updated`);
-      return postData.postId;
-    }),
+    .input(contentEditSchema)
+    .handler(editContent),
 
   delete: permissionProcedure({
     posts: ["delete"],
   })
     .input(z.string())
-    .handler(async ({ context: { db, ...ctx }, input }) => {
-      const logger = getLogger(ctx);
-      logger?.info(`Deleting post: ${input}`);
-
-      const currentPost = await db.query.post.findFirst({
-        where: (p, { eq: equals }) => equals(p.id, input),
-      });
-
-      if (!currentPost) {
-        logger?.warn(`Post not found for deletion: ${input}`);
-        return;
-      }
-
-      await Promise.all([
-        currentPost?.imageObjectKeys &&
-          S3().send(
-            new DeleteObjectsCommand({
-              Bucket: env.R2_ASSETS_BUCKET_NAME,
-              Delete: {
-                Objects: currentPost.imageObjectKeys.map((key) => ({
-                  Key: key,
-                })),
-              },
-            })
-          ),
-        db.delete(post).where(eq(post.id, input)),
-      ]);
-
-      if (currentPost?.imageObjectKeys) {
-        logger?.debug(
-          `Deleted ${currentPost.imageObjectKeys.length} images for post ${input}`
-        );
-      }
-      logger?.info(`Post ${input} successfully deleted`);
-    }),
+    .handler(deleteContent),
 
   insertImages: permissionProcedure({
     posts: ["create"],
@@ -231,21 +97,7 @@ export default {
         images: z.array(z.string()),
       })
     )
-    .handler(async ({ context: { db, ...ctx }, input }) => {
-      const logger = getLogger(ctx);
-      logger?.info(
-        `Inserting ${input.images.length} images for post: ${input.postId}`
-      );
-
-      await db
-        .update(post)
-        .set({
-          imageObjectKeys: input.images,
-        })
-        .where(eq(post.id, input.postId));
-
-      logger?.info(`Images successfully inserted for post ${input.postId}`);
-    }),
+    .handler(insertContentImages),
 
   uploadWeeklyPosts: permissionProcedure({
     posts: ["create"],

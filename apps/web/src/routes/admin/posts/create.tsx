@@ -27,7 +27,6 @@ import { Separator } from "@/components/ui/separator";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
 import { orpcClient } from "@/lib/orpc";
-import { uploadBlobWithProgress } from "@/lib/utils";
 
 const statusDisplayMap = {
   queued: "En cola",
@@ -49,7 +48,6 @@ function RouteComponent() {
     uploadProgress,
     handleFileChange,
     removeFile,
-    setUploadProgress,
   } = useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
@@ -60,6 +58,7 @@ function RouteComponent() {
       onSubmit: postCreateSchema,
     },
     defaultValues: {
+      type: "post" as const,
       title: "",
       version: "",
       censorship: "",
@@ -77,82 +76,21 @@ function RouteComponent() {
     },
     onSubmit: async (formData) => {
       try {
-        const { postId } = await toast
-          .promise(orpcClient.post.admin.create(formData.value), {
-            loading: "Creando post...",
-            success: "Post creado!",
-            error: (error) => ({
-              message: `Error al crear post: ${error}`,
-            }),
-          })
-          .unwrap();
-
-        const presignedUrls = await orpcClient.file.getPostPresignedUrls({
-          postId,
-          objects: selectedFiles.map((file) => ({
-            contentLength: file.size,
-            extension: file.name.split(".").pop() ?? "",
-          })),
-        });
-
-        const attachments = await toast
+        await toast
           .promise(
-            Promise.all(
-              selectedFiles.map(async (file, index) => {
-                const object = presignedUrls[index];
-
-                await uploadBlobWithProgress(
-                  file,
-                  object.presignedUrl,
-                  (percent) => {
-                    setUploadProgress((prev) => ({
-                      ...prev,
-                      [file.name]: {
-                        status: "uploading",
-                        progress: percent,
-                      },
-                    }));
-                  }
-                );
-
-                setUploadProgress((prev) => ({
-                  ...prev,
-                  [file.name]: {
-                    status: "uploaded",
-                    progress: 100,
-                  },
-                }));
-
-                return object.objectKey;
-              })
-            ),
+            orpcClient.post.admin.create({
+              ...formData.value,
+              files: selectedFiles,
+            }),
             {
-              loading: "Subiendo archivos...",
-              success: "Archivos subidos!",
+              loading: "Creando post...",
+              success: "Post creado!",
               error: (error) => ({
-                message: `Error al subir archivos: ${error}`,
-                duration: 10_000,
+                message: `Error al crear post: ${error}`,
               }),
             }
           )
           .unwrap();
-
-        if (attachments.length > 0) {
-          await toast.promise(
-            orpcClient.post.admin.insertImages({
-              postId,
-              images: attachments,
-            }),
-            {
-              loading: "Insertando imágenes...",
-              success: "Imágenes insertadas!",
-              error: (error) => ({
-                message: `Error al insertar imágenes: ${error}`,
-                duration: 10_000,
-              }),
-            }
-          );
-        }
 
         navigate({
           to: "/admin/posts/create",

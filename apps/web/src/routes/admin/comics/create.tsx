@@ -20,7 +20,6 @@ import { Progress } from "@/components/ui/progress";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
 import { orpcClient } from "@/lib/orpc";
-import { uploadBlobWithProgress } from "@/lib/utils";
 
 const statusDisplayMap = {
   queued: "En cola",
@@ -42,7 +41,6 @@ function RouteComponent() {
     uploadProgress,
     handleFileChange,
     removeFile,
-    setUploadProgress,
   } = useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
@@ -52,6 +50,7 @@ function RouteComponent() {
       onSubmit: comicCreateSchema,
     },
     defaultValues: {
+      type: "comic" as const,
       title: "",
       censorship: "",
       documentStatus: "draft" as (typeof DOCUMENT_STATUSES)[number],
@@ -60,85 +59,22 @@ function RouteComponent() {
     },
     onSubmit: async (formData) => {
       try {
-        const comic = await toast
-          .promise(orpcClient.comic.admin.create(formData.value), {
-            loading: "Creando comic...",
-            success: "Comic creado!",
-            error: (error) => ({
-              message: `Error al crear comic: ${error}`,
-              duration: 10_000,
-            }),
-          })
-          .unwrap();
-
-        const presignedUrls = await orpcClient.file.getPostPresignedUrls({
-          postId: comic,
-          objects: selectedFiles.map((file) => ({
-            contentLength: file.size,
-            extension: file.name.split(".").pop() ?? "",
-          })),
-        });
-
-        const images = await toast
+        await toast
           .promise(
-            Promise.all(
-              selectedFiles.map(async (file, index) => {
-                const object = presignedUrls[index];
-
-                await uploadBlobWithProgress(
-                  file,
-                  object.presignedUrl,
-                  (percent) => {
-                    setUploadProgress((prev) => ({
-                      ...prev,
-                      [file.name]: {
-                        status: "uploading",
-                        progress: percent,
-                      },
-                    }));
-                  }
-                );
-
-                setUploadProgress((prev) => ({
-                  ...prev,
-                  [file.name]: {
-                    status: "uploaded",
-                    progress: 100,
-                  },
-                }));
-
-                return {
-                  objectKey: object.objectKey,
-                };
-              })
-            ),
+            orpcClient.comic.admin.create({
+              ...formData.value,
+              files: selectedFiles,
+            }),
             {
-              loading: "Subiendo archivos...",
-              success: "Archivos subidos!",
+              loading: "Creando comic...",
+              success: "Comic creado!",
               error: (error) => ({
-                message: `Error al subir archivos: ${error}`,
+                message: `Error al crear comic: ${error}`,
                 duration: 10_000,
               }),
             }
           )
           .unwrap();
-
-        if (images.length > 0) {
-          await toast.promise(
-            orpcClient.comic.admin.insertImages({
-              postId: comic,
-              images: images.map((a) => a.objectKey),
-            }),
-            {
-              loading: "Insertando imágenes...",
-              success: "Imágenes insertadas!",
-              error: (error) => ({
-                message: `Error al insertar imágenes: ${error}`,
-                duration: 10_000,
-              }),
-            }
-          );
-        }
 
         navigate({
           to: "/admin/comics/create",

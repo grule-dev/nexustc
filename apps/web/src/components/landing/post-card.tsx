@@ -66,7 +66,7 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
               {count === 1 && (
                 <img
                   alt={post.title}
-                  className="h-full w-full rounded object-cover"
+                  className="h-full w-full object-cover"
                   src={images[0]}
                 />
               )}
@@ -75,12 +75,12 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
                 <div className="grid h-full w-full grid-cols-2 gap-1">
                   <img
                     alt={post.title}
-                    className="h-full w-full rounded object-cover"
+                    className="h-full w-full object-cover"
                     src={images[0]}
                   />
                   <img
                     alt={post.title}
-                    className="h-full w-full rounded object-cover"
+                    className="h-full w-full object-cover"
                     src={images[1]}
                   />
                 </div>
@@ -113,7 +113,7 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
                   {images.map((img) => (
                     <img
                       alt={post.title}
-                      className="h-full w-full rounded object-cover"
+                      className="h-full w-full object-cover"
                       key={img}
                       src={img}
                     />

@@ -1,9 +1,13 @@
 import { getLogger } from "@orpc/experimental-pino";
-import { eq } from "@repo/db";
-import { post, termPostRelation } from "@repo/db/schema/app";
-import { comicCreateSchema } from "@repo/shared/schemas";
+import { comicCreateSchema, comicEditSchema } from "@repo/shared/schemas";
 import z from "zod";
 import { permissionProcedure } from "../../index";
+import {
+  createContent,
+  deleteContent,
+  editContent,
+  insertContentImages,
+} from "../../utils/content-handlers";
 
 export default {
   getDashboardList: permissionProcedure({
@@ -68,47 +72,19 @@ export default {
     comics: ["create"],
   })
     .input(comicCreateSchema)
-    .handler(async ({ context: { db, session, ...ctx }, input, errors }) => {
-      const logger = getLogger(ctx);
-      logger?.info(
-        `User ${session.user.id} creating new comic: "${input.title}"`
-      );
+    .handler(createContent),
 
-      const [postData] = await db
-        .insert(post)
-        .values({
-          title: input.title,
-          authorId: session.user.id,
-          status: input.documentStatus,
-          type: "comic",
-        })
-        .returning({
-          postId: post.id,
-        });
+  edit: permissionProcedure({
+    comics: ["update"],
+  })
+    .input(comicEditSchema)
+    .handler(editContent),
 
-      if (!postData) {
-        logger?.error(`Failed to create comic for user ${session.user.id}`);
-        throw errors.NOT_FOUND();
-      }
-
-      const termIds = input.tags
-        .concat(input.languages, [input.censorship])
-        .filter((term) => term !== "")
-        .map((termId) => ({
-          postId: postData.postId,
-          termId,
-        }));
-
-      if (termIds.length > 0) {
-        await db.insert(termPostRelation).values(termIds);
-        logger?.debug(
-          `Inserted ${termIds.length} term relations for comic ${postData.postId}`
-        );
-      }
-
-      logger?.info(`Comic successfully created with ID: ${postData.postId}`);
-      return postData.postId;
-    }),
+  delete: permissionProcedure({
+    comics: ["delete"],
+  })
+    .input(z.string())
+    .handler(deleteContent),
 
   insertImages: permissionProcedure({
     comics: ["create"],
@@ -119,18 +95,5 @@ export default {
         images: z.array(z.string()),
       })
     )
-    .handler(async ({ context: { db, ...ctx }, input }) => {
-      const logger = getLogger(ctx);
-      logger?.info(
-        `Inserting ${input.images.length} images for comic: ${input.postId}`
-      );
-
-      await db
-        .update(post)
-        .set({
-          imageObjectKeys: input.images,
-        })
-        .where(eq(post.id, input.postId));
-      logger?.info(`Images successfully inserted for comic ${input.postId}`);
-    }),
+    .handler(insertContentImages),
 };

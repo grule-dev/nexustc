@@ -1,10 +1,9 @@
-import { postCreateSchema } from "@repo/shared/schemas";
+import { postEditSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
-import z from "zod";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
 import {
   Card,
@@ -42,9 +41,10 @@ function RouteComponent() {
 
   const form = useAppForm({
     validators: {
-      onSubmit: postCreateSchema.extend({ id: z.string() }),
+      onSubmit: postEditSchema,
     },
     defaultValues: {
+      type: "post" as const,
       id: oldPost.id,
       title: oldPost.title,
       version: oldPost.version ?? "",

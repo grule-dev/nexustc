@@ -1,20 +1,11 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getLogger } from "@orpc/experimental-pino";
 import { generateId } from "@repo/db/utils";
 import { env } from "@repo/env";
 import z from "zod";
 import { permissionProcedure, protectedProcedure } from "../index";
-
-const S3 = () =>
-  new S3Client({
-    region: "auto",
-    endpoint: `https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: env.R2_ACCESS_KEY_ID,
-      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
-    },
-  });
+import { getS3Client } from "../utils/s3";
 
 const POST_IMAGES_MAX_SIZE_BYTES = 1024 * 1024 * 5; // 5MB
 const AVATAR_MAX_SIZE_BYTES = 1024 * 512; // 512KB
@@ -54,7 +45,7 @@ export default {
           return {
             objectKey,
             presignedUrl: await getSignedUrl(
-              S3(),
+              getS3Client(),
               new PutObjectCommand({
                 Bucket: env.R2_ASSETS_BUCKET_NAME,
                 Key: objectKey,
@@ -87,7 +78,7 @@ export default {
 
       const key = `avatar/${session.user.id}.webp`;
       const url = await getSignedUrl(
-        S3(),
+        getS3Client(),
         new PutObjectCommand({
           Bucket: env.R2_ASSETS_BUCKET_NAME,
           Key: key,
