@@ -1,0 +1,41 @@
+# Dependencies
+
+node_modules
+\*\*/node_modules
+
+# Build outputs
+
+.output
+**/dist
+**/.turbo
+
+# Environment files
+
+.env
+.env.\*
+!.env.example
+
+# Git
+
+.git
+.gitignore
+
+# IDE
+
+.vscode
+.idea
+_.swp
+_.swo
+
+# Docker
+
+Dockerfile
+.dockerignore
+
+# Misc
+
+_.log
+_.md
+!README.md
+.DS_Store
+Thumbs.db

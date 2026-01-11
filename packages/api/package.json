@@ -39,7 +39,7 @@
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "pino": "catalog:",
-    "sharp": "^0.34.5",
+    "sharp": "catalog:",
     "zod": "catalog:"
   }
 }
