@@ -16,7 +16,11 @@ const config = defineConfig(({ mode }) => {
       }),
       tailwindcss(),
       mode !== "test" && tanstackStart(),
-      viteReact(),
+      viteReact({
+        babel: {
+          plugins: ["babel-plugin-react-compiler"],
+        },
+      }),
     ].filter(Boolean),
 
     build: {

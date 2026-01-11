@@ -84,6 +84,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^5.0.4",
+    "babel-plugin-react-compiler": "^1.0.0",
     "happy-dom": "^20.0.11",
     "jsdom": "^27.0.0",
     "typescript": "catalog:",
