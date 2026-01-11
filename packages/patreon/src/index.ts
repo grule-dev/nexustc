@@ -78,6 +78,10 @@ export class PatreonIdentity {
       ]
   > {
     const url = new URL(`${PATREON_API_BASE}/identity`);
+    url.searchParams.set(
+      "include",
+      "memberships,memberships.campaign,memberships.currently_entitled_tiers"
+    );
     url.searchParams.set("fields[user]", "email,full_name");
     url.searchParams.set(
       "fields[member]",
