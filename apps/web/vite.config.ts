@@ -19,6 +19,16 @@ const config = defineConfig(({ mode }) => {
       viteReact(),
     ].filter(Boolean),
 
+    build: {
+      rollupOptions: {
+        external: ["sharp"],
+      },
+    },
+
+    ssr: {
+      external: ["sharp"],
+    },
+
     test: {
       environment: "happy-dom",
       globals: true,

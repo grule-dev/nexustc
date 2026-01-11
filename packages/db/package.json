@@ -17,16 +17,17 @@
     "@repo/config": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/shared": "workspace:*",
-    "drizzle-kit": "^0.31.8",
-    "pg": "^8.16.3"
+    "drizzle-kit": "^0.31.8"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@types/pg": "^8.16.0",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
     "nanoid": "^5.1.6",
+    "pg": "^8.16.3",
     "redis": "catalog:"
   }
 }
