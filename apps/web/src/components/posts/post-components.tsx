@@ -150,6 +150,7 @@ export function PostActionBar({ post }: { post: PostProps }) {
       <div className="flex flex-wrap items-center gap-3">
         <BookmarkButton postId={post.id} />
         <Button
+          nativeButton={false}
           render={<Link params={{ id: post.id }} to={"/post/reviews/$id"} />}
           size="sm"
           variant="outline"

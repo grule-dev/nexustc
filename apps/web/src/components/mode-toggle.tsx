@@ -14,23 +14,16 @@ export function ModeToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Button
-          nativeButton={false}
-          render={<div />}
-          size="icon"
-          variant="outline"
-        >
-          <HugeiconsIcon
-            className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-            icon={Sun03Icon}
-          />
-          <HugeiconsIcon
-            className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-            icon={Moon02Icon}
-          />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
+      <DropdownMenuTrigger render={<Button size="icon" variant="outline" />}>
+        <HugeiconsIcon
+          className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+          icon={Sun03Icon}
+        />
+        <HugeiconsIcon
+          className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+          icon={Moon02Icon}
+        />
+        <span className="sr-only">Toggle theme</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme("light")}>

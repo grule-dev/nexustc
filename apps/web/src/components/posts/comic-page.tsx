@@ -252,6 +252,7 @@ function ComicInfoPage({
         <div className="flex flex-wrap items-center gap-3">
           <BookmarkButton postId={comic.id} />
           <Button
+            nativeButton={false}
             render={<Link params={{ id: comic.id }} to={"/post/reviews/$id"} />}
             size="sm"
             variant="outline"
@@ -651,7 +652,6 @@ function ComicReader({
 
   // Wheel to zoom
   const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
     const delta = e.deltaY > 0 ? -0.2 : 0.2;
     setScale((prev) => {
       const newScale = Math.max(1, Math.min(4, prev + delta));

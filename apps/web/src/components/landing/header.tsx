@@ -77,9 +77,14 @@ export function Header() {
         <div className="container hidden items-center justify-between px-4 md:flex">
           <nav className="flex items-center justify-center gap-4">
             {links.map((link) => (
-              <Link key={link.label} to={link.href}>
-                <Button variant="ghost">{link.label}</Button>
-              </Link>
+              <Button
+                key={link.href}
+                nativeButton={false}
+                render={<Link key={link.label} to={link.href} />}
+                variant="ghost"
+              >
+                {link.label}
+              </Button>
             ))}
           </nav>
           <div className="flex items-center gap-4">
@@ -87,9 +92,9 @@ export function Header() {
               <UserSection />
             </SignedIn>
             <SignedOut>
-              <Link to="/auth">
-                <Button>Login</Button>
-              </Link>
+              <Button nativeButton={false} render={<Link to="/auth" />}>
+                Login
+              </Button>
             </SignedOut>
             <ModeToggle />
           </div>
@@ -139,11 +144,15 @@ function BurgerMenu() {
         <RunOnClick onClick={() => setOpen(false)}>
           <nav className="flex flex-col gap-4 px-4">
             {links.map((link) => (
-              <Link key={link.label} to={link.href}>
-                <Button className="w-full" variant="outline">
-                  {link.label}
-                </Button>
-              </Link>
+              <Button
+                className="w-full"
+                key={link.label}
+                nativeButton={false}
+                render={<Link to={link.href} />}
+                variant="outline"
+              >
+                {link.label}
+              </Button>
             ))}
           </nav>
         </RunOnClick>
