@@ -5,11 +5,12 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**"],
+      "outputs": [".output/**"],
       "env": ["VITE_TURNSTILE_SITE_KEY", "VITE_ASSETS_BUCKET_URL"]
     },
     "start": {
-      "dependsOn": ["^start"]
+      "dependsOn": ["^start"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"]
     },
     "test": {
       "dependsOn": ["^test"]

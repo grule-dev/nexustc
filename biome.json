@@ -21,7 +21,14 @@
       "!**/.source"
     ]
   },
-  "extends": ["ultracite/core", "ultracite/react", "ultracite/remix"],
+  "extends": [
+    "ultracite/core",
+    "ultracite/react",
+    "ultracite/remix",
+    "ultracite/biome/core",
+    "ultracite/biome/remix",
+    "ultracite/biome/react"
+  ],
   "linter": {
     "rules": {
       "a11y": {

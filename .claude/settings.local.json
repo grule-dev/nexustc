@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run check-types:*)",
+      "Bash(bun run test:*)",
+      "Bash(bun run check:*)"
+    ]
+  },
+  "outputStyle": "default"
+}
