@@ -23,7 +23,7 @@ COPY . .
 
 # Install from the cached store (creates proper symlinks)
 # Include devDependencies since turbo is needed for build
-RUN pnpm install --offline --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Build the application
 ENV NODE_ENV=production
