@@ -1,4 +1,5 @@
 import type React from "react";
+import { Badge } from "@/components/ui/badge";
 import { cn, pickTextColorFromHex } from "@/lib/utils";
 
 export function TermBadge({
@@ -9,6 +10,15 @@ export function TermBadge({
   tag: { name: string; color: string | null | undefined };
   className?: string;
 }) {
+  // Use default Badge style when no colors are present
+  if (!tag.color || tag.color.trim() === "") {
+    return (
+      <Badge className={className} variant="outline" {...props}>
+        {tag.name}
+      </Badge>
+    );
+  }
+
   const colors = tag.color ? tag.color.split(",") : [];
 
   let color1 = "";
