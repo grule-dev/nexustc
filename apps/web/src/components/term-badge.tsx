@@ -26,7 +26,7 @@ export function TermBadge({
   let textColor: string | undefined = "";
 
   if (colors.length === 1) {
-    if (color1.startsWith("@")) {
+    if (colors[0].startsWith("@")) {
       textColor = colors[0].slice(1);
     } else {
       color1 = colors[0];
