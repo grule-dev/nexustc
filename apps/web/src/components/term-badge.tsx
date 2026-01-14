@@ -1,4 +1,5 @@
 import type React from "react";
+import { Badge } from "@/components/ui/badge";
 import { cn, pickTextColorFromHex } from "@/lib/utils";
 
 export function TermBadge({
@@ -9,6 +10,15 @@ export function TermBadge({
   tag: { name: string; color: string | null | undefined };
   className?: string;
 }) {
+  // Use default Badge style when no colors are present
+  if (!tag.color || tag.color.trim() === "") {
+    return (
+      <Badge className={className} variant="outline" {...props}>
+        {tag.name}
+      </Badge>
+    );
+  }
+
   const colors = tag.color ? tag.color.split(",") : [];
 
   let color1 = "";
@@ -16,7 +26,7 @@ export function TermBadge({
   let textColor: string | undefined = "";
 
   if (colors.length === 1) {
-    if (color1.startsWith("@")) {
+    if (colors[0].startsWith("@")) {
       textColor = colors[0].slice(1);
     } else {
       color1 = colors[0];

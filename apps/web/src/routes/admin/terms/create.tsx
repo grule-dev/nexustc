@@ -5,7 +5,9 @@ import { termCreateSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { toast } from "sonner";
+import { TermBadge } from "@/components/term-badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpc } from "@/lib/orpc";
 
@@ -24,6 +27,7 @@ export const Route = createFileRoute("/admin/terms/create")({
 });
 
 function RouteComponent() {
+  const [useCustomColors, setUseCustomColors] = useState(false);
   const mutation = useMutation(orpc.term.create.mutationOptions());
   const form = useAppForm({
     validators: {
@@ -31,7 +35,7 @@ function RouteComponent() {
     },
     defaultValues: {
       name: "",
-      color1: "#000000",
+      color1: "",
       color2: "",
       textColor: "",
       taxonomy: "" as (typeof TAXONOMIES)[number],
@@ -39,21 +43,28 @@ function RouteComponent() {
     onSubmit: async ({
       value: { name, color1, color2, textColor, taxonomy },
     }) => {
-      const colors: string[] = [];
+      let finalColor = "";
 
-      if (color1) {
-        colors.push(color1);
-      }
-      if (color2) {
-        colors.push(color2);
-      }
-      if (textColor) {
-        colors.push(`@${textColor}`);
+      // Only build color string if custom colors are enabled
+      if (useCustomColors) {
+        const colors: string[] = [];
+
+        if (color1) {
+          colors.push(color1);
+        }
+        if (color2) {
+          colors.push(color2);
+        }
+        if (textColor) {
+          colors.push(`@${textColor}`);
+        }
+
+        finalColor = colors.join(",");
       }
 
       try {
         toast.loading("Creando...", { id: "submitting" });
-        await mutation.mutateAsync({ name, color: colors.join(","), taxonomy });
+        await mutation.mutateAsync({ name, color: finalColor, taxonomy });
         toast.dismiss("submitting");
         toast.success("Creado!");
         form.resetField("name");
@@ -72,6 +83,23 @@ function RouteComponent() {
     textColor: state.values.textColor,
   }));
 
+  // Generate preview color string for TermBadge
+  const previewColor = useCustomColors
+    ? (() => {
+        const colors: string[] = [];
+        if (values.color1) {
+          colors.push(values.color1);
+        }
+        if (values.color2) {
+          colors.push(values.color2);
+        }
+        if (values.textColor) {
+          colors.push(`@${values.textColor}`);
+        }
+        return colors.join(",");
+      })()
+    : "";
+
   return (
     <form
       className="flex h-full items-center justify-center"
@@ -86,98 +114,134 @@ function RouteComponent() {
           <CardTitle>Crear Término</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-row gap-4">
-            <form.AppField name="name">
-              {(field) => (
-                <field.TextField
-                  className="grow"
-                  label="Nombre"
-                  placeholder="Nombre"
-                  required
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="color1">
-              {(field) => (
-                <field.TextField
-                  className="cursor-pointer p-0"
-                  label="Color 1"
-                  placeholder="Color 1"
-                  style={{
-                    backgroundColor: field.state.value ?? "transparent",
-                  }}
-                  type="color"
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="color2">
-              {(field) => (
-                <field.TextField
-                  className="cursor-pointer p-0"
-                  label="Color 2"
-                  placeholder="Color 2"
-                  style={{
-                    backgroundColor: field.state.value ?? "transparent",
-                  }}
-                  type="color"
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="textColor">
-              {(field) => (
-                <field.TextField
-                  className="cursor-pointer p-0"
-                  label="Color Texto"
-                  placeholder="Color Texto"
-                  style={{
-                    backgroundColor: field.state.value ?? "transparent",
-                  }}
-                  type="color"
-                />
-              )}
-            </form.AppField>
-            <Button
-              className="self-end"
-              onClick={() => {
-                form.setFieldValue("color1", "");
-                form.setFieldValue("color2", "");
-                form.setFieldValue("textColor", "");
+          {/* Name Field */}
+          <form.AppField name="name">
+            {(field) => (
+              <field.TextField label="Nombre" placeholder="Nombre" required />
+            )}
+          </form.AppField>
+
+          {/* Taxonomy Field */}
+          <form.AppField name="taxonomy">
+            {(field) => (
+              <field.SelectField
+                label="Taxonomía"
+                options={Object.entries(TAXONOMY_DATA).map(([key, value]) => ({
+                  value: key,
+                  label: value.label,
+                }))}
+                required
+              />
+            )}
+          </form.AppField>
+
+          {/* Custom Colors Switch */}
+          <Field className="flex flex-row items-center justify-between">
+            <Label htmlFor="use-custom-colors">
+              Usar colores personalizados
+            </Label>
+            <Switch
+              checked={useCustomColors}
+              id="use-custom-colors"
+              onCheckedChange={(checked) => {
+                setUseCustomColors(checked);
+                // Clear color fields when disabling custom colors
+                if (!checked) {
+                  form.setFieldValue("color1", "");
+                  form.setFieldValue("color2", "");
+                  form.setFieldValue("textColor", "");
+                }
               }}
-              type="button"
-              variant="destructive"
-            >
-              <HugeiconsIcon icon={Cancel01Icon} />
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <form.AppField name="taxonomy">
-              {(field) => (
-                <field.SelectField
-                  label="Taxonomía"
-                  options={Object.entries(TAXONOMY_DATA).map(
-                    ([key, value]) => ({
-                      value: key,
-                      label: value.label,
-                    })
+            />
+          </Field>
+
+          {/* Color Pickers - Only shown when custom colors are enabled */}
+          {useCustomColors && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-3">
+                <form.AppField name="color1">
+                  {(field) => (
+                    <Field className="gap-2">
+                      <Label>Color 1 (Inicio)</Label>
+                      <div className="relative">
+                        <input
+                          className="h-12 w-full cursor-pointer rounded-lg border-2 border-input transition-colors hover:border-ring focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          style={{
+                            backgroundColor: field.state.value || "#ffffff",
+                          }}
+                          type="color"
+                          value={field.state.value || "#ffffff"}
+                        />
+                      </div>
+                    </Field>
                   )}
-                  required
-                />
-              )}
-            </form.AppField>
-            <Field className="w-fit gap-3">
-              <Label>Preview</Label>
-              <span
-                className="inline-flex w-fit items-center rounded-full border p-2 px-2 py-0.5 font-semibold text-sm tracking-wide"
-                style={{
-                  color: values.textColor,
-                  border: `2px solid ${values.textColor}`,
-                  background: `linear-gradient(to right, ${values.color1}, ${values.color2})`,
+                </form.AppField>
+                <form.AppField name="color2">
+                  {(field) => (
+                    <Field className="gap-2">
+                      <Label>Color 2 (Fin)</Label>
+                      <div className="relative">
+                        <input
+                          className="h-12 w-full cursor-pointer rounded-lg border-2 border-input transition-colors hover:border-ring focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          style={{
+                            backgroundColor: field.state.value || "#ffffff",
+                          }}
+                          type="color"
+                          value={field.state.value || "#ffffff"}
+                        />
+                      </div>
+                    </Field>
+                  )}
+                </form.AppField>
+                <form.AppField name="textColor">
+                  {(field) => (
+                    <Field className="gap-2">
+                      <Label>Color de texto</Label>
+                      <div className="relative">
+                        <input
+                          className="h-12 w-full cursor-pointer rounded-lg border-2 border-input transition-colors hover:border-ring focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          style={{
+                            backgroundColor: field.state.value || "#ffffff",
+                          }}
+                          type="color"
+                          value={field.state.value || "#ffffff"}
+                        />
+                      </div>
+                    </Field>
+                  )}
+                </form.AppField>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  form.setFieldValue("color1", "");
+                  form.setFieldValue("color2", "");
+                  form.setFieldValue("textColor", "");
                 }}
+                type="button"
+                variant="outline"
               >
-                {values.name}
-              </span>
-            </Field>
-          </div>
+                <HugeiconsIcon icon={Cancel01Icon} />
+                Limpiar colores
+              </Button>
+            </div>
+          )}
+
+          {/* Preview using actual TermBadge component */}
+          <Field className="gap-3">
+            <Label>Vista previa</Label>
+            <div>
+              <TermBadge
+                tag={{
+                  name: values.name || "Vista previa",
+                  color: previewColor,
+                }}
+              />
+            </div>
+          </Field>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <form.AppForm>
