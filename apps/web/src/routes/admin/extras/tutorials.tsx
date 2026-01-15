@@ -1,7 +1,23 @@
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useConfirm } from "@omit/react-confirm-dialog";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { toast } from "sonner";
 import * as z from "zod";
-import { TutorialCard } from "@/components/landing/tutorial-card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpc, orpcClient } from "@/lib/orpc";
@@ -16,6 +32,13 @@ export const Route = createFileRoute("/admin/extras/tutorials")({
 function RouteComponent() {
   const { data: tutorials } = useSuspenseQuery(query);
   const queryClient = useQueryClient();
+  const deleteTutorialMutation = useMutation({
+    ...orpc.extras.deleteTutorial.mutationOptions(),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(query);
+    },
+  });
+  const confirm = useConfirm();
 
   const form = useAppForm({
     validators: {
@@ -79,10 +102,63 @@ function RouteComponent() {
           </form.AppForm>
         </div>
       </form>
-      <ScrollArea className="h-[100px] flex-1">
+      <ScrollArea className="h-25 flex-1">
         <section className="grid grid-cols-3 gap-6">
           {tutorials.map((tutorial) => (
-            <TutorialCard key={tutorial.id} tutorial={tutorial} />
+            <Card key={tutorial.id}>
+              <CardHeader>
+                <CardTitle>{tutorial.title}</CardTitle>
+                <CardDescription>{tutorial.description}</CardDescription>
+                <CardAction>
+                  <Button
+                    disabled={deleteTutorialMutation.isPending}
+                    onClick={async () => {
+                      const isConfirmed = await confirm({
+                        title: "Eliminar Tutorial",
+                        description:
+                          "¿Estás absolutamente seguro de que quieres eliminar este tutorial? Esta acción no se puede deshacer.",
+                        confirmText: "Eliminar",
+                        cancelText: "Cancelar",
+                      });
+
+                      if (!isConfirmed) {
+                        return;
+                      }
+
+                      toast.promise(
+                        deleteTutorialMutation
+                          .mutateAsync({
+                            id: tutorial.id,
+                          })
+                          .then(() => queryClient.invalidateQueries(query)),
+                        {
+                          loading: "Eliminando tutorial...",
+                          success: "Tutorial eliminado",
+                          error: (error) => ({
+                            message: `Error al eliminar tutorial: ${error}`,
+                            duration: 10_000,
+                          }),
+                        }
+                      );
+                    }}
+                    size="icon"
+                    variant="destructive"
+                  >
+                    <HugeiconsIcon icon={Delete02Icon} />
+                  </Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent className="mt-auto">
+                <iframe
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="aspect-video w-full"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  src={tutorial.embedUrl}
+                  title="YouTube video player"
+                />
+              </CardContent>
+            </Card>
           ))}
         </section>
       </ScrollArea>
