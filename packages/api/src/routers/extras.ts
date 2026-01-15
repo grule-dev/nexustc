@@ -1,4 +1,5 @@
 import { getLogger } from "@orpc/experimental-pino";
+import { eq } from "@repo/db";
 import type { tutorials as TutorialTable } from "@repo/db/schema/app";
 import { tutorials } from "@repo/db/schema/app";
 import z from "zod";
@@ -35,5 +36,17 @@ export default {
 
       await db.insert(tutorials).values(input);
       logger?.info(`Tutorial successfully created: ${input.title}`);
+    }),
+
+  deleteTutorial: permissionProcedure({
+    posts: ["delete"],
+  })
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.debug(`Deleting tutorial: ${input.id}`);
+
+      await db.delete(tutorials).where(eq(tutorials.id, input.id));
+      logger?.info(`Tutorial ${input.id} deleted successfully`);
     }),
 };
