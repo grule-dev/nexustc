@@ -33,6 +33,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await resend.emails.send({
+        from: "NeXusTC <noreply@accounts.nexustc18.com>",
+        to: user.email,
+        subject: "Restablece tu contraseña",
+        html: `<p>Haz click <a href="${url}">aquí</a> para restablecer tu contraseña</p>`,
+      });
+    },
   },
 
   emailVerification: {
@@ -41,7 +49,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
       await resend.emails.send({
-        from: "NeXusTC <verification@accounts.nexustc18.com>",
+        from: "NeXusTC <noreply@accounts.nexustc18.com>",
         to: user.email,
         template: { id: "confirm-email", variables: { VERIFICATION_URL: url } },
       });
