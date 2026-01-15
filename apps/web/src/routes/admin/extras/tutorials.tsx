@@ -126,11 +126,9 @@ function RouteComponent() {
                       }
 
                       toast.promise(
-                        deleteTutorialMutation
-                          .mutateAsync({
-                            id: tutorial.id,
-                          })
-                          .then(() => queryClient.invalidateQueries(query)),
+                        deleteTutorialMutation.mutateAsync({
+                          id: tutorial.id,
+                        }),
                         {
                           loading: "Eliminando tutorial...",
                           success: "Tutorial eliminado",
