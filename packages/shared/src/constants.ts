@@ -40,8 +40,26 @@ export const DOCUMENT_STATUS_LABELS: Record<
 
 export const RATING_REVIEW_MAX_LENGTH = 512;
 
+export const PATRON_TIER_KEYS = [
+  "none",
+  "level1",
+  "level3",
+  "level5",
+  "level8",
+  "level12",
+  "level69",
+] as const;
+
 // Patreon tier configuration
-export const PATRON_TIERS = {
+export const PATRON_TIERS: Record<
+  (typeof PATRON_TIER_KEYS)[number],
+  {
+    level: number;
+    badge: string | null;
+    adFree: boolean;
+    premiumLinks: boolean;
+  }
+> = {
   none: { level: 0, badge: null, adFree: false, premiumLinks: false },
   level1: {
     level: 1,

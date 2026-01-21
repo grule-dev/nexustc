@@ -17,11 +17,13 @@ import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
 import { getBucketUrl } from "@/lib/utils";
 import "react-image-crop/dist/ReactCrop.css";
 import {
-  CheckmarkCircle02Icon,
+  Cancel01Icon,
   HelpCircleIcon,
   RefreshIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Suspense } from "react";
 import { HoverReveal } from "@/components/hover-reveal";
 import { PostCard } from "@/components/landing/post-card";
@@ -158,14 +160,26 @@ function AccountsSection() {
 
         return (
           <div
-            className="flex w-full items-center justify-between rounded-md border p-4"
+            className="flex w-full items-center justify-between rounded-2xl border px-4 py-2"
             key={provider}
           >
             <div className="flex items-center gap-2">
               {providerData.Icon}
               <span className="font-medium">{providerData.label}</span>
             </div>
-            <HugeiconsIcon className="size-6" icon={CheckmarkCircle02Icon} />
+            <Button
+              onClick={async () => {
+                await authClient.unlinkAccount({
+                  providerId: provider,
+                  accountId,
+                });
+                queryClient.invalidateQueries({ queryKey: ["accounts"] });
+              }}
+              size="icon"
+              variant="destructive"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} />
+            </Button>
           </div>
         );
       })}
@@ -293,13 +307,6 @@ function UserBookmarks() {
   );
 }
 
-const TIER_LABELS: Record<string, string> = {
-  none: "Sin membresía",
-  tier1: "Supporter",
-  tier2: "Patron",
-  tier3: "Champion",
-};
-
 const TIER_STYLES: Record<string, string> = {
   tier1: "bg-amber-100 text-amber-800 border-amber-200",
   tier2: "bg-purple-100 text-purple-800 border-purple-200",
@@ -343,15 +350,12 @@ function PatreonStatusSection() {
           <>
             <div className="flex items-center gap-2">
               <Badge className={TIER_STYLES[status.tier] ?? ""}>
-                {TIER_LABELS[status.tier] ?? status.tier}
+                {status.benefits.badge}
               </Badge>
               {status.patronSince && (
                 <span className="text-muted-foreground text-sm">
-                  Miembro desde{" "}
-                  {new Date(status.patronSince).toLocaleDateString("es", {
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  Miembro desde el{" "}
+                  {format(status.patronSince, "PPP", { locale: es })}
                 </span>
               )}
             </div>
@@ -359,7 +363,7 @@ function PatreonStatusSection() {
               <p className="mb-2 font-medium">Beneficios activos:</p>
               <ul className="list-inside list-disc space-y-1 text-muted-foreground">
                 {status.benefits.badge && (
-                  <li>Badge: {TIER_LABELS[status.tier]}</li>
+                  <li>Badge: {status.benefits.badge}</li>
                 )}
                 {status.benefits.adFree && <li>Experiencia sin anuncios</li>}
                 {status.benefits.premiumLinks && (
