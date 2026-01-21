@@ -19,9 +19,18 @@ const user = ac.newRole({
   ratings: ["create", "self-update", "self-delete"],
 });
 
+const uploader = ac.newRole({
+  files: ["upload"],
+  posts: ["create", "list"],
+  comics: ["create", "list"],
+  dashboard: ["view"],
+  comments: ["create", "self-update", "self-delete"],
+  ratings: ["create", "self-update", "self-delete"],
+});
+
 const moderator = ac.newRole({
   files: ["upload"],
-  comics: ["create", "update", "delete"],
+  comics: ["create", "list", "update", "delete"],
   dashboard: ["view"],
   ratings: ["create", "self-update", "self-delete", "delete"],
 });
@@ -48,6 +57,7 @@ const owner = ac.newRole({
 export const roles = {
   owner,
   admin,
+  uploader,
   moderator,
   user,
 };
