@@ -23,7 +23,7 @@ import { Markdown } from "../markdown";
 import { RatingDisplay } from "../ratings";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { ImageGallery } from "../ui/image-gallery";
+import { ImageViewer } from "../ui/image-viewer";
 import { Separator } from "../ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
@@ -316,12 +316,13 @@ export function PostContent({ post }: { post: PostProps }) {
                   </div>
                 )}
 
-                {/* Image Gallery Modal */}
-                <ImageGallery
+                {/* Image Viewer Modal */}
+                <ImageViewer
                   images={galleryImages}
                   initialIndex={selectedImageIndex}
                   onOpenChange={setGalleryOpen}
                   open={galleryOpen}
+                  title={post.title}
                 />
               </div>
             </TabsContent>
