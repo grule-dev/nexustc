@@ -1,3 +1,5 @@
+import { Tag01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GamesCarousel } from "@/components/landing/games-carousel";
@@ -50,17 +52,19 @@ function HomeComponent() {
   const { weeklyGames } = Route.useLoaderData();
 
   return (
-    <main className="container grid grid-cols-1 gap-4 xl:grid-cols-4">
-      <div className="flex flex-col items-center justify-center xl:col-span-3">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4">
-          <HeroSection />
-          <h1 className="font-extrabold text-3xl">Juegos de la Semana</h1>
-          <GamesCarousel games={weeklyGames.data ?? []} />
-          <h1 className="font-extrabold text-3xl">Juegos Recientes</h1>
-          <RecentPosts />
+    <main className="grid grid-cols-3 gap-4 md:grid-cols-7">
+      <div className="col-span-5 col-start-2 grid grid-cols-4 gap-4">
+        <div className="col-span-3 flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-12 px-4">
+            <HeroSection />
+            <h1 className="font-extrabold text-3xl">Juegos de la Semana</h1>
+            <GamesCarousel games={weeklyGames.data ?? []} />
+            <h1 className="font-extrabold text-3xl">Juegos Recientes</h1>
+            <RecentPosts />
+          </div>
         </div>
+        <Sidebar />
       </div>
-      <Sidebar />
     </main>
   );
 }
@@ -75,9 +79,12 @@ function Sidebar() {
     <section className="flex flex-col items-center gap-4 px-4">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Usuarios Recientes</CardTitle>
+          <CardTitle className="inline-flex items-center gap-2 text-sm">
+            <HugeiconsIcon className="size-5" icon={UserGroupIcon} /> Usuarios
+            Recientes
+          </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap">
+        <CardContent className="flex flex-wrap px-4">
           {!!recentUsers.error && (
             <p className="text-red-500">Error: {recentUsers.error.code}</p>
           )}
@@ -95,7 +102,10 @@ function Sidebar() {
       </Card>
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Tags</CardTitle>
+          <CardTitle className="inline-flex items-center gap-2 text-sm">
+            <HugeiconsIcon className="size-4" icon={Tag01Icon} />
+            Tags
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {tags.map((tag) => (
@@ -114,7 +124,7 @@ function HeroSection() {
         <div className="relative">
           <img
             alt=""
-            className="h-96 w-full rounded-xl object-cover"
+            className="h-96 w-full rounded-xl object-cover outline-2 outline-primary outline-offset-2"
             src={"https://picsum.photos/id/11/1200/800"}
           />
           <div className="absolute inset-0 flex h-full w-full items-center justify-center">
@@ -125,17 +135,17 @@ function HeroSection() {
         </div>
       </div>
       <div className="hidden h-96 grid-rows-2 gap-4 md:grid">
-        <div className="h-full overflow-clip rounded-xl">
+        <div className="h-full">
           <img
             alt=""
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full rounded-xl object-cover object-center outline-2 outline-primary outline-offset-2"
             src={"https://picsum.photos/id/12/1000/600"}
           />
         </div>
-        <div className="h-full overflow-clip rounded-xl">
+        <div className="h-full">
           <img
             alt=""
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full rounded-xl object-cover object-center outline-2 outline-primary outline-offset-2"
             src={"https://picsum.photos/id/13/1000/600"}
           />
         </div>

@@ -77,7 +77,7 @@ function MenubarContent({
       align={align}
       alignOffset={alignOffset}
       className={cn(
-        "data-open:fade-in-0 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 min-w-48 rounded-2xl bg-popover p-1 text-popover-foreground shadow-2xl ring-1 ring-foreground/5 duration-100 data-open:animate-in",
+        "data-open:fade-in-0 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 min-w-48 rounded-2xl bg-popover p-1 text-popover-foreground shadow-2xl ring-1 ring-foreground/5 duration-100 data-open:animate-in",
         className
       )}
       data-slot="menubar-content"
@@ -96,7 +96,7 @@ function MenubarItem({
   return (
     <DropdownMenuItem
       className={cn(
-        "data-[variant=destructive]:*:[svg]:!text-destructive group/menubar-item gap-2.5 rounded-xl px-3 py-2 text-sm focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-[inset]:pl-8 data-[variant=destructive]:text-destructive data-[disabled]:opacity-50 data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4",
+        "group/menubar-item gap-2.5 rounded-xl px-3 py-2 text-sm focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-8 data-[variant=destructive]:text-destructive data-disabled:opacity-50 data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive!",
         className
       )}
       data-inset={inset}
@@ -117,7 +117,7 @@ function MenubarCheckboxItem({
     <MenuPrimitive.CheckboxItem
       checked={checked}
       className={cn(
-        "relative flex cursor-default select-none items-center gap-2.5 rounded-xl py-2 pr-3 pl-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "relative flex cursor-default select-none items-center gap-2.5 rounded-xl py-2 pr-3 pl-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       data-slot="menubar-checkbox-item"
@@ -171,7 +171,7 @@ function MenubarLabel({
   return (
     <DropdownMenuLabel
       className={cn(
-        "px-3.5 py-2.5 text-muted-foreground text-xs data-[inset]:pl-8",
+        "px-3.5 py-2.5 text-muted-foreground text-xs data-inset:pl-8",
         className
       )}
       data-inset={inset}
@@ -226,7 +226,7 @@ function MenubarSubTrigger({
   return (
     <DropdownMenuSubTrigger
       className={cn(
-        "gap-2 rounded-xl px-3 py-2 text-sm focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-[inset]:pl-8 data-open:text-accent-foreground [&_svg:not([class*='size-'])]:size-4",
+        "gap-2 rounded-xl px-3 py-2 text-sm focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-inset:pl-8 data-open:text-accent-foreground [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       data-inset={inset}

@@ -25,6 +25,11 @@ const patreonTierSchema = z.looseObject({
   type: z.literal("tier"),
 });
 
+const patreonCampaignSchema = z.looseObject({
+  id: z.string(),
+  type: z.literal("campaign"),
+});
+
 const patreonIdentityResponseSchema = z.looseObject({
   data: z.looseObject({
     id: z.string(),
@@ -42,7 +47,13 @@ const patreonIdentityResponseSchema = z.looseObject({
       .optional(),
   }),
   included: z
-    .array(z.union([patreonMemberSchema, patreonTierSchema]))
+    .array(
+      z.discriminatedUnion("type", [
+        patreonMemberSchema,
+        patreonTierSchema,
+        patreonCampaignSchema,
+      ])
+    )
     .optional(),
 });
 

@@ -62,13 +62,7 @@ function MainLayout() {
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative min-h-screen w-full">
-      <div
-        className="fixed inset-0 z-0 h-screen"
-        style={{
-          background:
-            "radial-gradient(125% 125% at 50% 10%, var(--color-background) 40%, oklch(from var(--color-primary) l c h / 0.2) 100%)",
-        }}
-      />
+      <div className="fixed inset-0 z-0 h-screen" />
 
       <div
         className="relative grid min-h-dvh grid-rows-[1fr_auto] gap-12"

@@ -1,4 +1,8 @@
-import { DOCUMENT_STATUSES, TAXONOMIES } from "@repo/shared/constants";
+import {
+  DOCUMENT_STATUSES,
+  PATRON_TIER_KEYS,
+  TAXONOMIES,
+} from "@repo/shared/constants";
 import { relations } from "drizzle-orm";
 import {
   boolean,
@@ -21,16 +25,6 @@ const timestamps = {
     .$onUpdate(() => new Date())
     .notNull(),
 };
-
-export const patronTierEnum = pgEnum("patron_tier", [
-  "none",
-  "level1",
-  "level3",
-  "level5",
-  "level8",
-  "level12",
-  "level69",
-]);
 
 export const user = pgTable(
   "user",
@@ -119,7 +113,7 @@ export const patron = pgTable(
       .references(() => user.id, { onDelete: "cascade" })
       .unique(),
     patreonUserId: text("patreon_user_id").notNull().unique(),
-    tier: patronTierEnum("tier").notNull().default("none"),
+    tier: text("tier", { enum: PATRON_TIER_KEYS }).notNull().default("none"),
     pledgeAmountCents: integer("pledge_amount_cents").notNull().default(0),
     isActivePatron: boolean("is_active_patron").notNull().default(false),
     patronSince: timestamp("patron_since", { withTimezone: true }),

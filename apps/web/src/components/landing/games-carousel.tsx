@@ -55,7 +55,7 @@ export function GamesCarousel({ games }: { games: PostType[] }) {
         <CarouselContent className="-ml-2">
           {games.map((game) => (
             <CarouselItem
-              className="basis-full py-1 pl-2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
+              className="basis-1/2 py-1 pl-2 md:basis-1/3 lg:basis-1/4"
               key={game.id}
             >
               <PostCard post={game} />

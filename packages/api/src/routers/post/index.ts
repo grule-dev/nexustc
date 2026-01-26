@@ -87,6 +87,7 @@ export default {
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
 
+          views: post.views,
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
 
@@ -183,6 +184,7 @@ export default {
           imageObjectKeys: post.imageObjectKeys,
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
+          views: post.views,
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
@@ -220,6 +222,19 @@ export default {
         type: z.enum(["post", "comic"]),
         query: z.string().optional(),
         termIds: z.array(z.string()).optional(),
+        orderBy: z
+          .enum([
+            "newest",
+            "oldest",
+            "title_asc",
+            "title_desc",
+            "views",
+            "rating_avg",
+            "rating_count",
+            "likes",
+          ])
+          .optional()
+          .default("views"),
       })
     )
     .handler(async ({ context: { db, ...context }, input }) => {
@@ -326,6 +341,7 @@ export default {
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
 
+          views: post.views,
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
 
@@ -351,18 +367,63 @@ export default {
         .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(and(...conditions));
 
-      // Order by similarity score if there's a query, otherwise by creation date
-      const posts = await baseQuery.orderBy(
-        input.query && input.query.trim() !== ""
-          ? sql`similarity DESC, ${post.createdAt} DESC`
-          : sql`${post.createdAt} DESC`
-      );
+      // Build the order clause based on input.orderBy
+      const getOrderClause = () => {
+        // When searching, similarity should be the primary sort
+        const hasQuery = input.query && input.query.trim() !== "";
+        const similarityPrefix = hasQuery ? sql`similarity DESC, ` : sql``;
+
+        switch (input.orderBy) {
+          case "newest":
+            return sql`${similarityPrefix}${post.createdAt} DESC`;
+          case "oldest":
+            return sql`${similarityPrefix}${post.createdAt} ASC`;
+          case "title_asc":
+            return sql`${similarityPrefix}${post.title} ASC`;
+          case "title_desc":
+            return sql`${similarityPrefix}${post.title} DESC`;
+          case "views":
+            return sql`${similarityPrefix}${post.views} DESC`;
+          case "rating_avg":
+            return sql`${similarityPrefix}COALESCE(${ratingsAgg.averageRating}, 0) DESC`;
+          case "rating_count":
+            return sql`${similarityPrefix}COALESCE(${ratingsAgg.ratingCount}, 0) DESC`;
+          case "likes":
+            return sql`${similarityPrefix}COALESCE(${likesAgg.count}, 0) DESC`;
+          default:
+            return sql`${similarityPrefix}${post.views} DESC`;
+        }
+      };
+
+      const posts = await baseQuery.orderBy(getOrderClause());
 
       // Remove similarity field from the final result
       const result = posts.map(({ similarity, ...postData }) => postData);
       logger?.debug(`Search returned ${result.length} posts`);
 
       return result;
+    }),
+
+  getRandom: publicProcedure
+    .input(z.object({ type: z.enum(["post", "comic"]) }))
+    .handler(async ({ context: { db, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(`Fetching random ${input.type}`);
+
+      const result = await db
+        .select({ id: post.id })
+        .from(post)
+        .where(and(eq(post.status, "publish"), eq(post.type, input.type)))
+        .orderBy(sql`RANDOM()`)
+        .limit(1);
+
+      if (!result.length) {
+        logger?.warn(`No published ${input.type} found for random selection`);
+        return null;
+      }
+
+      logger?.debug(`Random ${input.type} selected: ${result[0]?.id}`);
+      return result[0];
     }),
 
   getPostById: publicProcedure
@@ -435,6 +496,7 @@ export default {
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
           createdAt: post.createdAt,
+          views: post.views,
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,

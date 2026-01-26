@@ -2,13 +2,11 @@ import {
   Bookmark02Icon,
   FavouriteIcon,
   StarIcon,
+  ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { getBucketUrl, getTierColor } from "@/lib/utils";
-import { AndroidLogo } from "../icons/android";
-import { IOSLogo } from "../icons/ios";
-import { WindowsLogo } from "../icons/windows";
 import { TermBadge } from "../term-badge";
 import { Card, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
@@ -22,6 +20,7 @@ type PostCardProps = {
     imageObjectKeys: string[] | null;
     favorites: number;
     likes: number;
+    views: number;
     ratingCount?: number;
     averageRating?: number;
     terms: {
@@ -35,7 +34,6 @@ type PostCardProps = {
 
 export function PostCard({ post, withTags = true }: PostCardProps) {
   const groupedTerms = Object.groupBy(post.terms, (term) => term.taxonomy);
-  const platforms = groupedTerms.platform?.map((t) => t.name);
   const tags = groupedTerms.tag?.map((t) => ({ name: t.name, color: t.color }));
 
   const images = (post.imageObjectKeys?.slice(0, 4) ?? []).map(getBucketUrl);
@@ -45,6 +43,7 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
     <Link
       className="group w-full transition-transform hover:scale-102"
       params={{ id: post.id }}
+      preload={false}
       to="/post/$id"
     >
       <Card className="relative h-full gap-4 overflow-hidden pt-0 ring-primary group-hover:ring">
@@ -122,43 +121,41 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
               )}
             </div>
           )}
-          {/* Platforms overlay */}
-          {platforms && platforms?.length > 0 && (
-            <div className="absolute right-2 bottom-2 flex items-center gap-2 rounded-lg bg-black/50 px-2 py-1 backdrop-blur-md">
-              {platforms
-                ?.sort((a, b) => -a.localeCompare(b))
-                .map((platform) => {
-                  const Icon = getPlatformIcon(platform);
-                  return Icon;
-                })}
-            </div>
-          )}
         </div>
-        <CardContent className="gap-4 space-y-2">
+        <CardContent className="flex flex-col items-center space-y-2">
           <h3 className="line-clamp-2 font-semibold text-lg">{post.title}</h3>
           <Separator orientation="horizontal" />
-          {/* Stats overlay */}
-          <div className="bottom-2 left-2 flex items-center gap-2 rounded-lg">
-            <HugeiconsIcon
-              className="size-5 fill-red-500 text-red-500"
-              icon={FavouriteIcon}
-            />
-            <span className="text-sm text-white">{post.likes}</span>
-            <HugeiconsIcon
-              className="size-5 fill-blue-500 text-blue-500"
-              icon={Bookmark02Icon}
-            />
-            <span className="text-sm text-white">{post.favorites}</span>
+          <div className="bottom-2 left-2 flex items-center gap-3 rounded-lg leading-none">
+            <div className="inline-flex items-center gap-1">
+              <HugeiconsIcon className="size-4 text-white" icon={ViewIcon} />
+              <span className="translate-y-px text-white">{post.views}</span>
+            </div>
+            <div className="items-center-safe inline-flex gap-1">
+              <HugeiconsIcon
+                className="size-4 fill-red-500 text-red-500"
+                icon={FavouriteIcon}
+              />
+              <span className="translate-y-px text-white">{post.likes}</span>
+            </div>
+            <div className="inline-flex items-center gap-1">
+              <HugeiconsIcon
+                className="size-4 fill-blue-500 text-blue-500"
+                icon={Bookmark02Icon}
+              />
+              <span className="translate-y-px text-white">
+                {post.favorites}
+              </span>
+            </div>
             {post.ratingCount !== undefined && post.ratingCount > 0 && (
-              <>
+              <div className="inline-flex items-center gap-1">
                 <HugeiconsIcon
-                  className="size-5 fill-amber-400 text-amber-400"
+                  className="size-4 fill-amber-400 text-amber-400"
                   icon={StarIcon}
                 />
-                <span className="text-sm text-white">
+                <span className="translate-y-px text-white">
                   {post.averageRating?.toFixed(1)}
                 </span>
-              </>
+              </div>
             )}
           </div>
 
@@ -197,17 +194,4 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
       </Card>
     </Link>
   );
-}
-
-function getPlatformIcon(platform: string) {
-  switch (platform.toLowerCase()) {
-    case "pc":
-      return <WindowsLogo className="size-4 text-white" key="pc" />;
-    case "android":
-      return <AndroidLogo className="size-5 text-white" key="android" />;
-    case "ios":
-      return <IOSLogo className="size-5 text-white" key="ios" />;
-    default:
-      return null;
-  }
 }
