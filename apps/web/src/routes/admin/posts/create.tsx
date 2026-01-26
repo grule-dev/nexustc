@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/performance/useTopLevelRegex: it's a one-off thing, no performance impact */
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { DOCUMENT_STATUSES } from "@repo/shared/constants";
@@ -165,6 +166,33 @@ function RouteComponent() {
     }
   };
 
+  const extractTemplate = async () => {
+    const template = await navigator.clipboard.readText();
+    const { lore, tags, creatorBlock, linksBlock } = parseTemplate(template);
+
+    const tagIds: string[] = [];
+    for (const tagName of tags) {
+      const foundTag = groupedTerms.tag?.find(
+        (t) => t.name.toLowerCase() === tagName.toLowerCase()
+      );
+      if (foundTag) {
+        tagIds.push(foundTag.id);
+      }
+    }
+
+    const values = {
+      authorContent: form.getFieldValue("authorContent"),
+      content: form.getFieldValue("content"),
+      adsLinks: form.getFieldValue("adsLinks"),
+      tags: form.getFieldValue("tags"),
+    };
+
+    form.setFieldValue("authorContent", creatorBlock ?? values.authorContent);
+    form.setFieldValue("content", lore ?? values.content);
+    form.setFieldValue("adsLinks", linksBlock ?? values.adsLinks);
+    form.setFieldValue("tags", tagIds ?? values.tags);
+  };
+
   return (
     <form
       className="relative flex flex-col gap-4"
@@ -177,6 +205,11 @@ function RouteComponent() {
       <Card>
         <CardHeader>
           <CardTitle>Crear Post</CardTitle>
+          <CardAction>
+            <Button onClick={extractTemplate} type="button" variant="outline">
+              Extraer desde plantilla
+            </Button>
+          </CardAction>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           <form.AppField name="title">
@@ -496,6 +529,7 @@ function RouteComponent() {
           post={{
             ...post,
             id: "0",
+            views: 0,
             imageObjectKeys: selectedFiles.map(
               (file) => uploadProgress[file.name]?.previewUrl ?? ""
             ),
@@ -541,4 +575,49 @@ function Preview({
       </section>
     </div>
   );
+}
+
+type ParsedTemplate = {
+  creatorBlock: string;
+  tags: string[];
+  linksBlock: string;
+  lore: string;
+};
+
+export function parseTemplate(md: string): ParsedTemplate {
+  const extract = (regex: RegExp): string => {
+    const match = md.match(regex);
+    return match ? match[1].trim() : "";
+  };
+
+  // 1. CREATOR BLOCK (as-is, no separators)
+  const creatorBlock = extract(/(\*\*CREADOR:[\s\S]*?\)\s*)\n\s*\n/i);
+
+  // 2. TAGS
+  const tagsRaw = extract(/\*\*GÉNEROS \/ TAGS:\*\*\s*([\s\S]*?)\n\s*\n/i);
+
+  // 3. LINKS BLOCK (PC + ANDROID, headers preserved)
+  const linksBlock = extract(
+    /(═══════════════\*\*\[JUEGOS PC\]\*\*═══════════════[\s\S]*?)\n\s*\n═════════════════════════════════════════════/i
+  );
+
+  // Remove decorative separators inside links block
+  const cleanedLinksBlock = linksBlock.replace(/═{5,}/g, "").trim();
+
+  // 4. LORE (between header and closing separator)
+  const lore = extract(
+    /\*\*SINOPSIS \/ RESUMEN \/ LORE:\s*\*\*\s*\n\s*═+\s*\n([\s\S]*?)\n\s*═+/i
+  );
+
+  return {
+    creatorBlock,
+    tags: tagsRaw
+      ? tagsRaw
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [],
+    linksBlock: cleanedLinksBlock,
+    lore,
+  };
 }
