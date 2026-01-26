@@ -154,7 +154,7 @@ function SidebarLinks({
             <SidebarMenuItem key={link.name}>
               <SidebarMenuButton
                 render={<Link to={link.href} />}
-                variant="outline"
+                variant="default"
               >
                 {link.name}
               </SidebarMenuButton>

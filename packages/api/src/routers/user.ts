@@ -111,6 +111,7 @@ export default {
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
           createdAt: post.createdAt,
+          views: post.views,
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,

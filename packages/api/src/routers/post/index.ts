@@ -87,6 +87,7 @@ export default {
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
 
+          views: post.views,
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
 
@@ -183,6 +184,7 @@ export default {
           imageObjectKeys: post.imageObjectKeys,
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
+          views: post.views,
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
@@ -420,6 +422,7 @@ export default {
         return null;
       }
 
+      // @ts-expect-error
       logger?.debug(`Random ${input.type} selected: ${result[0].id}`);
       return result[0];
     }),
@@ -494,6 +497,7 @@ export default {
           adsLinks: post.adsLinks,
           authorContent: post.authorContent,
           createdAt: post.createdAt,
+          views: post.views,
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
