@@ -422,8 +422,7 @@ export default {
         return null;
       }
 
-      // @ts-expect-error
-      logger?.debug(`Random ${input.type} selected: ${result[0].id}`);
+      logger?.debug(`Random ${input.type} selected: ${result[0]?.id}`);
       return result[0];
     }),
 
