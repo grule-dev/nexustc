@@ -191,9 +191,9 @@ function RouteComponent() {
       form.setFieldValue("authorContent", creatorBlock ?? values.authorContent);
       form.setFieldValue("content", lore ?? values.content);
       form.setFieldValue("adsLinks", linksBlock ?? values.adsLinks);
-      form.setFieldValue("tags", tagIds ?? values.tags);
+      form.setFieldValue("tags", tagIds.length > 0 ? tagIds : values.tags);
     } catch (error) {
-      toast.error("No se pudo leer el portapapeles");
+      toast.error(`No se pudo leer el portapapeles: ${error}`);
     }
   };
 
