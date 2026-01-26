@@ -167,30 +167,34 @@ function RouteComponent() {
   };
 
   const extractTemplate = async () => {
-    const template = await navigator.clipboard.readText();
-    const { lore, tags, creatorBlock, linksBlock } = parseTemplate(template);
+    try {
+      const template = await navigator.clipboard.readText();
+      const { lore, tags, creatorBlock, linksBlock } = parseTemplate(template);
 
-    const tagIds: string[] = [];
-    for (const tagName of tags) {
-      const foundTag = groupedTerms.tag?.find(
-        (t) => t.name.toLowerCase() === tagName.toLowerCase()
-      );
-      if (foundTag) {
-        tagIds.push(foundTag.id);
+      const tagIds: string[] = [];
+      for (const tagName of tags) {
+        const foundTag = groupedTerms.tag?.find(
+          (t) => t.name.toLowerCase() === tagName.toLowerCase()
+        );
+        if (foundTag) {
+          tagIds.push(foundTag.id);
+        }
       }
+
+      const values = {
+        authorContent: form.getFieldValue("authorContent"),
+        content: form.getFieldValue("content"),
+        adsLinks: form.getFieldValue("adsLinks"),
+        tags: form.getFieldValue("tags"),
+      };
+
+      form.setFieldValue("authorContent", creatorBlock ?? values.authorContent);
+      form.setFieldValue("content", lore ?? values.content);
+      form.setFieldValue("adsLinks", linksBlock ?? values.adsLinks);
+      form.setFieldValue("tags", tagIds ?? values.tags);
+    } catch (error) {
+      toast.error("No se pudo leer el portapapeles");
     }
-
-    const values = {
-      authorContent: form.getFieldValue("authorContent"),
-      content: form.getFieldValue("content"),
-      adsLinks: form.getFieldValue("adsLinks"),
-      tags: form.getFieldValue("tags"),
-    };
-
-    form.setFieldValue("authorContent", creatorBlock ?? values.authorContent);
-    form.setFieldValue("content", lore ?? values.content);
-    form.setFieldValue("adsLinks", linksBlock ?? values.adsLinks);
-    form.setFieldValue("tags", tagIds ?? values.tags);
   };
 
   return (
