@@ -2,12 +2,29 @@ import { Tag01Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { GamesCarousel } from "@/components/landing/games-carousel";
 import { PostCard } from "@/components/landing/post-card";
 import { TermBadge } from "@/components/term-badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserLabel } from "@/components/users/user-label";
+import { useOverflowDetection } from "@/hooks/use-overflow-detection";
 import { useTerms } from "@/hooks/use-terms";
 import { orpcClient, safeOrpcClient } from "@/lib/orpc";
 import { getBucketUrl } from "@/lib/utils";
@@ -84,43 +101,87 @@ function Sidebar() {
 
   return (
     <section className="flex h-96 w-full flex-col items-center gap-4 px-4">
-      <Card className="w-full flex-1">
-        <CardHeader>
-          <CardTitle className="inline-flex items-center justify-center gap-2 text-sm">
+      <OverflowCard
+        header={
+          <>
             <HugeiconsIcon className="size-5" icon={UserGroupIcon} /> Usuarios
             Recientes
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap px-4">
-          {!!recentUsers.error && (
-            <p className="text-red-500">Error: {recentUsers.error.code}</p>
-          )}
-          {recentUsers.data?.map((user, idx) => (
-            <div className="flex items-center" key={user.id}>
-              <Link params={{ id: user.id }} to="/user/$id">
-                <UserLabel user={user} />
-              </Link>
-              {idx < (recentUsers.data?.length ?? 0) - 1 && (
-                <span className="mr-1">,</span>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-      <Card className="w-full flex-1">
-        <CardHeader>
-          <CardTitle className="inline-flex items-center gap-2 text-sm">
+          </>
+        }
+      >
+        {!!recentUsers.error && (
+          <p className="text-red-500">Error: {recentUsers.error.code}</p>
+        )}
+        {recentUsers.data?.map((user, idx) => (
+          <div className="flex items-center" key={user.id}>
+            <Link params={{ id: user.id }} to="/user/$id">
+              <UserLabel user={user} />
+            </Link>
+            {idx < (recentUsers.data?.length ?? 0) - 1 && (
+              <span className="mr-1">,</span>
+            )}
+          </div>
+        ))}
+      </OverflowCard>
+      <OverflowCard
+        header={
+          <>
             <HugeiconsIcon className="size-4" icon={Tag01Icon} />
             Tags
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <TagCard key={tag.id} tag={tag} />
-          ))}
-        </CardContent>
-      </Card>
+          </>
+        }
+      >
+        {tags.map((tag) => (
+          <TagCard key={tag.id} tag={tag} />
+        ))}
+      </OverflowCard>
     </section>
+  );
+}
+
+function OverflowCard({
+  children,
+  header,
+}: React.PropsWithChildren<{ header: React.ReactNode }>) {
+  const overflow = useOverflowDetection();
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  return (
+    <Card className="min-h-0 w-full flex-1">
+      <CardHeader className="flex items-center justify-between">
+        <CardTitle className="inline-flex items-center gap-2 text-sm">
+          {header}
+        </CardTitle>
+        {overflow.hasOverflow && (
+          <CardAction>
+            <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
+              <DialogTrigger render={<Button size="sm" variant="default" />}>
+                Ver más
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Tags</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-96 overflow-y-auto pr-4">
+                  <div className="flex flex-wrap gap-2">{children}</div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+          </CardAction>
+        )}
+      </CardHeader>
+      <CardContent className="relative min-h-0 flex-1 overflow-hidden py-0">
+        <div
+          className="flex h-full w-full flex-wrap items-start gap-2"
+          ref={overflow.containerRef}
+        >
+          {children}
+        </div>
+        {overflow.hasOverflow && (
+          <div className="absolute inset-0 top-0 h-full w-full bg-linear-to-t from-card to-transparent" />
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
