@@ -37,6 +37,7 @@ import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/creat
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
 import { Route as AdminExtrasWeeklyRouteImport } from './routes/admin/extras/weekly'
 import { Route as AdminExtrasTutorialsRouteImport } from './routes/admin/extras/tutorials'
+import { Route as AdminExtrasFeaturedRouteImport } from './routes/admin/extras/featured'
 import { Route as AdminComicsCreateRouteImport } from './routes/admin/comics/create'
 import { Route as MainUserIdRouteImport } from './routes/_main/user.$id'
 import { Route as MainPostIdRouteImport } from './routes/_main/post.$id'
@@ -182,6 +183,11 @@ const AdminExtrasTutorialsRoute = AdminExtrasTutorialsRouteImport.update({
   path: '/extras/tutorials',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminExtrasFeaturedRoute = AdminExtrasFeaturedRouteImport.update({
+  id: '/extras/featured',
+  path: '/extras/featured',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminComicsCreateRoute = AdminComicsCreateRouteImport.update({
   id: '/comics/create',
   path: '/comics/create',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/post/$id': typeof MainPostIdRoute
   '/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
+  '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/post/$id': typeof MainPostIdRoute
   '/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
+  '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/_main/post/$id': typeof MainPostIdRoute
   '/_main/user/$id': typeof MainUserIdRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
+  '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/post/$id'
     | '/user/$id'
     | '/admin/comics/create'
+    | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
     | '/admin/posts/create'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/post/$id'
     | '/user/$id'
     | '/admin/comics/create'
+    | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
     | '/admin/posts/create'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/_main/post/$id'
     | '/_main/user/$id'
     | '/admin/comics/create'
+    | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
     | '/admin/posts/create'
@@ -623,6 +635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminExtrasTutorialsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/extras/featured': {
+      id: '/admin/extras/featured'
+      path: '/extras/featured'
+      fullPath: '/admin/extras/featured'
+      preLoaderRoute: typeof AdminExtrasFeaturedRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/comics/create': {
       id: '/admin/comics/create'
       path: '/comics/create'
@@ -706,6 +725,7 @@ const MainRouteRouteWithChildren = MainRouteRoute._addFileChildren(
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminComicsCreateRoute: typeof AdminComicsCreateRoute
+  AdminExtrasFeaturedRoute: typeof AdminExtrasFeaturedRoute
   AdminExtrasTutorialsRoute: typeof AdminExtrasTutorialsRoute
   AdminExtrasWeeklyRoute: typeof AdminExtrasWeeklyRoute
   AdminPostsCreateRoute: typeof AdminPostsCreateRoute
@@ -720,6 +740,7 @@ interface AdminRouteRouteChildren {
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminComicsCreateRoute: AdminComicsCreateRoute,
+  AdminExtrasFeaturedRoute: AdminExtrasFeaturedRoute,
   AdminExtrasTutorialsRoute: AdminExtrasTutorialsRoute,
   AdminExtrasWeeklyRoute: AdminExtrasWeeklyRoute,
   AdminPostsCreateRoute: AdminPostsCreateRoute,

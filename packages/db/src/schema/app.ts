@@ -159,6 +159,10 @@ export const accountRelations = relations(account, ({ one }) => ({
 
 export const postTypeEnum = pgEnum("post_type", ["post", "comic"]);
 export const documentStatusEnum = pgEnum("document_status", DOCUMENT_STATUSES);
+export const featuredPositionEnum = pgEnum("featured_position", [
+  "main",
+  "secondary",
+]);
 
 export const term = pgTable("term", {
   id: text("id").primaryKey().$defaultFn(generateId),
@@ -190,6 +194,23 @@ export const post = pgTable(
     index("post_title_gin_idx").using("gin", table.title.op("gin_trgm_ops")),
     index("post_status_idx").on(table.status),
     index("post_created_at_idx").on(table.createdAt),
+  ]
+);
+
+export const featuredPost = pgTable(
+  "featured_post",
+  {
+    id: text("id").primaryKey().$defaultFn(generateId),
+    postId: text("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    position: featuredPositionEnum("position").notNull(),
+    order: integer("order").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("featured_post_post_id_idx").on(table.postId),
+    index("featured_post_position_idx").on(table.position),
   ]
 );
 
@@ -289,6 +310,14 @@ export const postRelations = relations(post, ({ many }) => ({
   favorites: many(postBookmark),
   likes: many(postLikes),
   ratings: many(postRating),
+  featured: many(featuredPost),
+}));
+
+export const featuredPostRelations = relations(featuredPost, ({ one }) => ({
+  post: one(post, {
+    fields: [featuredPost.postId],
+    references: [post.id],
+  }),
 }));
 
 export const termRelations = relations(term, ({ many }) => ({

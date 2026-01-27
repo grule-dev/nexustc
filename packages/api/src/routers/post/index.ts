@@ -2,6 +2,7 @@ import { getLogger } from "@orpc/experimental-pino";
 import { and, asc, desc, eq, sql } from "@repo/db";
 import {
   comment,
+  featuredPost,
   post,
   postBookmark,
   postLikes,
@@ -212,6 +213,109 @@ export default {
         .orderBy(asc(post.title));
 
       logger?.debug(`Successfully fetched ${posts.length} weekly posts`);
+      return posts;
+    }
+  ),
+
+  getFeatured: publicProcedure.handler(
+    async ({ context: { db, ...context } }) => {
+      const logger = getLogger(context);
+      logger?.info("Fetching featured posts");
+
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
+
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
+          json_agg(
+            json_build_object(
+              'id', ${term.id},
+              'name', ${term.name},
+              'taxonomy', ${term.taxonomy},
+              'color', ${term.color}
+            )
+          )
+        `.as("terms"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
+
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
+
+      const posts = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          version: post.version,
+          content: post.content,
+          imageObjectKeys: post.imageObjectKeys,
+          adsLinks: post.adsLinks,
+          authorContent: post.authorContent,
+          views: post.views,
+          position: featuredPost.position,
+          order: featuredPost.order,
+
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+
+          terms: sql<
+            {
+              id: string;
+              name: string;
+              taxonomy: (typeof TAXONOMIES)[number];
+              color: string;
+            }[]
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
+
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
+
+          createdAt: post.createdAt,
+        })
+        .from(featuredPost)
+        .innerJoin(post, eq(post.id, featuredPost.postId))
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
+        .where(eq(post.status, "publish"))
+        .orderBy(
+          sql`CASE WHEN ${featuredPost.position} = 'main' THEN 0 ELSE 1 END`,
+          featuredPost.order
+        );
+
+      logger?.debug(`Successfully fetched ${posts.length} featured posts`);
       return posts;
     }
   ),

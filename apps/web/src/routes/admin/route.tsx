@@ -88,6 +88,10 @@ const nav = {
         href: "/admin/extras/weekly",
       },
       {
+        name: "Posts Destacados",
+        href: "/admin/extras/featured",
+      },
+      {
         name: "Tutoriales",
         href: "/admin/extras/tutorials",
       },
