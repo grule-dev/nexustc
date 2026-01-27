@@ -4,6 +4,7 @@ import {
   createFileRoute,
   type ErrorComponentProps,
   Outlet,
+  useMatchRoute,
 } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { AdblockBlockerDialog } from "@/components/adblock-blocker-dialog";
@@ -29,6 +30,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAdblockDetector } from "@/hooks/use-adblock-detector";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_main")({
   component: MainLayout,
@@ -60,17 +62,31 @@ function MainLayout() {
 }
 
 function Wrapper({ children }: { children: React.ReactNode }) {
+  const matchRoute = useMatchRoute();
+
+  const isChronos = matchRoute({
+    to: "/chronos",
+  });
+
   return (
-    <div className="relative min-h-screen w-full">
+    <div
+      className={cn(
+        "relative min-h-screen w-full",
+        isChronos && "bg-neutral-900"
+      )}
+    >
       <div className="fixed inset-0 z-0 h-screen" />
 
       <div
-        className="relative grid min-h-dvh grid-rows-[1fr_auto] gap-12"
+        className={cn(
+          "relative grid min-h-dvh grid-rows-[1fr_auto]",
+          !isChronos && "gap-12"
+        )}
         id="main-scrollable-area"
       >
         <div className="flex flex-col items-center">
           <Header />
-          <div className="h-6 md:h-12" />
+          {!isChronos && <div className="h-6 md:h-12" />}
           {children}
         </div>
         <Footer />

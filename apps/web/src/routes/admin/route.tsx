@@ -97,6 +97,15 @@ const nav = {
       },
     ],
   },
+  chronos: {
+    name: "Chronos",
+    links: [
+      {
+        name: "Editar Página",
+        href: "/admin/chronos/edit",
+      },
+    ],
+  },
 };
 
 function AdminLayout() {
@@ -131,6 +140,9 @@ function AdminLayout() {
           </HasPermissions>
           <HasPermissions permissions={{ posts: ["create"] }}>
             <SidebarLinks item={nav.extras} />
+          </HasPermissions>
+          <HasPermissions permissions={{ chronos: ["update"] }}>
+            <SidebarLinks item={nav.chronos} />
           </HasPermissions>
         </SidebarContent>
         <SidebarRail />

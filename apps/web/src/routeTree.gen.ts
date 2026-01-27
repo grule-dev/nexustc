@@ -39,6 +39,7 @@ import { Route as AdminExtrasWeeklyRouteImport } from './routes/admin/extras/wee
 import { Route as AdminExtrasTutorialsRouteImport } from './routes/admin/extras/tutorials'
 import { Route as AdminExtrasFeaturedRouteImport } from './routes/admin/extras/featured'
 import { Route as AdminComicsCreateRouteImport } from './routes/admin/comics/create'
+import { Route as AdminChronosEditRouteImport } from './routes/admin/chronos/edit'
 import { Route as MainUserIdRouteImport } from './routes/_main/user.$id'
 import { Route as MainPostIdRouteImport } from './routes/_main/post.$id'
 import { Route as AdminPostsEditIdRouteImport } from './routes/admin/posts/edit.$id'
@@ -193,6 +194,11 @@ const AdminComicsCreateRoute = AdminComicsCreateRouteImport.update({
   path: '/comics/create',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminChronosEditRoute = AdminChronosEditRouteImport.update({
+  id: '/chronos/edit',
+  path: '/chronos/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const MainUserIdRoute = MainUserIdRouteImport.update({
   id: '/user/$id',
   path: '/user/$id',
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/post/$id': typeof MainPostIdRoute
   '/user/$id': typeof MainUserIdRoute
+  '/admin/chronos/edit': typeof AdminChronosEditRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/post/$id': typeof MainPostIdRoute
   '/user/$id': typeof MainUserIdRoute
+  '/admin/chronos/edit': typeof AdminChronosEditRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/_main/post/$id': typeof MainPostIdRoute
   '/_main/user/$id': typeof MainUserIdRoute
+  '/admin/chronos/edit': typeof AdminChronosEditRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/post/$id'
     | '/user/$id'
+    | '/admin/chronos/edit'
     | '/admin/comics/create'
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/post/$id'
     | '/user/$id'
+    | '/admin/chronos/edit'
     | '/admin/comics/create'
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/_main/post/$id'
     | '/_main/user/$id'
+    | '/admin/chronos/edit'
     | '/admin/comics/create'
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
@@ -649,6 +661,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminComicsCreateRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/chronos/edit': {
+      id: '/admin/chronos/edit'
+      path: '/chronos/edit'
+      fullPath: '/admin/chronos/edit'
+      preLoaderRoute: typeof AdminChronosEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/_main/user/$id': {
       id: '/_main/user/$id'
       path: '/user/$id'
@@ -724,6 +743,7 @@ const MainRouteRouteWithChildren = MainRouteRoute._addFileChildren(
 
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminChronosEditRoute: typeof AdminChronosEditRoute
   AdminComicsCreateRoute: typeof AdminComicsCreateRoute
   AdminExtrasFeaturedRoute: typeof AdminExtrasFeaturedRoute
   AdminExtrasTutorialsRoute: typeof AdminExtrasTutorialsRoute
@@ -739,6 +759,7 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
+  AdminChronosEditRoute: AdminChronosEditRoute,
   AdminComicsCreateRoute: AdminComicsCreateRoute,
   AdminExtrasFeaturedRoute: AdminExtrasFeaturedRoute,
   AdminExtrasTutorialsRoute: AdminExtrasTutorialsRoute,

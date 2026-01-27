@@ -304,6 +304,16 @@ export const tutorials = pgTable("tutorial", {
   ...timestamps,
 });
 
+export const chronosPage = pgTable("chronos_page", {
+  id: text("id").primaryKey().$defaultFn(generateId),
+  stickyImageKey: text("sticky_image_key"),
+  carouselImageKeys: jsonb("carousel_image_keys").$type<string[]>(),
+  markdownContent: text("markdown_content").notNull().default(""),
+  markdownImageKeys: jsonb("markdown_image_keys").$type<string[]>(),
+  isActive: boolean("is_active").notNull().default(true),
+  ...timestamps,
+});
+
 export const postRelations = relations(post, ({ many }) => ({
   terms: many(termPostRelation),
   comments: many(comment),

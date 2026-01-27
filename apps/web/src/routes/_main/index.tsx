@@ -81,7 +81,7 @@ function HomeComponent() {
   return (
     <main className="grid grid-cols-3 gap-4 md:grid-cols-7">
       <div className="col-span-5 col-start-2">
-        <div className="flex flex-col items-center justify-center gap-8 px-4">
+        <div className="flex flex-col items-center gap-8 px-4">
           <HeroSection />
           <h1 className="font-extrabold text-2xl">Juegos de la Semana</h1>
           <GamesCarousel games={weeklyGames.data ?? []} />
@@ -100,7 +100,7 @@ function Sidebar() {
   const tags = terms?.filter((term) => term.taxonomy === "tag") ?? [];
 
   return (
-    <section className="flex h-96 w-full flex-col items-center gap-4 px-4">
+    <section className="flex h-96 w-full flex-col items-center gap-4">
       <OverflowCard
         header={
           <>
@@ -203,7 +203,7 @@ function HeroSection() {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="grid h-96 w-full grid-cols-3 flex-row gap-2">
+    <div className="grid h-96 w-full grid-cols-3 flex-row gap-4">
       <div className="container col-span-2 grid h-96 w-full grid-cols-1 gap-4 md:grid-cols-3">
         {main && (
           <div className="md:col-span-2">

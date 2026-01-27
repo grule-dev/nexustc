@@ -1,4 +1,5 @@
 import type { RouterClient } from "@orpc/server";
+import chronos from "./chronos";
 import comic from "./comic";
 import extras from "./extras";
 import file from "./file";
@@ -17,6 +18,7 @@ export const appRouter = {
   extras,
   rating,
   patreon,
+  chronos,
 };
 
 export type AppRouter = typeof appRouter;
