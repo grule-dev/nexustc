@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useBlocker, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import Zoom from "react-medium-image-zoom";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -300,16 +299,14 @@ function RouteComponent() {
           <h3 className="mb-2 font-semibold">Principal</h3>
           {displayedMainPost ? (
             <Item className="overflow-hidden" variant="muted">
-              <Zoom>
-                <ItemMedia className="size-12" variant="image">
-                  <img
-                    alt={displayedMainPost.title}
-                    src={getBucketUrl(
-                      displayedMainPost.imageObjectKeys?.[0] ?? ""
-                    )}
-                  />
-                </ItemMedia>
-              </Zoom>
+              <ItemMedia className="size-12" variant="image">
+                <img
+                  alt={displayedMainPost.title}
+                  src={getBucketUrl(
+                    displayedMainPost.imageObjectKeys?.[0] ?? ""
+                  )}
+                />
+              </ItemMedia>
               <ItemContent>
                 <ItemTitle className="w-fit min-w-0 text-ellipsis">
                   {displayedMainPost.title}
@@ -331,14 +328,12 @@ function RouteComponent() {
           <ItemGroup className="grid grid-cols-2 gap-4">
             {displayedSecondaryPosts.map((post) => (
               <Item className="overflow-hidden" key={post.id} variant="muted">
-                <Zoom>
-                  <ItemMedia className="size-12" variant="image">
-                    <img
-                      alt={post.title}
-                      src={getBucketUrl(post.imageObjectKeys?.[0] ?? "")}
-                    />
-                  </ItemMedia>
-                </Zoom>
+                <ItemMedia className="size-12" variant="image">
+                  <img
+                    alt={post.title}
+                    src={getBucketUrl(post.imageObjectKeys?.[0] ?? "")}
+                  />
+                </ItemMedia>
                 <ItemContent>
                   <ItemTitle className="w-fit min-w-0 text-ellipsis">
                     {post.title}

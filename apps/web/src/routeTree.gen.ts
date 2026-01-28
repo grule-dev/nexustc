@@ -221,6 +221,7 @@ const MainPostReviewsIdRoute = MainPostReviewsIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof MainIndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof MainAboutRoute
   '/auth': typeof MainAuthRoute
@@ -235,7 +236,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
   '/api/health': typeof ApiHealthRoute
-  '/': typeof MainIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/post/$id': typeof MainPostIdRoute
   '/user/$id': typeof MainUserIdRoute
@@ -249,10 +249,10 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/admin/comics': typeof AdminComicsIndexRoute
-  '/admin/posts': typeof AdminPostsIndexRoute
-  '/admin/terms': typeof AdminTermsIndexRoute
-  '/admin/users': typeof AdminUsersIndexRoute
+  '/admin/comics/': typeof AdminComicsIndexRoute
+  '/admin/posts/': typeof AdminPostsIndexRoute
+  '/admin/terms/': typeof AdminTermsIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
   '/post/reviews/$id': typeof MainPostReviewsIdRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
@@ -332,6 +332,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/admin'
     | '/about'
     | '/auth'
@@ -346,7 +347,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tutorials'
     | '/api/health'
-    | '/'
     | '/admin/'
     | '/post/$id'
     | '/user/$id'
@@ -360,10 +360,10 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/patreon/webhook'
     | '/api/rpc/$'
-    | '/admin/comics'
-    | '/admin/posts'
-    | '/admin/terms'
-    | '/admin/users'
+    | '/admin/comics/'
+    | '/admin/posts/'
+    | '/admin/terms/'
+    | '/admin/users/'
     | '/post/reviews/$id'
     | '/admin/posts/edit/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -461,7 +461,7 @@ declare module '@tanstack/react-router' {
     '/_main': {
       id: '/_main'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof MainRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -573,28 +573,28 @@ declare module '@tanstack/react-router' {
     '/admin/users/': {
       id: '/admin/users/'
       path: '/users'
-      fullPath: '/admin/users'
+      fullPath: '/admin/users/'
       preLoaderRoute: typeof AdminUsersIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/terms/': {
       id: '/admin/terms/'
       path: '/terms'
-      fullPath: '/admin/terms'
+      fullPath: '/admin/terms/'
       preLoaderRoute: typeof AdminTermsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/posts/': {
       id: '/admin/posts/'
       path: '/posts'
-      fullPath: '/admin/posts'
+      fullPath: '/admin/posts/'
       preLoaderRoute: typeof AdminPostsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/comics/': {
       id: '/admin/comics/'
       path: '/comics'
-      fullPath: '/admin/comics'
+      fullPath: '/admin/comics/'
       preLoaderRoute: typeof AdminComicsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
