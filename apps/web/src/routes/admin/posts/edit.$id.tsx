@@ -35,7 +35,6 @@ function RouteComponent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // biome-ignore lint/style/noNonNullAssertion: should never happen
   const oldPost = data.oldPost!;
   const terms = Object.groupBy(oldPost.terms, (item) => item.term.taxonomy);
 

@@ -28,6 +28,7 @@ export default {
       return {
         id: "",
         stickyImageKey: null,
+        headerImageKey: null,
         carouselImageKeys: [],
         markdownContent: "",
         markdownImageKeys: [],
@@ -37,7 +38,7 @@ export default {
       };
     }
 
-    logger?.info(`Returning chronos page: ${result[0].id}`);
+    logger?.info(`Returning chronos page: ${result[0]?.id}`);
     return result[0];
   }),
 
@@ -57,6 +58,7 @@ export default {
         return {
           id: "",
           stickyImageKey: null,
+          headerImageKey: null,
           carouselImageKeys: [],
           markdownContent: "",
           markdownImageKeys: [],
@@ -66,7 +68,7 @@ export default {
         };
       }
 
-      logger?.info(`Returning chronos page for edit: ${result[0].id}`);
+      logger?.info(`Returning chronos page for edit: ${result[0]?.id}`);
       return result[0];
     }
   ),
@@ -89,6 +91,7 @@ export default {
           .insert(chronosPage)
           .values({
             stickyImageKey: input.stickyImageKey ?? null,
+            headerImageKey: input.headerImageKey ?? null,
             carouselImageKeys: input.carouselImageKeys ?? [],
             markdownContent: input.markdownContent,
             markdownImageKeys: input.markdownImageKeys ?? [],
@@ -96,32 +99,33 @@ export default {
           })
           .returning();
 
-        logger?.info(`Chronos page created successfully: ${result[0].id}`);
+        logger?.info(`Chronos page created successfully: ${result[0]?.id}`);
         return result[0];
       }
 
-      logger?.info(`Updating existing chronos page: ${existing[0].id}`);
+      logger?.info(`Updating existing chronos page: ${existing[0]?.id}`);
       const result = await db
         .update(chronosPage)
         .set({
-          stickyImageKey: input.stickyImageKey ?? existing[0].stickyImageKey,
+          stickyImageKey: input.stickyImageKey ?? existing[0]!.stickyImageKey,
+          headerImageKey: input.headerImageKey ?? existing[0]!.headerImageKey,
           carouselImageKeys:
-            input.carouselImageKeys ?? existing[0].carouselImageKeys,
+            input.carouselImageKeys ?? existing[0]!.carouselImageKeys,
           markdownContent: input.markdownContent,
           markdownImageKeys:
-            input.markdownImageKeys ?? existing[0].markdownImageKeys,
+            input.markdownImageKeys ?? existing[0]!.markdownImageKeys,
         })
-        .where(eq(chronosPage.id, existing[0].id))
+        .where(eq(chronosPage.id, existing[0]!.id))
         .returning();
 
-      logger?.info(`Chronos page updated successfully: ${result[0].id}`);
+      logger?.info(`Chronos page updated successfully: ${result[0]?.id}`);
       return result[0];
     }),
 
   getPresignedUrls: permissionProcedure({ chronos: ["update"] })
     .input(
       z.object({
-        type: z.enum(["sticky", "carousel", "markdown"]),
+        type: z.enum(["sticky", "header", "carousel", "markdown"]),
         objects: z.array(
           z.object({
             contentLength: z.number().max(CHRONOS_IMAGES_MAX_SIZE_BYTES),

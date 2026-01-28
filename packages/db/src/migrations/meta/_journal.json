@@ -71,6 +71,13 @@
       "when": 1769559077995,
       "tag": "0009_bitter_magma",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1769623160253,
+      "tag": "0010_slippery_blue_marvel",
+      "breakpoints": true
     }
   ]
 }

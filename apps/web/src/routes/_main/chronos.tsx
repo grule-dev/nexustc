@@ -38,6 +38,13 @@ function RouteComponent() {
 
       {/* Central scrollable content */}
       <article className="col-span-2 flex min-h-screen w-full flex-col items-center gap-8 px-4 py-4">
+        {data.headerImageKey && (
+          <img
+            alt="Header"
+            className="w-full max-w-3xl rounded-lg object-cover shadow-lg"
+            src={getBucketUrl(data.headerImageKey)}
+          />
+        )}
         <div className="prose dark:prose-invert w-full max-w-none">
           <ReactMarkdown>{data.markdownContent}</ReactMarkdown>
         </div>
