@@ -64,6 +64,13 @@
       "when": 1769470907596,
       "tag": "0008_fuzzy_stardust",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1769559077995,
+      "tag": "0009_bitter_magma",
+      "breakpoints": true
     }
   ]
 }
