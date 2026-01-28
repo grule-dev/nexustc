@@ -2,10 +2,9 @@ import { ConfirmDialogProvider } from "@omit/react-confirm-dialog";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { AgeVerificationDialog } from "@/components/age-verification-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
-import "react-medium-image-zoom/dist/styles.css";
-import { AgeVerificationDialog } from "@/components/age-verification-dialog";
 
 export const Route = createRootRoute({
   head: () => ({

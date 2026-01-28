@@ -88,8 +88,21 @@ const nav = {
         href: "/admin/extras/weekly",
       },
       {
+        name: "Posts Destacados",
+        href: "/admin/extras/featured",
+      },
+      {
         name: "Tutoriales",
         href: "/admin/extras/tutorials",
+      },
+    ],
+  },
+  chronos: {
+    name: "Chronos",
+    links: [
+      {
+        name: "Editar Página",
+        href: "/admin/chronos/edit",
       },
     ],
   },
@@ -127,6 +140,9 @@ function AdminLayout() {
           </HasPermissions>
           <HasPermissions permissions={{ posts: ["create"] }}>
             <SidebarLinks item={nav.extras} />
+          </HasPermissions>
+          <HasPermissions permissions={{ chronos: ["update"] }}>
+            <SidebarLinks item={nav.chronos} />
           </HasPermissions>
         </SidebarContent>
         <SidebarRail />

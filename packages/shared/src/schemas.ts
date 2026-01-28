@@ -118,3 +118,10 @@ export const ratingUpdateSchema = z.object({
     .optional()
     .default(""),
 });
+
+export const chronosUpdateSchema = z.object({
+  stickyImageKey: z.string().optional(),
+  carouselImageKeys: z.array(z.string()).optional(),
+  markdownContent: z.string().max(65_535),
+  markdownImageKeys: z.array(z.string()).optional(),
+});

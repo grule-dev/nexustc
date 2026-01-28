@@ -43,3 +43,6 @@ export {
   or,
   sql,
 } from "drizzle-orm";
+
+// Re-export schema
+export * from "./schema/app";
