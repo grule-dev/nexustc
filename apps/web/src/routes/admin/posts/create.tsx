@@ -10,8 +10,8 @@ import { Activity, useState } from "react";
 import { toast } from "sonner";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
 import { Markdown } from "@/components/markdown";
-import { GamePage } from "@/components/posts/game-page";
 import type { PostProps } from "@/components/posts/post-components";
+import { PostPage } from "@/components/posts/post-components";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -575,7 +575,7 @@ function Preview({
         <Button onClick={() => setVisible(false)} size="icon" type="button">
           <HugeiconsIcon className="size-8" icon={Cancel01Icon} />
         </Button>
-        <GamePage post={post} />
+        <PostPage post={post} />
       </section>
     </div>
   );

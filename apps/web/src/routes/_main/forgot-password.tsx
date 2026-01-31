@@ -98,7 +98,6 @@ function RouteComponent() {
                   theme: "auto",
                   size: "flexible",
                 }}
-                // biome-ignore lint/style/noNonNullAssertion: it's defined at runtime
                 siteKey={env.VITE_TURNSTILE_SITE_KEY!}
               />
             )}

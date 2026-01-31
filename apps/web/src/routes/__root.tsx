@@ -66,10 +66,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           {children}
         </ConfirmDialogProvider>
         <AgeVerificationDialog />
-        <Toaster richColors />
+        <Toaster position="top-right" richColors />
         <TanStackDevtools
           config={{
-            position: "bottom-right",
+            position: "top-right",
           }}
           plugins={[
             {

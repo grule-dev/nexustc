@@ -3,8 +3,8 @@ import { zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import { ComicPage } from "@/components/posts/comic-page";
 import { CommentSection } from "@/components/posts/comment-section";
+import { PostPage } from "@/components/posts/post-components";
 import { safeOrpcClient } from "@/lib/orpc";
-import { GamePage } from "../../components/posts/game-page";
 
 const comicPageSchema = z.object({
   page: z.number().optional(),
@@ -53,7 +53,7 @@ function RouteComponent() {
       <div className="flex flex-col gap-12">
         {/* Main Post Content */}
         {post.type === "post" ? (
-          <GamePage post={post} />
+          <PostPage post={post} />
         ) : (
           <ComicPage comic={post} />
         )}

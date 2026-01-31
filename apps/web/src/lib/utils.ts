@@ -1,6 +1,19 @@
 import { env } from "@repo/env/client";
 import { type ClassValue, clsx } from "clsx";
+import type { FacehashProps } from "facehash";
 import { twMerge } from "tailwind-merge";
+
+export const defaultFacehashProps: Omit<FacehashProps, "name"> = {
+  colorClasses: [
+    "bg-red-500",
+    "bg-orange-500",
+    "bg-green-500",
+    "bg-blue-500",
+    "bg-purple-500",
+    "bg-pink-500",
+  ],
+  variant: "solid",
+};
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

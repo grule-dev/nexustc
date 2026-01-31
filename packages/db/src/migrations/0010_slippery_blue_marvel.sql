@@ -1,0 +1,1 @@
+ALTER TABLE "chronos_page" ADD COLUMN "header_image_key" text;

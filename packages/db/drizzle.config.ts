@@ -10,7 +10,6 @@ export default defineConfig({
   out: "./src/migrations",
   dialect: "postgresql",
   dbCredentials: {
-    // biome-ignore lint/style/noNonNullAssertion: it will be defined at runtime
     url: process.env.DATABASE_URL!,
   },
 });

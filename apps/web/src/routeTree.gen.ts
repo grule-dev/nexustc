@@ -16,6 +16,7 @@ import { Route as MainIndexRouteImport } from './routes/_main/index'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as MainTutorialsRouteImport } from './routes/_main/tutorials'
 import { Route as MainTermsRouteImport } from './routes/_main/terms'
+import { Route as MainSearchRouteImport } from './routes/_main/search'
 import { Route as MainResetPasswordRouteImport } from './routes/_main/reset-password'
 import { Route as MainProfileRouteImport } from './routes/_main/profile'
 import { Route as MainPrivacyRouteImport } from './routes/_main/privacy'
@@ -77,6 +78,11 @@ const MainTutorialsRoute = MainTutorialsRouteImport.update({
 const MainTermsRoute = MainTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => MainRouteRoute,
+} as any)
+const MainSearchRoute = MainSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => MainRouteRoute,
 } as any)
 const MainResetPasswordRoute = MainResetPasswordRouteImport.update({
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof MainPrivacyRoute
   '/profile': typeof MainProfileRoute
   '/reset-password': typeof MainResetPasswordRoute
+  '/search': typeof MainSearchRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
   '/api/health': typeof ApiHealthRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof MainPrivacyRoute
   '/profile': typeof MainProfileRoute
   '/reset-password': typeof MainResetPasswordRoute
+  '/search': typeof MainSearchRoute
   '/terms': typeof MainTermsRoute
   '/tutorials': typeof MainTutorialsRoute
   '/api/health': typeof ApiHealthRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/_main/privacy': typeof MainPrivacyRoute
   '/_main/profile': typeof MainProfileRoute
   '/_main/reset-password': typeof MainResetPasswordRoute
+  '/_main/search': typeof MainSearchRoute
   '/_main/terms': typeof MainTermsRoute
   '/_main/tutorials': typeof MainTutorialsRoute
   '/api/health': typeof ApiHealthRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/reset-password'
+    | '/search'
     | '/terms'
     | '/tutorials'
     | '/api/health'
@@ -378,6 +388,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/profile'
     | '/reset-password'
+    | '/search'
     | '/terms'
     | '/tutorials'
     | '/api/health'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/_main/privacy'
     | '/_main/profile'
     | '/_main/reset-password'
+    | '/_main/search'
     | '/_main/terms'
     | '/_main/tutorials'
     | '/api/health'
@@ -498,6 +510,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof MainTermsRouteImport
+      parentRoute: typeof MainRouteRoute
+    }
+    '/_main/search': {
+      id: '/_main/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof MainSearchRouteImport
       parentRoute: typeof MainRouteRoute
     }
     '/_main/reset-password': {
@@ -710,6 +729,7 @@ interface MainRouteRouteChildren {
   MainPrivacyRoute: typeof MainPrivacyRoute
   MainProfileRoute: typeof MainProfileRoute
   MainResetPasswordRoute: typeof MainResetPasswordRoute
+  MainSearchRoute: typeof MainSearchRoute
   MainTermsRoute: typeof MainTermsRoute
   MainTutorialsRoute: typeof MainTutorialsRoute
   MainIndexRoute: typeof MainIndexRoute
@@ -729,6 +749,7 @@ const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainPrivacyRoute: MainPrivacyRoute,
   MainProfileRoute: MainProfileRoute,
   MainResetPasswordRoute: MainResetPasswordRoute,
+  MainSearchRoute: MainSearchRoute,
   MainTermsRoute: MainTermsRoute,
   MainTutorialsRoute: MainTutorialsRoute,
   MainIndexRoute: MainIndexRoute,

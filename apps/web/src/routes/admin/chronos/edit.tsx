@@ -28,6 +28,7 @@ import {
 
 type ChronosData = {
   stickyImageKey: string | null;
+  headerImageKey: string | null;
   carouselImageKeys: string[];
   markdownContent: string;
   markdownImageKeys: string[];
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/admin/chronos/edit")({
     return {
       initialData: {
         stickyImageKey: data.stickyImageKey,
+        headerImageKey: data.headerImageKey,
         carouselImageKeys: data.carouselImageKeys ?? [],
         markdownContent: data.markdownContent,
         markdownImageKeys: data.markdownImageKeys ?? [],
@@ -58,23 +60,47 @@ function RouteComponent() {
   const [stickyImagePreview, setStickyImagePreview] = useState<string | null>(
     null
   );
+  const [headerImageFile, setHeaderImageFile] = useState<File | null>(null);
+  const [headerImagePreview, setHeaderImagePreview] = useState<string | null>(
+    null
+  );
   const [uploadingStickyImage, setUploadingStickyImage] = useState(false);
+  const [uploadingHeaderImage, setUploadingHeaderImage] = useState(false);
   const [uploadingCarouselImages, setUploadingCarouselImages] = useState(false);
 
   const carousel = useMultipleFileUpload();
 
+  const [uploadingHelperImages, setUploadingHelperImages] = useState(false);
+
+  const helperImages = useMemo(
+    () =>
+      currentData.markdownImageKeys.map((key) => ({
+        key,
+        url: getBucketUrl(key),
+      })),
+    [currentData.markdownImageKeys]
+  );
+
   const hasChanges = useMemo(() => {
     return (
       currentData.stickyImageKey !== savedData.stickyImageKey ||
+      currentData.headerImageKey !== savedData.headerImageKey ||
       JSON.stringify(currentData.carouselImageKeys) !==
         JSON.stringify(savedData.carouselImageKeys) ||
       currentData.markdownContent !== savedData.markdownContent ||
       JSON.stringify(currentData.markdownImageKeys) !==
         JSON.stringify(savedData.markdownImageKeys) ||
       stickyImageFile !== null ||
+      headerImageFile !== null ||
       carousel.selectedFiles.length > 0
     );
-  }, [currentData, savedData, stickyImageFile, carousel.selectedFiles]);
+  }, [
+    currentData,
+    savedData,
+    stickyImageFile,
+    headerImageFile,
+    carousel.selectedFiles,
+  ]);
 
   const blocker = useBlocker({
     shouldBlockFn: () => hasChanges,
@@ -99,6 +125,17 @@ function RouteComponent() {
     }
   };
 
+  const handleHeaderImageSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (event.target.files?.[0]) {
+      const file = event.target.files[0];
+      const converted = await convertImage(file, "webp", 0.8);
+      setHeaderImageFile(converted);
+      setHeaderImagePreview(URL.createObjectURL(converted));
+    }
+  };
+
   const uploadStickyImage = async (): Promise<string | null> => {
     if (!stickyImageFile) {
       return currentData.stickyImageKey;
@@ -119,7 +156,6 @@ function RouteComponent() {
       await uploadBlobWithProgress(
         stickyImageFile,
         presignedUrl.presignedUrl,
-        // Empty progress callback - progress not displayed for sticky image
         () => {
           // Intentionally empty
         }
@@ -128,6 +164,37 @@ function RouteComponent() {
       return presignedUrl.objectKey;
     } finally {
       setUploadingStickyImage(false);
+    }
+  };
+
+  const uploadHeaderImage = async (): Promise<string | null> => {
+    if (!headerImageFile) {
+      return currentData.headerImageKey;
+    }
+
+    setUploadingHeaderImage(true);
+    try {
+      const [presignedUrl] = await orpcClient.chronos.getPresignedUrls({
+        type: "header",
+        objects: [
+          {
+            contentLength: headerImageFile.size,
+            extension: "webp",
+          },
+        ],
+      });
+
+      await uploadBlobWithProgress(
+        headerImageFile,
+        presignedUrl.presignedUrl,
+        () => {
+          // Intentionally empty
+        }
+      );
+
+      return presignedUrl.objectKey;
+    } finally {
+      setUploadingHeaderImage(false);
     }
   };
 
@@ -175,15 +242,83 @@ function RouteComponent() {
     }
   };
 
+  const handleHelperImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!event.target.files?.length) {
+      return;
+    }
+
+    const files = Array.from(event.target.files);
+    setUploadingHelperImages(true);
+
+    try {
+      const convertedFiles = await Promise.all(
+        files.map((file) =>
+          file.type.startsWith("image/gif")
+            ? file
+            : convertImage(file, "webp", 0.8)
+        )
+      );
+
+      const presignedUrls = await orpcClient.chronos.getPresignedUrls({
+        type: "markdown",
+        objects: convertedFiles.map((file) => ({
+          contentLength: file.size,
+          extension: file.name.split(".").pop() ?? "webp",
+        })),
+      });
+
+      await Promise.all(
+        presignedUrls.map((url, index) =>
+          uploadBlobWithProgress(
+            convertedFiles[index],
+            url.presignedUrl,
+            () => {
+              // Intentionally empty
+            }
+          )
+        )
+      );
+
+      const newKeys = presignedUrls.map((url) => url.objectKey);
+
+      setCurrentData((prev) => ({
+        ...prev,
+        markdownImageKeys: [...prev.markdownImageKeys, ...newKeys],
+      }));
+      toast.success(
+        `${newKeys.length} imagen${newKeys.length > 1 ? "es subidas" : " subida"}`,
+        { duration: 2000 }
+      );
+    } catch {
+      toast.error("Error al subir imágenes", { duration: 3000 });
+    } finally {
+      setUploadingHelperImages(false);
+      event.target.value = "";
+    }
+  };
+
+  const copyToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("URL copiada al portapapeles", { duration: 1500 });
+    } catch {
+      toast.error("Error al copiar URL", { duration: 2000 });
+    }
+  };
+
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const [stickyKey, carouselKeys] = await Promise.all([
+      const [stickyKey, headerKey, carouselKeys] = await Promise.all([
         uploadStickyImage(),
+        uploadHeaderImage(),
         uploadCarouselImages(),
       ]);
 
       return orpcClient.chronos.update({
         stickyImageKey: stickyKey ?? undefined,
+        headerImageKey: headerKey ?? undefined,
         carouselImageKeys: carouselKeys,
         markdownContent: currentData.markdownContent,
         markdownImageKeys: currentData.markdownImageKeys,
@@ -192,6 +327,7 @@ function RouteComponent() {
     onSuccess: async (data) => {
       const newData = {
         stickyImageKey: data.stickyImageKey,
+        headerImageKey: data.headerImageKey,
         carouselImageKeys: data.carouselImageKeys ?? [],
         markdownContent: data.markdownContent,
         markdownImageKeys: data.markdownImageKeys ?? [],
@@ -201,6 +337,8 @@ function RouteComponent() {
       setCurrentData(newData);
       setStickyImageFile(null);
       setStickyImagePreview(null);
+      setHeaderImageFile(null);
+      setHeaderImagePreview(null);
       carousel.selectedFiles.splice(0, carousel.selectedFiles.length);
 
       await queryClient.invalidateQueries({
@@ -237,10 +375,13 @@ function RouteComponent() {
     setCurrentData(savedData);
     setStickyImageFile(null);
     setStickyImagePreview(null);
+    setHeaderImageFile(null);
+    setHeaderImagePreview(null);
     carousel.selectedFiles.splice(0, carousel.selectedFiles.length);
   };
 
-  const isUploading = uploadingStickyImage || uploadingCarouselImages;
+  const isUploading =
+    uploadingStickyImage || uploadingHeaderImage || uploadingCarouselImages;
 
   return (
     <main className="flex flex-col gap-6">
@@ -301,6 +442,47 @@ function RouteComponent() {
           <Input
             accept="image/*"
             onChange={handleStickyImageSelect}
+            type="file"
+          />
+        </div>
+      </section>
+
+      {/* Header Image Section */}
+      <section className="flex flex-col gap-4 rounded-lg border p-4">
+        <h2 className="font-semibold text-lg">Imagen de Cabecera</h2>
+        <p className="text-muted-foreground text-sm">
+          Imagen que aparece en la parte superior del contenido central
+        </p>
+
+        {(headerImagePreview || currentData.headerImageKey) && (
+          <div className="relative w-full max-w-2xl">
+            <img
+              alt="Header preview"
+              className="w-full rounded-lg border object-cover shadow-md"
+              src={
+                headerImagePreview ??
+                getBucketUrl(currentData.headerImageKey ?? "")
+              }
+            />
+            <Button
+              className="absolute top-2 right-2"
+              onClick={() => {
+                setHeaderImageFile(null);
+                setHeaderImagePreview(null);
+                setCurrentData((prev) => ({ ...prev, headerImageKey: null }));
+              }}
+              size="sm"
+              variant="destructive"
+            >
+              Eliminar
+            </Button>
+          </div>
+        )}
+
+        <div>
+          <Input
+            accept="image/*"
+            onChange={handleHeaderImageSelect}
             type="file"
           />
         </div>
@@ -421,6 +603,60 @@ function RouteComponent() {
             value={currentData.markdownContent}
           />
         </div>
+      </section>
+
+      {/* Helper Images Section */}
+      <section className="flex flex-col gap-4 rounded-lg border p-4">
+        <h2 className="font-semibold text-lg">Imágenes para Markdown</h2>
+        <p className="text-muted-foreground text-sm">
+          Sube imágenes para usarlas en el contenido Markdown. Haz clic en una
+          imagen para copiar su URL.
+        </p>
+
+        <div className="flex items-center gap-4">
+          <Input
+            accept="image/*"
+            className="max-w-xs"
+            disabled={uploadingHelperImages}
+            id="helper-upload"
+            multiple
+            onChange={handleHelperImageUpload}
+            type="file"
+          />
+          {uploadingHelperImages && (
+            <Badge variant="secondary">Subiendo...</Badge>
+          )}
+        </div>
+
+        {helperImages.length > 0 && (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
+            {helperImages.map((image) => (
+              <button
+                className="group relative cursor-pointer overflow-hidden rounded-md border transition-all hover:ring-2 hover:ring-primary"
+                key={image.key}
+                onClick={() => copyToClipboard(image.url)}
+                type="button"
+              >
+                <img
+                  alt="Helper"
+                  className="aspect-square w-full object-cover"
+                  src={image.url}
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="font-medium text-sm text-white">
+                    Copiar URL
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {helperImages.length === 0 && (
+          <p className="text-muted-foreground text-sm italic">
+            Las imágenes subidas aparecerán aquí
+          </p>
+        )}
       </section>
 
       <AlertDialog

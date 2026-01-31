@@ -1,60 +1,39 @@
-import { ArrowLeft02Icon, Menu01Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowLeft02Icon,
+  Book02Icon,
+  Clock01Icon,
+  Home01Icon,
+  Search01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Link,
   useCanGoBack,
   useMatchRoute,
   useRouter,
-  useSearch,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { motion, useMotionValueEvent, useScroll } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { SignedIn } from "../auth/signed-in";
 import { SignedOut } from "../auth/signed-out";
 import { ModeToggle } from "../mode-toggle";
-import { RunOnClick } from "../run-on-click";
 import { Button } from "../ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "../ui/sheet";
 import { UserSection } from "./login-section";
 
-const links = [
-  { label: "Inicio", href: "/" },
-  { label: "Juegos", href: "/post-search" },
-  { label: "Comics", href: "/comic-search" },
-  { label: "TheChronos", href: "/chronos" },
-  { label: "Tutoriales", href: "/tutorials" },
+const navItems = [
+  { href: "/", label: "Inicio", icon: Home01Icon },
+  { href: "/search", label: "Buscar", icon: Search01Icon },
+  { href: "/tutorials", label: "Tutoriales", icon: Book02Icon },
+  { href: "/chronos", label: "Chronos", icon: Clock01Icon },
 ] as const;
 
-// const postPageApi = getRouteApi("/_main/post/$id");
-
 export function Header() {
-  const matchRoute = useMatchRoute();
-  const search = useSearch({
-    from: "/_main/post/$id",
-    shouldThrow: false,
-  });
-
-  const isSticky = !(
-    (matchRoute({
-      to: "/post/$id",
-    }) &&
-      search?.page !== -1) ||
-    matchRoute({
-      to: "/chronos",
-    })
-  );
-
   return (
     <>
       <header className="inset-x-0 top-0 z-10 mx-auto flex w-full flex-col items-center gap-4 border-b bg-primary/50 p-4 backdrop-blur">
-        <div>
+        <div className="flex w-full items-center justify-between">
+          <BackButton />
           <Link to="/">
             <h1 className="font-bold text-primary-foreground text-xl md:text-3xl">
               NeXusTC
@@ -64,42 +43,10 @@ export function Header() {
               <span className="font-normal text-xs md:text-sm"> BETA</span>
             </h1>
           </Link>
+          <ModeToggle />
         </div>
       </header>
-      <div
-        className={cn(
-          isSticky && "sticky",
-          "inset-x-0 top-0 z-10 mx-auto flex w-full flex-row items-center justify-between border-b bg-primary/50 p-4 backdrop-blur md:justify-center"
-        )}
-      >
-        <BackButton />
-        <BurgerMenu />
-        <div className="container hidden items-center justify-between px-4 md:flex">
-          <nav className="flex items-center justify-center gap-4">
-            {links.map((link) => (
-              <Button
-                key={link.href}
-                nativeButton={false}
-                render={<Link key={link.label} to={link.href} />}
-                variant="ghost"
-              >
-                {link.label}
-              </Button>
-            ))}
-          </nav>
-          <div className="flex items-center gap-4">
-            <SignedIn>
-              <UserSection />
-            </SignedIn>
-            <SignedOut>
-              <Button nativeButton={false} render={<Link to="/auth" />}>
-                Login
-              </Button>
-            </SignedOut>
-            <ModeToggle />
-          </div>
-        </div>
-      </div>
+      <FloatingNavbar />
     </>
   );
 }
@@ -115,7 +62,7 @@ function BackButton() {
 
   return (
     <Button
-      className="md:hidden"
+      className="md:invisible"
       disabled={!(canGoBack && mounted)}
       onClick={() => router.history.back()}
       size="icon"
@@ -126,44 +73,76 @@ function BackButton() {
   );
 }
 
-function BurgerMenu() {
-  const [open, setOpen] = useState(false);
+function FloatingNavbar() {
+  const matchRoute = useMatchRoute();
+
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollY } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+  const [visible, setVisible] = useState<boolean>(false);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    if (latest > 50) {
+      setVisible(true);
+    } else {
+      setVisible(false);
+    }
+  });
+
+  const isSticky = !matchRoute({
+    to: "/chronos",
+  });
 
   return (
-    <Sheet onOpenChange={setOpen} open={open}>
-      <SheetTrigger
-        render={<Button className="md:hidden" size="icon" variant="ghost" />}
+    <motion.div
+      className={cn(
+        "inset-x-0 top-4 z-10 mb-4 w-full flex-row items-center justify-center rounded-xl rounded-t-none md:flex md:justify-center",
+        isSticky ? "sticky" : "block"
+      )}
+      ref={ref}
+    >
+      <motion.div
+        animate={{
+          boxShadow: visible
+            ? "0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset"
+            : "none",
+          width: visible ? "auto" : "100%",
+          borderRadius: visible ? "50px" : "0",
+        }}
+        className="hidden items-center justify-between border bg-primary/50 p-2 backdrop-blur md:flex"
+        initial={{ boxShadow: "none", width: "100%", borderRadius: "0" }}
+        transition={{
+          type: "spring",
+          stiffness: 200,
+          damping: 50,
+        }}
       >
-        <HugeiconsIcon className="size-6" icon={Menu01Icon} />
-      </SheetTrigger>
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>Menu</SheetTitle>
-        </SheetHeader>
-
-        <RunOnClick onClick={() => setOpen(false)}>
-          <nav className="flex flex-col gap-4 px-4">
-            {links.map((link) => (
-              <Button
-                className="w-full"
-                key={link.label}
-                nativeButton={false}
-                render={<Link to={link.href} />}
-                variant="outline"
-              >
-                {link.label}
-              </Button>
-            ))}
-          </nav>
-        </RunOnClick>
-
-        <SheetFooter className="flex flex-row items-center justify-center gap-4">
-          <RunOnClick onClick={() => setOpen(false)}>
+        <nav className="flex items-center justify-center gap-1">
+          {navItems.map((link) => (
+            <Button
+              key={link.href}
+              nativeButton={false}
+              render={<Link key={link.label} to={link.href} />}
+              variant="ghost"
+            >
+              <HugeiconsIcon className="size-5" icon={link.icon} />
+              {link.label}
+            </Button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-1">
+          <SignedIn>
             <UserSection />
-          </RunOnClick>
-          <ModeToggle />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          </SignedIn>
+          <SignedOut>
+            <Button nativeButton={false} render={<Link to="/auth" />}>
+              Login
+            </Button>
+          </SignedOut>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

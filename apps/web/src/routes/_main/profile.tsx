@@ -4,17 +4,16 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { Avatar, AvatarFallback, AvatarImage } from "facehash";
 import { toast } from "sonner";
 import z from "zod";
 import { DiscordLogo } from "@/components/icons/discord";
 import { PatreonLogo } from "@/components/icons/patreon";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
-import { getBucketUrl } from "@/lib/utils";
 import "react-image-crop/dist/ReactCrop.css";
 import {
   Cancel01Icon,
@@ -32,6 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { UserLabel } from "@/components/users/user-label";
 import { orpc } from "@/lib/orpc";
+import { defaultFacehashProps, getBucketUrl } from "@/lib/utils";
 import { authMiddleware } from "@/middleware/auth";
 
 export const Route = createFileRoute("/_main/profile")({
@@ -69,7 +69,7 @@ function RouteComponent() {
         </CardHeader>
         <CardContent className="flex w-full flex-col justify-around gap-6 md:flex-row">
           <section className="flex flex-col items-center gap-2">
-            <Avatar className="size-32">
+            <Avatar className="size-32 rounded-full">
               <AvatarImage
                 src={
                   session.user.image
@@ -77,9 +77,11 @@ function RouteComponent() {
                     : undefined
                 }
               />
-              <AvatarFallback>
-                {session.user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
+              <AvatarFallback
+                className="rounded-full"
+                facehashProps={defaultFacehashProps}
+                name={session.user.name}
+              />
             </Avatar>
             <UserLabel className="text-2xl" user={session.user} />
             <HoverReveal blur="blur-sm" className="p-4">
@@ -87,7 +89,7 @@ function RouteComponent() {
             </HoverReveal>
           </section>
           {/* <Separator className="hidden md:block" orientation="vertical" /> */}
-          <section className="w-md">
+          <section className="w-full max-w-md">
             <Tabs className="flex-1" defaultValue="account">
               <TabsList className="w-full">
                 <TabsTrigger value="account">Cuentas</TabsTrigger>
@@ -108,9 +110,6 @@ function RouteComponent() {
           </section>
         </CardContent>
       </Card>
-      <Suspense fallback={<Spinner />}>
-        <PatreonStatusSection />
-      </Suspense>
       <Suspense fallback={<Spinner />}>
         <UserBookmarks />
       </Suspense>
@@ -183,6 +182,9 @@ function AccountsSection() {
           </div>
         );
       })}
+      <Suspense fallback={<Spinner />}>
+        <PatreonStatusSection />
+      </Suspense>
       <Button
         onClick={async () => {
           authClient.signOut();
@@ -298,7 +300,7 @@ function UserBookmarks() {
       <CardHeader>
         <CardTitle>Tus Favoritos</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-3 gap-4">
+      <CardContent className="grid grid-cols-2 gap-4 md:grid-cols-3">
         {data.map((bookmark) => (
           <PostCard key={bookmark.id} post={bookmark} />
         ))}
@@ -379,7 +381,7 @@ function PatreonStatusSection() {
           </p>
         )}
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <Button
             disabled={syncMutation.isPending}
             onClick={handleSync}

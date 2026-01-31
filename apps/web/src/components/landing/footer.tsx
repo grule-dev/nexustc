@@ -15,7 +15,7 @@ export function Footer() {
         NeXusTC
         <span className="align-super font-normal text-sm">+18</span>
         <span className="font-normal text-sm"> BETA</span>
-        <span className="text-sm"> &copy; 2025</span>
+        <span className="text-sm"> &copy; 2026</span>
       </h1>
       <div className="flex flex-wrap justify-center gap-4 text-muted-foreground">
         {footerLinks.map((link) => (

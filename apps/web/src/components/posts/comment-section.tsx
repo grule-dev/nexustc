@@ -4,15 +4,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { Avatar, AvatarFallback, AvatarImage } from "facehash";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpcClient } from "@/lib/orpc";
-import { getBucketUrl } from "@/lib/utils";
+import { defaultFacehashProps } from "@/lib/utils";
 import { SignedIn } from "../auth/signed-in";
 import { SignedOut } from "../auth/signed-out";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Spinner } from "../ui/spinner";
 import { UserLabel } from "../users/user-label";
@@ -195,17 +195,13 @@ export function CommentSection({ postId }: { postId: string }) {
                 key={comment.id}
               >
                 <Link params={{ id: comment.author.id }} to="/user/$id">
-                  <Avatar className="size-10 ring-2 ring-background transition-transform group-hover:scale-105">
-                    <AvatarImage
-                      src={
-                        comment.author.image
-                          ? getBucketUrl(comment.author.image)
-                          : undefined
-                      }
+                  <Avatar className="size-10 rounded-full ring-2 ring-background transition-transform group-hover:scale-105">
+                    <AvatarImage src={undefined} />
+                    <AvatarFallback
+                      className="rounded-full"
+                      facehashProps={defaultFacehashProps}
+                      name={comment.author.name}
                     />
-                    <AvatarFallback className="bg-primary/10 font-medium text-primary">
-                      {comment.author.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
                   </Avatar>
                 </Link>
                 <div className="flex min-w-0 flex-1 flex-col gap-2">

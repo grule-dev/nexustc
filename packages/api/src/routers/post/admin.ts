@@ -285,13 +285,11 @@ export default {
             order: 0,
           },
           {
-            // biome-ignore lint/style/noNonNullAssertion: it's already validated by zod
             postId: input.secondaryPostIds[0]!,
             position: "secondary",
             order: 1,
           },
           {
-            // biome-ignore lint/style/noNonNullAssertion: same as above
             postId: input.secondaryPostIds[1]!,
             position: "secondary",
             order: 2,

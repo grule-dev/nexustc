@@ -232,12 +232,9 @@ function RouteComponent() {
     }
 
     await featuredMutation.mutateAsync({
-      // biome-ignore lint/style/noNonNullAssertion: we check isValid before calling this
       mainPostId: selectedPosts.mainPostId!,
       secondaryPostIds: [
-        // biome-ignore lint/style/noNonNullAssertion: same above
         selectedPosts.secondaryPostIds[0]!,
-        // biome-ignore lint/style/noNonNullAssertion: same above
         selectedPosts.secondaryPostIds[1]!,
       ],
     });

@@ -1,14 +1,13 @@
 import {
   Calendar03Icon,
   Download04Icon,
-  HeartCheckIcon,
+  FavouriteCircleIcon,
   Image02Icon,
   InformationCircleIcon,
   Link01Icon,
   Share08Icon,
   StarIcon,
   Tag01Icon,
-  UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
@@ -37,96 +36,99 @@ export type PostProps = Omit<
   ratingCount?: number;
 };
 
+export function PostPage({ post }: { post: PostProps }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <PostHero post={post} />
+      <PostContent post={post} />
+    </div>
+  );
+}
+
 export function PostHero({ post }: { post: PostProps }) {
   const mainImage = post.imageObjectKeys?.[0];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl">
-      {/* Main Image with Gradient Overlay */}
-      {mainImage && (
-        <div className="relative">
-          <div className="aspect-video w-full overflow-hidden md:aspect-21/9">
-            <img
-              alt={`Portada de ${post.title}`}
-              className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-              src={getBucketUrl(mainImage)}
-            />
-          </div>
-          {/* Gradient overlay for text readability */}
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
-
-          {/* Content overlay */}
-          <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <div className="flex flex-col gap-4">
-              {/* Title and Version */}
-              <div className="flex flex-wrap items-end gap-3">
-                <h1 className="font-bold text-3xl text-white drop-shadow-lg md:text-5xl">
-                  {post.title}
-                </h1>
-                {post.version && (
-                  <Badge
-                    className="mb-1 border-white/30 bg-white/20 text-white backdrop-blur-sm md:mb-2"
-                    variant="outline"
-                  >
-                    v{post.version}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Meta Row */}
-              <div className="flex flex-wrap items-center gap-4">
-                <MetaBadge icon={Calendar03Icon}>
-                  {format(post.createdAt, "d 'de' MMMM, yyyy", {
-                    locale: es,
-                  })}
-                </MetaBadge>
-
-                {post.ratingCount !== undefined && post.ratingCount > 0 && (
-                  <div className="flex items-center gap-1.5 text-white">
-                    <HugeiconsIcon
-                      className="size-4 fill-amber-400 text-amber-400"
-                      icon={StarIcon}
-                    />
-                    <span className="font-semibold">
-                      {post.averageRating?.toFixed(1)}
-                    </span>
-                    <span className="text-white/70">
-                      ({post.ratingCount} votos)
-                    </span>
-                  </div>
-                )}
+    <div className="flex flex-col">
+      <div className="relative overflow-hidden rounded-t-3xl border border-b-0">
+        {/* Main Image with Gradient Overlay */}
+        {mainImage && (
+          <div className="relative">
+            <div className="aspect-video w-full overflow-hidden md:aspect-21/9">
+              <img
+                alt={`Portada de ${post.title}`}
+                className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                src={getBucketUrl(mainImage)}
+              />
+            </div>
+            {/* Gradient overlay for text readability */}
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+            {/* Content overlay */}
+            <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
+              <div className="flex flex-col gap-4">
+                {/* Title and Version */}
+                <div className="flex flex-wrap items-end gap-3">
+                  <h1 className="font-bold text-3xl text-white drop-shadow-lg md:text-5xl">
+                    {post.title}
+                  </h1>
+                  {post.version && (
+                    <Badge
+                      className="mb-1 border-white/30 bg-white/20 text-white backdrop-blur-sm md:mb-2"
+                      variant="outline"
+                    >
+                      {post.version}
+                    </Badge>
+                  )}
+                </div>
+                {/* Meta Row */}
+                <div className="flex flex-wrap items-center gap-4">
+                  {post.ratingCount !== undefined && post.ratingCount > 0 && (
+                    <div className="flex items-center gap-1.5 text-white">
+                      <HugeiconsIcon
+                        className="size-4 fill-amber-400 text-amber-400"
+                        icon={StarIcon}
+                      />
+                      <span className="font-semibold">
+                        {post.averageRating?.toFixed(1)}
+                      </span>
+                      <span className="text-white/70">
+                        ({post.ratingCount} votos)
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Fallback when no image */}
-      {!mainImage && (
-        <div className="flex flex-col gap-4 bg-linear-to-br from-primary/20 via-primary/10 to-transparent p-8 md:p-12">
-          <div className="flex flex-wrap items-end gap-3">
-            <h1 className="font-bold text-3xl md:text-5xl">{post.title}</h1>
-            {post.version && (
-              <Badge className="mb-1 md:mb-2" variant="secondary">
-                v{post.version}
+        )}
+        {/* Fallback when no image */}
+        {!mainImage && (
+          <div className="flex flex-col gap-4 bg-linear-to-br from-primary/20 via-primary/10 to-transparent p-8 md:p-12">
+            <div className="flex flex-wrap items-end gap-3">
+              <h1 className="font-bold text-3xl md:text-5xl">{post.title}</h1>
+              {post.version && (
+                <Badge className="mb-1 md:mb-2" variant="secondary">
+                  {post.version}
+                </Badge>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <Badge className="gap-1.5" variant="secondary">
+                <HugeiconsIcon className="size-3.5" icon={Calendar03Icon} />
+                {format(post.createdAt, "d 'de' MMMM, yyyy", { locale: es })}
               </Badge>
-            )}
+              {post.ratingCount !== undefined && post.ratingCount > 0 && (
+                <RatingDisplay
+                  averageRating={post.averageRating ?? 0}
+                  ratingCount={post.ratingCount}
+                  variant="compact"
+                />
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <Badge className="gap-1.5" variant="secondary">
-              <HugeiconsIcon className="size-3.5" icon={Calendar03Icon} />
-              {format(post.createdAt, "d 'de' MMMM, yyyy", { locale: es })}
-            </Badge>
-            {post.ratingCount !== undefined && post.ratingCount > 0 && (
-              <RatingDisplay
-                averageRating={post.averageRating ?? 0}
-                ratingCount={post.ratingCount}
-                variant="compact"
-              />
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
+      <PostActionBar post={post} />
     </div>
   );
 }
@@ -146,7 +148,7 @@ export function PostActionBar({ post }: { post: PostProps }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-4">
+    <div className="flex flex-wrap items-center justify-center gap-4 rounded-b-3xl border bg-card p-4 md:justify-between">
       <div className="flex flex-wrap items-center gap-3">
         <BookmarkButton postId={post.id} />
         <Button
@@ -156,7 +158,7 @@ export function PostActionBar({ post }: { post: PostProps }) {
           variant="outline"
         >
           <HugeiconsIcon className="size-4" icon={StarIcon} />
-          Valoraciones
+          Reviews
         </Button>
         <Tooltip>
           <TooltipTrigger
@@ -174,6 +176,11 @@ export function PostActionBar({ post }: { post: PostProps }) {
 
       {/* Quick Stats */}
       <div className="flex items-center gap-4 text-muted-foreground text-sm">
+        <MetaBadge icon={Calendar03Icon}>
+          {format(post.createdAt, "PP", {
+            locale: es,
+          })}
+        </MetaBadge>
         {hasImages && (
           <span className="flex items-center gap-1.5">
             <HugeiconsIcon className="size-4" icon={Image02Icon} />
@@ -239,13 +246,6 @@ export function PostContent({ post }: { post: PostProps }) {
               {hasContent && (
                 <ContentCard icon={InformationCircleIcon} title="Sinopsis">
                   <Markdown>{post.content}</Markdown>
-                </ContentCard>
-              )}
-
-              {/* Author Support */}
-              {hasAuthorContent && (
-                <ContentCard icon={HeartCheckIcon} title="Apoya al Creador">
-                  <Markdown>{post.authorContent}</Markdown>
                 </ContentCard>
               )}
 
@@ -346,7 +346,7 @@ export function PostContent({ post }: { post: PostProps }) {
           <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
             <h3 className="flex items-center gap-2 font-semibold text-lg">
               <HugeiconsIcon className="size-5" icon={Tag01Icon} />
-              Etiquetas
+              Tags
             </h3>
 
             <div className="flex flex-col gap-4">
@@ -377,61 +377,17 @@ export function PostContent({ post }: { post: PostProps }) {
           </div>
         )}
 
-        {/* Quick Info Card */}
-        <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
-          <h3 className="flex items-center gap-2 font-semibold text-lg">
-            <HugeiconsIcon className="size-5" icon={InformationCircleIcon} />
-            Información Rápida
-          </h3>
-
-          <div className="flex flex-col gap-3">
-            <InfoRow label="Publicado">
-              {format(post.createdAt, "d MMM yyyy", { locale: es })}
-            </InfoRow>
-
-            {post.version && <InfoRow label="Versión">{post.version}</InfoRow>}
-
-            {post.ratingCount !== undefined && post.ratingCount > 0 && (
-              <InfoRow label="Valoración">
-                <div className="flex items-center gap-1.5">
-                  <HugeiconsIcon
-                    className="size-4 fill-amber-400 text-amber-400"
-                    icon={StarIcon}
-                  />
-                  <span className="font-medium">
-                    {post.averageRating?.toFixed(1)}
-                  </span>
-                  <span className="text-muted-foreground">
-                    ({post.ratingCount})
-                  </span>
-                </div>
-              </InfoRow>
-            )}
-
-            {hasImages && (
-              <InfoRow label="Imágenes">{allImages.length}</InfoRow>
-            )}
-          </div>
-        </div>
-
         {/* Author Support Sidebar Card (if exists) */}
         {hasAuthorContent && (
           <div className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 to-transparent p-5">
             <h3 className="flex items-center gap-2 font-semibold text-lg">
               <HugeiconsIcon
-                className="size-5 text-primary"
-                icon={HeartCheckIcon}
+                className="size-8 text-primary"
+                icon={FavouriteCircleIcon}
               />
               Apoya al Creador
             </h3>
-            <p className="text-muted-foreground text-sm">
-              Este juego fue creado por desarrolladores independientes.
-              Considera apoyarlos directamente.
-            </p>
-            <Button className="w-full gap-2" size="sm" variant="outline">
-              <HugeiconsIcon className="size-4" icon={UserIcon} />
-              Ver más información
-            </Button>
+            <Markdown>{post.authorContent}</Markdown>
           </div>
         )}
       </div>
@@ -451,7 +407,7 @@ function MetaBadge({
   children: React.ReactNode;
 }) {
   return (
-    <span className="flex items-center gap-1.5 text-sm text-white/90">
+    <span className="flex items-center gap-1.5 text-sm">
       <HugeiconsIcon className="size-4" icon={icon} />
       {children}
     </span>
@@ -501,21 +457,6 @@ function TagCategory({
           <TermBadge className="text-xs" key={term.id} tag={term} />
         ))}
       </div>
-    </div>
-  );
-}
-
-function InfoRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{children}</span>
     </div>
   );
 }

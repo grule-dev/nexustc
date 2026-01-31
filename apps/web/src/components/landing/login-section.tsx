@@ -1,4 +1,4 @@
-import { SquareLock01Icon } from "@hugeicons/core-free-icons";
+import { SquareLock01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -22,23 +22,24 @@ export function UserSection() {
 
     return (
       <>
+        <Button
+          nativeButton={false}
+          render={<Link to="/profile" />}
+          variant="ghost"
+        >
+          <HugeiconsIcon className="size-5" icon={UserIcon} />
+          Perfil
+        </Button>
         {role !== "user" && (
           <Button
             nativeButton={false}
             render={<Link to="/admin" />}
-            variant="default"
+            variant="ghost"
           >
-            <HugeiconsIcon icon={SquareLock01Icon} />
+            <HugeiconsIcon className="size-5" icon={SquareLock01Icon} />
             Admin
           </Button>
         )}
-        <Button
-          nativeButton={false}
-          render={<Link to="/profile" />}
-          variant="default"
-        >
-          Perfil
-        </Button>
       </>
     );
   }

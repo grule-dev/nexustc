@@ -1,12 +1,13 @@
+import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AnimatePresence, motion } from "motion/react";
+import { createContext, useContext, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
-export function SearchContainer({
-  label,
-  children,
-}: React.PropsWithChildren<{ label: string }>) {
+export function SearchContainer({ children }: React.PropsWithChildren) {
   return (
-    <main className="container w-full space-y-6 p-6 py-0">
-      <h1 className="font-bold text-4xl">{label}</h1>
+    <main className="container w-full space-y-6 py-0">
       <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
         {children}
       </div>
@@ -18,15 +19,80 @@ export function SearchResults({ children }: React.PropsWithChildren) {
   return <div className="md:col-span-2">{children}</div>;
 }
 
+const formContext = createContext<{
+  filter: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+} | null>(null);
+
 export function SearchForm({
   ref,
   children,
   className,
   ...props
 }: React.PropsWithChildren<React.ComponentProps<"form">>) {
+  const [openFilters, setOpenFilters] = useState(false);
+
   return (
     <form className={cn("row-start-1 md:row-start-auto", className)} {...props}>
-      {children}
+      <formContext.Provider value={{ filter: [openFilters, setOpenFilters] }}>
+        {children}
+      </formContext.Provider>
     </form>
+  );
+}
+
+export function SearchFilters({ children }: React.PropsWithChildren<unknown>) {
+  const {
+    filter: [openFilters],
+  } = useFormContext();
+
+  return (
+    <AnimatePresence>
+      {openFilters && (
+        <motion.div
+          animate={{ height: "auto" }}
+          className="flex flex-col gap-4 overflow-hidden"
+          exit={{ height: 0 }}
+          initial={{ height: 0 }}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function useFormContext() {
+  const context = useContext(formContext);
+
+  if (!context) {
+    throw new Error("useFormContext must be used within a SearchForm");
+  }
+
+  return context;
+}
+
+export function SearchFiltersButton({
+  children,
+  className,
+  ...props
+}: React.PropsWithChildren<React.ComponentProps<"button">>) {
+  const {
+    filter: [openFilters, setOpenFilters],
+  } = useFormContext();
+
+  return (
+    <Button
+      className={cn("w-full", className)}
+      onClick={() => setOpenFilters((prev) => !prev)}
+      type="button"
+      variant="outline"
+      {...props}
+    >
+      <HugeiconsIcon
+        className={cn("transition-transform", openFilters ? "rotate-180" : "")}
+        icon={ArrowDown01Icon}
+      />
+      {openFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+    </Button>
   );
 }
