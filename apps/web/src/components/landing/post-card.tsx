@@ -125,7 +125,7 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
         <CardContent className="flex flex-col items-center space-y-2">
           <h3 className="line-clamp-2 font-semibold text-lg">{post.title}</h3>
           <Separator orientation="horizontal" />
-          <div className="bottom-2 left-2 flex items-center gap-3 rounded-lg leading-none">
+          <div className="bottom-2 left-2 flex flex-wrap items-center gap-3 rounded-lg leading-none">
             <div className="inline-flex items-center gap-1">
               <HugeiconsIcon className="size-4 text-white" icon={ViewIcon} />
               <span className="translate-y-px text-white">{post.views}</span>

@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { AdblockBlockerDialog } from "@/components/adblock-blocker-dialog";
+import { BottomNav } from "@/components/bottom-nav";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { LoadingSpinner } from "@/components/loading-spinner";
@@ -69,29 +70,32 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <div
-      className={cn(
-        "relative min-h-screen w-full",
-        isChronos && "bg-neutral-900"
-      )}
-    >
-      <div className="fixed inset-0 z-0 h-screen" />
-
+    <>
       <div
         className={cn(
-          "relative grid min-h-dvh grid-rows-[1fr_auto]",
-          !isChronos && "gap-12"
+          "relative min-h-screen w-full",
+          isChronos && "bg-neutral-900"
         )}
-        id="main-scrollable-area"
       >
-        <div className="flex flex-col items-center">
-          <Header />
-          {!isChronos && <div className="h-6 md:h-12" />}
-          {children}
+        <div className="fixed inset-0 z-0 h-screen" />
+
+        <div
+          className={cn(
+            "relative grid min-h-dvh grid-rows-[1fr_auto]",
+            !isChronos && "gap-12",
+            "pb-20 md:pb-0"
+          )}
+          id="main-scrollable-area"
+        >
+          <div className="flex flex-col items-center">
+            <Header />
+            {children}
+          </div>
+          <Footer />
         </div>
-        <Footer />
       </div>
-    </div>
+      <BottomNav />
+    </>
   );
 }
 

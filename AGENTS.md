@@ -1,231 +1,148 @@
-# AGENTS.md - Coding Agent Guidelines
+# AGENTS.md
 
-This document provides essential information for AI coding agents working in this repository.
+Guidelines for AI coding agents working in the NeXusTC codebase.
 
 ## Project Overview
 
-Monorepo built with Turborepo, using:
+NeXusTC is a full-stack TypeScript monorepo with TanStack Start (React + SSR), oRPC for type-safe APIs, Turborepo, Drizzle ORM (PostgreSQL), Better-Auth, and Redis. Package manager: **bun@1.3.0**.
 
-- **Frontend**: React 19, TanStack Router, TailwindCSS, shadcn/ui
-- **Backend**: Hono, oRPC (type-safe APIs)
-- **Database**: Drizzle ORM with SQLite/Turso
-- **Auth**: Better-Auth
-- **Runtime**: Bun (package manager & runtime)
-- **Linting/Formatting**: Biome with Ultracite preset
-
-## Build/Test/Lint Commands
-
-### Root Level Commands
+## Build/Lint/Test Commands
 
 ```bash
-bun install                    # Install all dependencies
-bun run dev                    # Start all apps in dev mode
-bun run build                  # Build all apps
-bun run check                  # Format and lint with Biome (auto-fix)
-bun run check-types            # Type check all apps
-```
+# Development
+bun run dev              # Start all apps (web on port 3000)
+bun run dev:web          # Start web app only
+bun install              # Install dependencies
 
-### Package-Specific Commands
+# Building
+bun run build            # Build all packages/apps
+bun run web:build        # Build web app only
+bun run check-types      # Type-check all packages
 
-```bash
-# Web app (Vite + React)
-bun run dev:web                # Start web app on port 3001
-turbo -F web build             # Build web app
-turbo -F web test              # Run all tests in web app
-turbo -F web test:run          # Run tests once (no watch)
-turbo -F web check-types       # Type check web app
+# Code Quality (Ultracite/Biome)
+bun run check            # Run linter/formatter with auto-fix
 
-# Server (Hono API)
-bun run dev:server             # Start server on port 3000
-turbo -F server build          # Build server
-turbo -F server check-types    # Type check server
+# Testing
+bun run test             # Run all tests
+bun run test:watch       # Run API tests in watch mode (in packages/api)
+
+# Single test file:
+bun run test -- path/to/file.test.ts
+# or within a package:
+cd packages/api && bun run test -- src/routers/user.test.ts
 
 # Database
-bun run db:push                # Apply schema changes
-bun run db:generate            # Generate migrations
-turbo -F @repo/db db:push      # Direct db commands
-```
-
-### Linting/Formatting
-
-```bash
-biome check --write .          # Format and lint with Biome (auto-fix)
+bun run db:push          # Push schema changes to database
+bun run db:generate      # Generate migrations from schema
 ```
 
 ## Code Style Guidelines
 
-This project uses **Ultracite** (zero-config Biome preset). Most formatting/linting issues are auto-fixed.
+### TypeScript
 
-### Import Organization
-
-- Group imports: external packages → workspace packages → relative imports
-- Use type imports: `import type { AppRouter } from "@repo/api"`
-- Prefer named imports over default imports for clarity
-- Use path aliases: `@/*` for `./src/*` in apps/web
-
-Example:
-
-```typescript
-import { createORPCClient } from "@orpc/client";
-import type { AppRouterClient } from "@repo/api/routers/index";
-import type { QueryClient } from "@tanstack/react-query";
-import { ThemeProvider } from "@/components/theme-provider";
-import { link } from "@/utils/orpc";
-```
-
-### TypeScript Conventions
-
-- **Strict mode enabled**: All strict TypeScript checks are on
-- **Explicit types**: Add types for function parameters and return values when they enhance clarity
-- **No `any`**: Use `unknown` instead when type is genuinely unknown
-- **Type safety**: Leverage TypeScript's type narrowing instead of type assertions
-- **Const assertions**: Use `as const` for immutable values and literal types
-- **No unused vars**: `noUnusedLocals` and `noUnusedParameters` are enforced
+- Use explicit types for function parameters/returns when it enhances clarity
+- Prefer `unknown` over `any`
+- Use const assertions (`as const`) for immutable values
+- Prefer `type` over `interface` for type definitions
 
 ### Naming Conventions
 
-- **Files**: kebab-case (e.g., `use-debounce-effect.ts`, `age-verification-dialog.tsx`)
-- **Components**: PascalCase (e.g., `AgeVerificationDialog`)
-- **Functions/Variables**: camelCase (e.g., `createORPCClient`, `queryClient`)
-- **Constants**: SCREAMING_SNAKE_CASE (e.g., `DOCUMENT_STATUSES`, `TAXONOMIES`)
-- **Types/Interfaces**: PascalCase (e.g., `AppRouter`, `RouterAppContext`)
+- Variables/functions: camelCase (`getUserProfile`)
+- Components: PascalCase (`UserProfile`)
+- Constants: UPPER_SNAKE_CASE for true constants
+- Files: kebab-case for utilities, PascalCase for components
+- Database tables/columns: snake_case in schema
 
-### Code Organization
+### Imports & Formatting
 
-- **Monorepo structure**:
-  - `apps/web` - Frontend React app
-  - `apps/server` - Backend Hono API
-  - `packages/api` - API routers and business logic
-  - `packages/db` - Database schema and queries
-  - `packages/auth` - Authentication config
-  - `packages/shared` - Shared schemas, types, constants
-- **Component structure**: Keep components focused and under reasonable complexity
-- **Early returns**: Prefer early returns over nested conditionals
-- **Extract complexity**: Extract complex conditions into well-named boolean variables
+- Use specific imports over namespace imports
+- Group imports: external libs first, then internal (`@repo/*`), then relative
+- No barrel files (index re-exports)
+- Use `const` by default, `let` only when reassignment needed
+- Arrow functions for callbacks and short functions
 
-### React Conventions
+### Modern Patterns
 
-- **Function components only**: No class components
-- **Hooks**: Call at top level only, never conditionally
-- **Dependencies**: Specify all hook dependencies correctly
-- **Keys**: Use unique IDs for list items (prefer over array indices)
-- **Ref as prop**: Use ref as a prop (React 19+ pattern), not `forwardRef`
-- **No component nesting**: Don't define components inside other components
+- `for...of` over `.forEach()` and indexed loops
+- Optional chaining (`?.`) and nullish coalescing (`??`)
+- Template literals over string concatenation
+- Destructuring for objects/arrays
+- Early returns over nested conditionals
+
+### React
+
+- Function components only (no class components)
+- Hooks at top level only, never conditionally
+- Specify all dependencies in hook arrays correctly
+- Use `key` prop with unique IDs (not indices)
+- React 19: use ref as prop, not `React.forwardRef`
+- Semantic HTML and ARIA attributes for accessibility
+
+### Async/Await
+
+- Always `await` promises in async functions
+- Use `async/await` over promise chains
+- Proper error handling with try-catch
+- Don't use async functions as Promise executors
 
 ### Error Handling
 
-- **Throw Error objects**: Use `throw new Error("message")`, not strings
-- **Try-catch**: Use meaningfully, don't catch just to rethrow
-- **Async errors**: Handle with try-catch blocks in async functions
-- **Early returns**: Use for error cases to reduce nesting
-
-### Modern JavaScript/TypeScript
-
-- **Arrow functions**: Use for callbacks and short functions
-- **Const/let**: Use `const` by default, `let` only when reassignment needed, never `var`
-- **For...of**: Prefer over `.forEach()` and indexed `for` loops
-- **Optional chaining**: Use `?.` for safer property access
-- **Nullish coalescing**: Use `??` instead of `||` for default values
-- **Template literals**: Prefer over string concatenation
-- **Destructuring**: Use for object and array assignments
-- **Async/await**: Use instead of promise chains for readability
-
-### Validation & Schemas
-
-- **Zod schemas**: Define in `packages/shared/src/schemas.ts`
-- **Transform**: Chain `.trim()` and `.transform()` for string sanitization
-- **Numeric separators**: Use underscores for readability (e.g., `65_535`)
-
-Example:
-
-```typescript
-export const postCreateSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1)
-    .max(255)
-    .transform((val) => val.trim()),
-  content: z
-    .string()
-    .trim()
-    .max(65_535)
-    .transform((val) => val.trim()),
-});
-```
-
-### Testing (Vitest)
-
-- **File naming**: `*.test.ts` or `*.test.tsx`
-- **Structure**: Use `describe`, `it`/`test`, `beforeEach`, `afterEach`
-- **Async tests**: Use async/await, not done callbacks
-- **No .only/.skip**: Don't commit tests with `.only` or `.skip`
-- **Mocking**: Use `vi.fn()`, `vi.mock()`, `vi.useFakeTimers()`
-- **React testing**: Use `@testing-library/react` with `renderHook`, `render`
+- Remove `console.log`, `debugger`, `alert` from production code
+- Throw `Error` objects with descriptive messages
+- Use try-catch meaningfully - don't catch just to rethrow
+- Prefer early returns for error cases
 
 ### Security
 
-- **Links**: Add `rel="noopener"` when using `target="_blank"`
-- **No dangerouslySetInnerHTML**: Avoid unless absolutely necessary
-- **No eval()**: Never use eval or similar dynamic code execution
-- **Input validation**: Always validate and sanitize user input
+- Add `rel="noopener"` when using `target="_blank"`
+- Validate and sanitize user input
+- Avoid `dangerouslySetInnerHTML` unless necessary
 
 ### Performance
 
-- **No spread in loops**: Avoid spread syntax in accumulators within loops
-- **Regex literals**: Use top-level regex literals instead of creating in loops
-- **Specific imports**: Prefer specific imports over namespace imports
-- **No barrel files**: Avoid index files that re-export everything
+- Avoid spread in accumulators within loops
+- Use top-level regex literals
+- Prefer specific imports over namespace imports
 
-## Environment Setup
+### Comments
 
-- **Node version**: Uses Bun as package manager (`bun@1.3.0`)
-- **TypeScript**: v5.8+
-- **Module system**: ESM only (`"type": "module"`)
-- **Module resolution**: `bundler` mode
+- Never comment obvious code - it must be self-explanatory
+- Use comments only for complex logic that needs explanation
 
-## Database Operations
+## Testing Guidelines
 
-```bash
-bun run db:push                # Apply schema changes (no migrations)
-bun run db:generate            # Generate migration files
-cd packages/db && drizzle-kit studio  # Open Drizzle Studio
-```
+- Test files: `*.test.ts` or `*.spec.ts`
+- Web tests: Vitest with happy-dom environment
+- API tests: Vitest with node environment
+- Use async/await, never done callbacks
+- Don't commit `.only` or `.skip` in tests
+- Keep test suites flat - avoid excessive `describe` nesting
 
-## Common Patterns
+## Architecture Patterns
 
-### oRPC Router Definition
+### API (oRPC)
 
-```typescript
-export const appRouter = {
-  comic,
-  post,
-  term,
-  user,
-  file,
-  extras,
-};
+- Use `publicProcedure` for unauthenticated endpoints
+- Use `protectedProcedure` for authenticated-only
+- Use `permissionProcedure([permissions])` for role-based access
+- Routers organized by domain in `packages/api/src/routers/`
 
-export type AppRouter = typeof appRouter;
-export type AppRouterClient = RouterClient<typeof appRouter>;
-```
+### Database (Drizzle)
 
-### TanStack Router Route
+- Schema in `packages/db/src/schema/app.ts`
+- Use re-exported operators (`eq`, `and`, `or`) from `@repo/db`
+- Redis singleton via `getRedis()`
 
-```typescript
-export const Route = createRootRouteWithContext<RouterAppContext>()({
-  component: RootComponent,
-  head: () => ({
-    meta: [{ title: "App Title" }],
-  }),
-});
-```
+### Frontend (TanStack Start)
 
-## Key Reminders
+- File-based routing in `apps/web/src/routes/`
+- Components in `apps/web/src/components/`
+- Use `orpc` client for API calls with TanStack Query
+- Routes auto-generated - don't manually edit `routeTree.gen.ts`
 
-1. **Always run `bun run check` before committing** - Auto-fixes most issues
-2. **Use workspace packages**: Import from `@repo/*` for shared code
-3. **Type safety**: Export and import types properly across packages
-4. **No console.log**: Remove debugging statements before committing
-5. **Path aliases**: Use `@/*` imports in web app for cleaner imports
-6. **Bun runtime**: Use `bun` commands, not `npm` or `yarn`
+## Environment Variables
+
+Required: `DATABASE_URL`, `REDIS_URL`
+Build-time: `VITE_TURNSTILE_SITE_KEY`, `VITE_ASSETS_BUCKET_URL`
+
+Always run `bun run check` before committing to ensure code passes Ultracite/Biome rules.
