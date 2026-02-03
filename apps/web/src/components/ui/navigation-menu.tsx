@@ -5,10 +5,12 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 function NavigationMenu({
+  align = "start",
   className,
   children,
   ...props
-}: NavigationMenuPrimitive.Root.Props) {
+}: NavigationMenuPrimitive.Root.Props &
+  Pick<NavigationMenuPrimitive.Positioner.Props, "align">) {
   return (
     <NavigationMenuPrimitive.Root
       className={cn(
@@ -19,7 +21,7 @@ function NavigationMenu({
       {...props}
     >
       {children}
-      <NavigationMenuPositioner />
+      <NavigationMenuPositioner align={align} />
     </NavigationMenuPrimitive.Root>
   );
 }
@@ -27,7 +29,7 @@ function NavigationMenu({
 function NavigationMenuList({
   className,
   ...props
-}: NavigationMenuPrimitive.List.Props) {
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.List>) {
   return (
     <NavigationMenuPrimitive.List
       className={cn(
@@ -43,7 +45,7 @@ function NavigationMenuList({
 function NavigationMenuItem({
   className,
   ...props
-}: NavigationMenuPrimitive.Item.Props) {
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Item>) {
   return (
     <NavigationMenuPrimitive.Item
       className={cn("relative", className)}
@@ -86,7 +88,7 @@ function NavigationMenuContent({
   return (
     <NavigationMenuPrimitive.Content
       className={cn(
-        "data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 group-data-[viewport=false]/navigation-menu:data-closed:zoom-out-95 group-data-[viewport=false]/navigation-menu:data-open:zoom-in-95 group-data-[viewport=false]/navigation-menu:data-open:fade-in-0 group-data-[viewport=false]/navigation-menu:data-closed:fade-out-0 h-full w-auto p-2.5 pr-3 ease-[cubic-bezier(0.22,1,0.36,1)] data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out **:data-[slot=navigation-menu-link]:focus:outline-none **:data-[slot=navigation-menu-link]:focus:ring-0 group-data-[viewport=false]/navigation-menu:rounded-2xl group-data-[viewport=false]/navigation-menu:bg-popover group-data-[viewport=false]/navigation-menu:text-popover-foreground group-data-[viewport=false]/navigation-menu:shadow-2xl group-data-[viewport=false]/navigation-menu:ring-1 group-data-[viewport=false]/navigation-menu:ring-foreground/5 group-data-[viewport=false]/navigation-menu:duration-300 group-data-[viewport=false]/navigation-menu:data-closed:animate-out group-data-[viewport=false]/navigation-menu:data-open:animate-in",
+        "data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 group-data-[viewport=false]/navigation-menu:data-closed:zoom-out-95 group-data-[viewport=false]/navigation-menu:data-open:zoom-in-95 group-data-[viewport=false]/navigation-menu:data-open:fade-in-0 group-data-[viewport=false]/navigation-menu:data-closed:fade-out-0 h-full w-auto p-2.5 pr-3 transition-[opacity,transform,translate] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-ending-style:data-[activation-direction=left]:translate-x-[50%] data-ending-style:data-[activation-direction=right]:translate-x-[-50%] data-starting-style:data-[activation-direction=left]:translate-x-[-50%] data-starting-style:data-[activation-direction=right]:translate-x-[50%] data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out data-ending-style:opacity-0 data-starting-style:opacity-0 **:data-[slot=navigation-menu-link]:focus:outline-none **:data-[slot=navigation-menu-link]:focus:ring-0 group-data-[viewport=false]/navigation-menu:rounded-2xl group-data-[viewport=false]/navigation-menu:bg-popover group-data-[viewport=false]/navigation-menu:text-popover-foreground group-data-[viewport=false]/navigation-menu:shadow-2xl group-data-[viewport=false]/navigation-menu:ring-1 group-data-[viewport=false]/navigation-menu:ring-foreground/5 group-data-[viewport=false]/navigation-menu:duration-300 group-data-[viewport=false]/navigation-menu:data-closed:animate-out group-data-[viewport=false]/navigation-menu:data-open:animate-in",
         className
       )}
       data-slot="navigation-menu-content"
@@ -109,14 +111,14 @@ function NavigationMenuPositioner({
         align={align}
         alignOffset={alignOffset}
         className={cn(
-          "isolate z-50 h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none data-[side=bottom]:before:-top-2.5 data-[side=bottom]:before:right-0 data-[side=bottom]:before:left-0",
+          "isolate z-50 h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none data-[side=bottom]:before:-top-2.5 data-[side=bottom]:before:right-0 data-[side=bottom]:before:left-0",
           className
         )}
         side={side}
         sideOffset={sideOffset}
         {...props}
       >
-        <NavigationMenuPrimitive.Popup className="relative h-(--popup-height) w-(--popup-width) xs:w-(--popup-width) origin-(--transform-origin) rounded-2xl bg-popover text-popover-foreground shadow outline-none ring-1 ring-foreground/5 transition-all ease-[cubic-bezier(0.22,1,0.36,1)] data-ending-style:scale-90 data-starting-style:scale-90 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-150">
+        <NavigationMenuPrimitive.Popup className="data-[ending-style]:easing-[ease] relative h-(--popup-height) w-(--popup-width) xs:w-(--popup-width) origin-(--transform-origin) rounded-2xl bg-popover text-popover-foreground shadow outline-none ring-1 ring-foreground/5 transition-[opacity,transform,width,height,scale,translate] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-ending-style:scale-90 data-starting-style:scale-90 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-150">
           <NavigationMenuPrimitive.Viewport className="relative size-full overflow-hidden" />
         </NavigationMenuPrimitive.Popup>
       </NavigationMenuPrimitive.Positioner>
@@ -143,7 +145,7 @@ function NavigationMenuLink({
 function NavigationMenuIndicator({
   className,
   ...props
-}: NavigationMenuPrimitive.Icon.Props) {
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Icon>) {
   return (
     <NavigationMenuPrimitive.Icon
       className={cn(
