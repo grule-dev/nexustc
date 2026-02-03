@@ -20,6 +20,7 @@ import {
 import admin from "./admin";
 
 export default {
+  // TODO: implement caching here, very heavily used endpoint
   getRecent: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(24).default(12) }))
     .handler(async ({ context: { db, ...context }, input }) => {
@@ -119,6 +120,7 @@ export default {
       return posts;
     }),
 
+  // TODO: implement caching here as well
   getWeekly: publicProcedure.handler(
     async ({ context: { db, ...context } }) => {
       const logger = getLogger(context);
@@ -217,6 +219,7 @@ export default {
     }
   ),
 
+  // TODO: cache as well
   getFeatured: publicProcedure.handler(
     async ({ context: { db, ...context } }) => {
       const logger = getLogger(context);
@@ -530,6 +533,7 @@ export default {
       return result[0];
     }),
 
+  // TODO: could probably benefit from caching as well, especially on frequently accessed posts
   getPostById: publicProcedure
     .use(fixedWindowRatelimitMiddleware({ limit: 20, windowSeconds: 60 }))
     .input(z.string())

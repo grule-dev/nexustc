@@ -1,4 +1,4 @@
-import { ShuffleIcon } from "@hugeicons/core-free-icons";
+import { DiceFaces05Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useStore } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -223,9 +223,25 @@ function PostSearch() {
       >
         <Card className="w-full">
           <CardContent className="flex flex-col gap-4">
-            <form.AppField name="query">
-              {(field) => <field.TextField label="Buscar" type="text" />}
-            </form.AppField>
+            <div className="flex items-end gap-2">
+              <form.AppField name="query">
+                {(field) => (
+                  <field.TextField
+                    className="w-full"
+                    label="Buscar"
+                    type="text"
+                  />
+                )}
+              </form.AppField>
+              <Button
+                onClick={handleRandomPost}
+                size="icon"
+                type="button"
+                variant="outline"
+              >
+                <HugeiconsIcon icon={DiceFaces05Icon} />
+              </Button>
+            </div>
             <SearchFiltersButton />
             <SearchFilters>
               <form.AppField name="orderBy">
@@ -289,15 +305,6 @@ function PostSearch() {
                 )}
               </form.AppField>
             </SearchFilters>
-            <Button
-              className="w-full"
-              onClick={handleRandomPost}
-              type="button"
-              variant="outline"
-            >
-              <HugeiconsIcon icon={ShuffleIcon} />
-              Juego Aleatorio
-            </Button>
           </CardContent>
         </Card>
       </SearchForm>
@@ -383,9 +390,25 @@ function ComicSearch() {
       >
         <Card className="w-full">
           <CardContent className="flex flex-col gap-4">
-            <form.AppField name="query">
-              {(field) => <field.TextField label="Buscar" type="text" />}
-            </form.AppField>
+            <div className="flex items-end gap-2">
+              <form.AppField name="query">
+                {(field) => (
+                  <field.TextField
+                    className="w-full"
+                    label="Buscar"
+                    type="text"
+                  />
+                )}
+              </form.AppField>
+              <Button
+                onClick={handleRandomComic}
+                size="icon"
+                type="button"
+                variant="outline"
+              >
+                <HugeiconsIcon icon={DiceFaces05Icon} />
+              </Button>
+            </div>
             <SearchFiltersButton />
             <SearchFilters>
               <form.AppField name="orderBy">
@@ -410,15 +433,6 @@ function ComicSearch() {
                 )}
               </form.AppField>
             </SearchFilters>
-            <Button
-              className="w-full"
-              onClick={handleRandomComic}
-              type="button"
-              variant="outline"
-            >
-              <HugeiconsIcon icon={ShuffleIcon} />
-              Cómic Aleatorio
-            </Button>
           </CardContent>
         </Card>
       </SearchForm>

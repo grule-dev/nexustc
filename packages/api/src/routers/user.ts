@@ -20,6 +20,7 @@ import {
 
 const RECENT_USERS_CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
 
+// TODO: improve recent user caching implementation
 // const recentUserSchema = z.object({
 //   id: z.string(),
 //   name: z.string(),
