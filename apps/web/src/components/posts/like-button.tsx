@@ -32,7 +32,7 @@ function LikeButtonUI({
         className={cn(isLiked ? "fill-primary stroke-primary" : "fill-none")}
         icon={FavouriteIcon}
       />
-      {isLiked ? "Me gusta" : "Me gusta"}
+      Me Gusta
     </Button>
   );
 }
