@@ -20,14 +20,15 @@ import {
 
 const RECENT_USERS_CACHE_TTL_SECONDS = 60 * 5; // 5 minutes
 
-const recentUserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  image: z.string().nullable(),
-  role: z.string(),
-});
+// TODO: improve recent user caching implementation
+// const recentUserSchema = z.object({
+//   id: z.string(),
+//   name: z.string(),
+//   image: z.string().nullable(),
+//   role: z.string(),
+// });
 
-const recentUsersListSchema = z.array(recentUserSchema);
+// const recentUsersListSchema = z.array(recentUserSchema);
 
 export default {
   getBookmarks: protectedProcedure.handler(
@@ -188,6 +189,45 @@ export default {
       );
     }),
 
+  toggleLike: protectedProcedure
+    .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
+    .input(z.object({ liked: z.boolean(), postId: z.string() }))
+    .handler(async ({ context: { db, session, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `User ${session.user.id} toggling like for post ${input.postId} to ${input.liked}`
+      );
+
+      if (input.liked) {
+        await db
+          .insert(postLikes)
+          .values({
+            postId: input.postId,
+            userId: session.user.id,
+          })
+          .onConflictDoNothing();
+
+        logger?.debug(
+          `Like added for user ${session.user.id} on post ${input.postId}`
+        );
+      } else {
+        await db
+          .delete(postLikes)
+          .where(
+            and(
+              eq(postLikes.postId, input.postId),
+              eq(postLikes.userId, session.user.id)
+            )
+          );
+        logger?.debug(
+          `Like removed for user ${session.user.id} on post ${input.postId}`
+        );
+      }
+      logger?.info(
+        `Like toggle completed for user ${session.user.id} on post ${input.postId}`
+      );
+    }),
+
   getLikes: protectedProcedure.handler(
     ({ context: { db, session, ...ctx } }) => {
       const logger = getLogger(ctx);
@@ -215,7 +255,7 @@ export default {
 
   getRecentUsers: publicProcedure.handler(
     async ({
-      context: { cache, db, session, ...ctx },
+      context: { db, session, ...ctx },
     }): Promise<
       {
         id: string;
@@ -227,7 +267,7 @@ export default {
       const logger = getLogger(ctx);
       logger?.info("Fetching recent users list");
 
-      const cachedList = await cache.get("recent-users");
+      // const cachedList = await cache.get("recent-users");
 
       const currentUser = session?.user;
 
@@ -240,30 +280,30 @@ export default {
           .where(eq(user.id, currentUser.id));
       }
 
-      if (cachedList) {
-        const result = recentUsersListSchema.safeParse(cachedList);
+      // if (cachedList) {
+      //   const result = recentUsersListSchema.safeParse(cachedList);
 
-        if (result.success) {
-          const list = result.data;
+      //   if (result.success) {
+      //     const list = result.data;
 
-          if (currentUser && !list.find((u) => u.id === currentUser.id)) {
-            // If the user is not in the cached list, add them
-            list.push({
-              id: currentUser.id,
-              name: currentUser.name,
-              role: currentUser.role ?? "user",
-              image: currentUser.image ?? null,
-            });
-          }
+      //     if (currentUser && !list.find((u) => u.id === currentUser.id)) {
+      //       // If the user is not in the cached list, add them
+      //       list.push({
+      //         id: currentUser.id,
+      //         name: currentUser.name,
+      //         role: currentUser.role ?? "user",
+      //         image: currentUser.image ?? null,
+      //       });
+      //     }
 
-          logger?.debug(
-            `Returning cached recent users list with ${list.length} users`
-          );
-          return list;
-        }
+      //     logger?.debug(
+      //       `Returning cached recent users list with ${list.length} users`
+      //     );
+      //     return list;
+      //   }
 
-        logger?.error("Invalid cached list format, will fetch from database");
-      }
+      //   logger?.error("Invalid cached list format, will fetch from database");
+      // }
 
       logger?.debug(
         "Cache miss or invalid, fetching recent users from database"
@@ -283,11 +323,11 @@ export default {
         },
       });
 
-      await cache.setEx(
-        "recent-users",
-        RECENT_USERS_CACHE_TTL_SECONDS,
-        JSON.stringify(users)
-      );
+      // await cache.setEx(
+      //   "recent-users",
+      //   RECENT_USERS_CACHE_TTL_SECONDS,
+      //   JSON.stringify(users)
+      // );
 
       logger?.debug(`Fetched and cached ${users.length} recent users`);
       return users;

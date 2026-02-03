@@ -40,6 +40,7 @@ import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { BookmarkButton } from "./bookmark-button";
+import { LikeButton } from "./like-button";
 
 const postPageApi = getRouteApi("/_main/post/$id");
 
@@ -250,6 +251,7 @@ function ComicInfoPage({
       {/* Action Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-3">
+          <LikeButton postId={comic.id} />
           <BookmarkButton postId={comic.id} />
           <Button
             nativeButton={false}

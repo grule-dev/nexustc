@@ -25,7 +25,7 @@ function RouteComponent() {
   const data = Route.useLoaderData();
 
   return (
-    <main className="relative grid w-full bg-neutral-900 md:grid-cols-4">
+    <main className="relative grid w-full md:grid-cols-4">
       {/* Left sticky image */}
       {data.stickyImageKey && (
         <div

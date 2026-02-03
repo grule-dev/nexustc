@@ -13,20 +13,23 @@ import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import AutoScroll from "embla-carousel-auto-scroll";
 import { useState } from "react";
 import { toast } from "sonner";
 import { TermBadge } from "@/components/term-badge";
 import type { PostType } from "@/lib/types";
-import { cn, getBucketUrl } from "@/lib/utils";
+import { getBucketUrl } from "@/lib/utils";
 import { Markdown } from "../markdown";
 import { RatingDisplay } from "../ratings";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { ImageViewer } from "../ui/image-viewer";
 import { Separator } from "../ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { BookmarkButton } from "./bookmark-button";
+import { LikeButton } from "./like-button";
 
 export type PostProps = Omit<
   PostType,
@@ -150,6 +153,7 @@ export function PostActionBar({ post }: { post: PostProps }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-4 rounded-b-3xl border bg-card p-4 md:justify-between">
       <div className="flex flex-wrap items-center gap-3">
+        <LikeButton postId={post.id} />
         <BookmarkButton postId={post.id} />
         <Button
           nativeButton={false}
@@ -217,6 +221,59 @@ export function PostContent({ post }: { post: PostProps }) {
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
+      {/* Gallery Tab */}
+      {hasImages && (
+        <div className="lg:col-span-3">
+          <div className="flex flex-col gap-6">
+            {allImages.length > 0 && (
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: true,
+                  dragFree: true,
+                }}
+                plugins={[
+                  AutoScroll({
+                    playOnInit: true,
+                    stopOnInteraction: false,
+                    speed: 1,
+                  }),
+                ]}
+              >
+                <CarouselContent>
+                  {allImages.map((image, index) => (
+                    <CarouselItem className="md:basis-1/3" key={image}>
+                      <button
+                        className="group aspect-video overflow-hidden rounded-xl border-2 transition-all"
+                        onClick={() => {
+                          setSelectedImageIndex(index);
+                          setGalleryOpen(true);
+                        }}
+                        type="button"
+                      >
+                        <img
+                          alt={`Miniatura ${index + 1}`}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                          src={getBucketUrl(image)}
+                        />
+                      </button>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+            )}
+
+            {/* Image Viewer Modal */}
+            <ImageViewer
+              images={galleryImages}
+              initialIndex={selectedImageIndex}
+              onOpenChange={setGalleryOpen}
+              open={galleryOpen}
+              title={post.title}
+            />
+          </div>
+        </div>
+      )}
       {/* Left Column - Main Content */}
       <div className="flex flex-col gap-6 lg:col-span-2">
         <Tabs className="w-full" defaultValue="info">
@@ -225,12 +282,6 @@ export function PostContent({ post }: { post: PostProps }) {
               <HugeiconsIcon className="size-4" icon={InformationCircleIcon} />
               Información
             </TabsTrigger>
-            {hasImages && (
-              <TabsTrigger className="gap-2" value="gallery">
-                <HugeiconsIcon className="size-4" icon={Image02Icon} />
-                Galería
-              </TabsTrigger>
-            )}
             {hasDownloadLinks && (
               <TabsTrigger className="gap-2" value="downloads">
                 <HugeiconsIcon className="size-4" icon={Download04Icon} />
@@ -265,68 +316,6 @@ export function PostContent({ post }: { post: PostProps }) {
               )}
             </div>
           </TabsContent>
-
-          {/* Gallery Tab */}
-          {hasImages && (
-            <TabsContent className="mt-6" value="gallery">
-              <div className="flex flex-col gap-6">
-                {/* Main Selected Image */}
-                <button
-                  className="group relative cursor-zoom-in overflow-hidden rounded-2xl border bg-black/5"
-                  onClick={() => setGalleryOpen(true)}
-                  type="button"
-                >
-                  <img
-                    alt={`${post.title} - Imagen ${selectedImageIndex + 1}`}
-                    className="aspect-video w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-                    src={getBucketUrl(allImages[selectedImageIndex])}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/10">
-                    <span className="rounded-full bg-black/50 px-4 py-2 font-medium text-sm text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                      Click para ampliar
-                    </span>
-                  </div>
-                </button>
-
-                {/* Thumbnail Grid */}
-                {allImages.length > 1 && (
-                  <div className="grid grid-cols-4 gap-3 md:grid-cols-6 lg:grid-cols-5">
-                    {allImages.map((image, index) => (
-                      <button
-                        className={cn(
-                          "group relative aspect-video overflow-hidden rounded-xl border-2 transition-all",
-                          selectedImageIndex === index
-                            ? "border-primary ring-2 ring-primary/20"
-                            : "border-transparent hover:border-primary/50"
-                        )}
-                        key={image}
-                        onClick={() => setSelectedImageIndex(index)}
-                        type="button"
-                      >
-                        <img
-                          alt={`Miniatura ${index + 1}`}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                          src={getBucketUrl(image)}
-                        />
-                        {selectedImageIndex === index && (
-                          <div className="absolute inset-0 bg-primary/10" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Image Viewer Modal */}
-                <ImageViewer
-                  images={galleryImages}
-                  initialIndex={selectedImageIndex}
-                  onOpenChange={setGalleryOpen}
-                  open={galleryOpen}
-                  title={post.title}
-                />
-              </div>
-            </TabsContent>
-          )}
 
           {/* Downloads Tab */}
           {hasDownloadLinks && (

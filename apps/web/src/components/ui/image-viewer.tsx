@@ -477,11 +477,17 @@ export function ImageViewer({
           {/* Main Image Area */}
           {/* biome-ignore lint/a11y/noStaticElementInteractions: image area needs touch/mouse events for zoom/pan */}
           {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: image area needs touch/mouse events for zoom/pan */}
+          {/** biome-ignore lint/a11y/useKeyWithClickEvents: required for click outside the image area */}
           <div
             className={cn(
               "relative flex flex-1 items-center justify-center overflow-hidden",
               !showControls && "cursor-none"
             )}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                onOpenChange(false);
+              }
+            }}
             onDoubleClick={handleDoubleClick}
             onMouseDown={handleMouseDown}
             onMouseLeave={handleMouseUp}

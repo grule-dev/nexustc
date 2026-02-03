@@ -61,11 +61,9 @@ export const Route = createFileRoute("/_main/")({
 
 function HomeComponent() {
   return (
-    <main className="grid grid-cols-1 gap-4 md:grid-cols-7">
-      <div className="grid gap-4 md:col-span-5 md:col-start-2 md:grid-cols-3">
-        <MainContent />
-        <Sidebar />
-      </div>
+    <main className="grid w-full gap-4 px-2 md:grid-cols-3 md:px-4">
+      <MainContent />
+      <Sidebar />
     </main>
   );
 }
@@ -74,7 +72,7 @@ function MainContent() {
   const { weeklyGames } = Route.useLoaderData();
 
   return (
-    <div className="flex flex-col items-center gap-8 px-4 md:col-span-2">
+    <div className="flex w-full flex-col items-center gap-8 md:col-span-2">
       <HeroSection />
       <h1 className="font-extrabold text-2xl">Juegos de la Semana</h1>
       <GamesCarousel games={weeklyGames.data ?? []} />
@@ -236,7 +234,12 @@ function TagCard({
   tag: { id: string; name: string; color: string | null };
 }) {
   return (
-    <Link className="grow" search={{ tag: [tag.id] }} to="/post-search">
+    <Link
+      className="grow"
+      preload={false}
+      search={{ tag: [tag.id] }}
+      to="/post-search"
+    >
       <TermBadge className="w-full justify-center" tag={tag} />
     </Link>
   );

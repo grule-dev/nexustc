@@ -4,10 +4,10 @@ import {
   createFileRoute,
   type ErrorComponentProps,
   Outlet,
-  useMatchRoute,
 } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { AdblockBlockerDialog } from "@/components/adblock-blocker-dialog";
+import { AppSidebar } from "@/components/app-sidebar";
 import { BottomNav } from "@/components/bottom-nav";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
@@ -30,6 +30,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAdblockDetector } from "@/hooks/use-adblock-detector";
 import { cn } from "@/lib/utils";
 
@@ -63,39 +64,27 @@ function MainLayout() {
 }
 
 function Wrapper({ children }: { children: React.ReactNode }) {
-  const matchRoute = useMatchRoute();
-
-  const isChronos = matchRoute({
-    to: "/chronos",
-  });
-
   return (
-    <>
-      <div
-        className={cn(
-          "relative min-h-screen w-full",
-          isChronos && "bg-neutral-900"
-        )}
-      >
+    <SidebarProvider>
+      <AppSidebar />
+      <div className={cn("relative min-h-screen w-full")}>
         <div className="fixed inset-0 z-0 h-screen" />
 
-        <div
-          className={cn(
-            "relative grid min-h-dvh grid-rows-[1fr_auto]",
-            !isChronos && "gap-12",
-            "pb-20 md:pb-0"
-          )}
-          id="main-scrollable-area"
-        >
-          <div className="flex flex-col items-center">
-            <Header />
-            {children}
+        <SidebarInset>
+          <div
+            className="relative grid min-h-dvh grid-rows-[1fr_auto] gap-4 pb-20 md:pb-0"
+            id="main-scrollable-area"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <Header />
+              {children}
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
+        </SidebarInset>
       </div>
       <BottomNav />
-    </>
+    </SidebarProvider>
   );
 }
 

@@ -2,98 +2,161 @@ import { FavouriteIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useDebounceEffect } from "@/hooks/use-debounce-effect";
 import { authClient } from "@/lib/auth-client";
 import { orpc, queryClient } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
-function useLikeMutation(postId: string) {
-  const queryOptions = orpc.post.getLikes.queryOptions({ input: postId });
-
-  return useMutation(
-    orpc.post.toggleLike.mutationOptions({
-      // optimistic update
-      onMutate: async (newState: { liked: boolean }) => {
-        await queryClient.cancelQueries(queryOptions);
-
-        const previous = queryClient.getQueryData<number>([queryOptions]);
-        queryClient.setQueryData(queryOptions.queryKey, (prev) =>
-          newState.liked ? (prev ?? 0) + 1 : (prev ?? 1) - 1
-        );
-
-        return { previous };
-      },
-
-      // rollback if error
-      onError: (_err, _vars, ctx) => {
-        if (ctx?.previous !== undefined) {
-          queryClient.setQueryData([queryOptions], ctx.previous);
-        }
-      },
-
-      // refetch after mutation
-      onSettled: () => {
-        queryClient.invalidateQueries(queryOptions);
-      },
-    })
+function LikeButtonUI({
+  isLiked,
+  isLoading,
+  isDisabled,
+  onClick,
+}: {
+  isLiked: boolean;
+  isLoading: boolean;
+  isDisabled?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <Button
+      disabled={isLoading || isDisabled}
+      onClick={onClick}
+      size="sm"
+      variant="outline"
+    >
+      <HugeiconsIcon
+        className={cn(isLiked ? "fill-primary stroke-primary" : "fill-none")}
+        icon={FavouriteIcon}
+      />
+      Me Gusta
+    </Button>
   );
 }
 
-export function LikeButton({
-  initialLikes,
-  postId,
-}: {
-  initialLikes: number;
-  postId: string;
-}) {
-  const { data: likes, isFetching } = useQuery(
-    orpc.post.getLikes.queryOptions({
-      input: postId,
-      refetchOnWindowFocus: false,
+export function LikeButton({ postId }: { postId: string }) {
+  const { data: auth } = authClient.useSession();
+  const [cooldown, setCooldown] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Reset cooldown after 2 seconds
+  useDebounceEffect(
+    () => {
+      if (cooldown) {
+        setCooldown(false);
+      }
+    },
+    2000,
+    [cooldown]
+  );
+
+  // Query to fetch user's likes
+  const likesQueryOptions = orpc.user.getLikes.queryOptions();
+  const { data: userLikes, isLoading: isLoadingLikes } = useQuery({
+    ...likesQueryOptions,
+    enabled: !!auth,
+  });
+
+  // Calculate if current post is liked
+  const isLiked = userLikes?.some((b) => b.postId === postId) ?? false;
+
+  // Mutation with optimistic updates
+  const likeMutation = useMutation(
+    orpc.user.toggleLike.mutationOptions({
+      onMutate: async (variables) => {
+        // Cancel outgoing refetches
+        await queryClient.cancelQueries(likesQueryOptions);
+
+        // Snapshot current value
+        const previousLikes = queryClient.getQueryData(
+          likesQueryOptions.queryKey
+        );
+
+        // Optimistically update cache
+        queryClient.setQueryData(
+          likesQueryOptions.queryKey,
+          (old: { postId: string }[] | undefined) => {
+            if (!old) {
+              return old;
+            }
+
+            if (variables.liked) {
+              // Add like optimistically
+              return [...old, { postId: variables.postId }];
+            }
+            // Remove like optimistically
+            return old.filter((b) => b.postId !== variables.postId);
+          }
+        );
+
+        return { previousLikes };
+      },
+
+      onError: (error, variables, context) => {
+        // Rollback on error
+        if (context?.previousLikes !== undefined) {
+          queryClient.setQueryData(
+            likesQueryOptions.queryKey,
+            context.previousLikes
+          );
+        }
+
+        // Show error toast with appropriate message
+        const action = variables.liked ? "agregar" : "quitar";
+        toast.error(
+          `Error al ${action} me gusta: ${error instanceof Error ? error.message : "Error desconocido"}`,
+          { duration: 5000 }
+        );
+      },
+
+      onSettled: () => {
+        // Refetch to ensure consistency
+        queryClient.invalidateQueries(likesQueryOptions);
+      },
     })
   );
 
-  const toggleLike = useLikeMutation(postId);
-  const { data: auth } = authClient.useSession();
-  const [localLikes, setLocalLikes] = useState(initialLikes);
+  if (!mounted) {
+    return null;
+  }
 
-  useEffect(() => {
-    if (likes !== undefined) {
-      setLocalLikes(likes);
-    }
-  }, [likes]);
-
+  // Unauthenticated state - static disabled button
   if (!auth) {
     return (
-      <Button size="icon">
-        <HugeiconsIcon className="size-6" icon={FavouriteIcon} />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger>
+          <LikeButtonUI isDisabled={true} isLiked={false} isLoading={false} />
+        </TooltipTrigger>
+        <TooltipContent>Inicia sesión para dar me gusta</TooltipContent>
+      </Tooltip>
     );
   }
 
   const handleClick = () => {
-    toggleLike.mutate({ postId, liked: !likes });
+    if (cooldown || likeMutation.isPending || isLoadingLikes) {
+      return;
+    }
+
+    setCooldown(true);
+
+    likeMutation.mutate({
+      postId,
+      liked: !isLiked,
+    });
   };
 
   return (
-    <Button
-      disabled={
-        toggleLike.isPending ||
-        likes === undefined ||
-        isFetching ||
-        localLikes === undefined
-      }
+    <LikeButtonUI
+      isLiked={isLiked}
+      isLoading={isLoadingLikes || cooldown || likeMutation.isPending}
       onClick={handleClick}
-      variant="outline"
-    >
-      <HugeiconsIcon
-        className={cn(
-          "size-6",
-          likes ? "fill-primary stroke-primary" : "fill-none"
-        )}
-        icon={FavouriteIcon}
-      />
-      {localLikes}
-    </Button>
+    />
   );
 }
