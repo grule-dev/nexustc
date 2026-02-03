@@ -1,8 +1,8 @@
 import { os } from "@orpc/server";
 import { auth } from "@repo/auth";
+import { getRedis } from "@repo/db";
 import type { Permissions, Role } from "@repo/shared/permissions";
 import type { AtLeastOne } from "@repo/shared/types";
-import type { RedisClientType } from "redis";
 import { z } from "zod";
 import type { Context } from "./context";
 import {
@@ -75,7 +75,7 @@ export const fixedWindowRatelimitMiddleware = ({
     });
 
     const { exceeded } = await checkFixedWindowRateLimit(
-      context.cache as RedisClientType,
+      await getRedis(),
       key,
       limit,
       windowSeconds
@@ -105,7 +105,7 @@ export const slidingWindowRatelimitMiddleware = (
     const key = getRateLimitKey({ strategy: "sliding", identifier, path });
 
     const { exceeded } = await checkSlidingWindowRateLimit(
-      context.cache as RedisClientType,
+      await getRedis(),
       key,
       limit,
       windowSeconds,
