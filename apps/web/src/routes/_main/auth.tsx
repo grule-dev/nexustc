@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { auth } from "@repo/auth";
 import { env } from "@repo/env/client";
+import { useStore } from "@tanstack/react-form";
 import {
   createFileRoute,
   Link,
@@ -10,15 +11,17 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { createMiddleware } from "@tanstack/react-start";
+import { Facehash } from "facehash";
 import { useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient, getAuthErrorMessage } from "@/lib/auth-client";
+import { defaultFacehashProps } from "@/lib/utils";
 
 const redirectMiddleware = createMiddleware().server(
   async ({ request, next }) => {
@@ -96,34 +99,41 @@ function RouteComponent() {
   const navigate = useNavigate();
 
   const loginForm = useAppForm({
-    validators: {
-      onSubmit: loginSchema,
-    },
     defaultValues: {
       email: "",
       password: "",
       turnstileToken: "",
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value, formApi }) => {
+      const { data, error } = loginSchema.safeParse(value);
+
+      if (error) {
+        setError("Email o contraseña inválidos");
+        return;
+      }
+
       try {
         setError(undefined);
 
-        toast.loading("Iniciando sesión...", { id: "auth" });
-
-        const { error: authError } = await authClient.signIn.email({
-          email: value.email,
-          password: value.password,
-          callbackURL: window.location.origin,
-          fetchOptions: {
-            headers: {
-              "x-captcha-response": value.turnstileToken,
-            },
-          },
-        });
+        const { error: authError } = await toast
+          .promise(
+            authClient.signIn.email({
+              email: data.email,
+              password: data.password,
+              callbackURL: window.location.origin,
+              fetchOptions: {
+                headers: {
+                  "x-captcha-response": data.turnstileToken,
+                },
+              },
+            }),
+            {
+              loading: "Iniciando sesión...",
+            }
+          )
+          .unwrap();
 
         if (authError) {
-          toast.dismiss("auth");
-
           if (authError.status === 403) {
             toast.error(
               "Por favor verifica tu dirección de correo electrónico antes de iniciar sesión. Se te ha enviado un nuevo correo de verificación."
@@ -135,14 +145,12 @@ function RouteComponent() {
           return;
         }
 
-        toast.dismiss("auth");
-
         navigate({ to: "/" });
       } catch (err) {
-        toast.dismiss("auth");
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
         loginForm.resetField("turnstileToken");
+        formApi.setErrorMap({});
       }
     },
   });
@@ -200,8 +208,20 @@ function RouteComponent() {
     },
   });
 
+  const registerName = useStore(
+    registerForm.store,
+    (state) => state.values.name
+  );
+
   return (
     <Card className="min-w-sm">
+      <CardHeader>
+        <h1 className="text-center font-bold text-3xl text-primary">
+          NeXusTC
+          <span className="align-super font-normal text-xs">+18</span>
+          <span className="font-normal text-xs"> BETA</span>
+        </h1>
+      </CardHeader>
       <CardContent>
         <Tabs
           defaultValue="login"
@@ -278,6 +298,14 @@ function RouteComponent() {
                 registerForm.handleSubmit();
               }}
             >
+              <div className="flex w-full justify-center">
+                <Facehash
+                  name={registerName}
+                  {...defaultFacehashProps}
+                  className="w-full place-items-center rounded-full border"
+                  size={128}
+                />
+              </div>
               <registerForm.AppField name="name">
                 {(field) => (
                   <field.TextField

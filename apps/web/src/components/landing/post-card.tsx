@@ -1,16 +1,9 @@
-import {
-  Bookmark02Icon,
-  FavouriteIcon,
-  StarIcon,
-  ViewIcon,
-} from "@hugeicons/core-free-icons";
+import { FavouriteIcon, StarIcon, ViewIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { getBucketUrl, getTierColor } from "@/lib/utils";
-import { TermBadge } from "../term-badge";
 import { Card, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type PostCardProps = {
   post: {
@@ -32,10 +25,7 @@ type PostCardProps = {
   withTags?: boolean;
 };
 
-export function PostCard({ post, withTags = true }: PostCardProps) {
-  const groupedTerms = Object.groupBy(post.terms, (term) => term.taxonomy);
-  const tags = groupedTerms.tag?.map((t) => ({ name: t.name, color: t.color }));
-
+export function PostCard({ post }: PostCardProps) {
   const images = (post.imageObjectKeys?.slice(0, 4) ?? []).map(getBucketUrl);
   const count = images.length;
 
@@ -125,26 +115,13 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
         <CardContent className="flex flex-col items-center space-y-2">
           <h3 className="line-clamp-2 font-semibold text-lg">{post.title}</h3>
           <Separator orientation="horizontal" />
-          <div className="bottom-2 left-2 flex flex-wrap items-center gap-3 rounded-lg leading-none">
-            <div className="inline-flex items-center gap-1">
-              <HugeiconsIcon className="size-4 text-white" icon={ViewIcon} />
-              <span className="translate-y-px text-white">{post.views}</span>
-            </div>
+          <div className="bottom-2 left-2 flex flex-row items-center gap-3 rounded-lg leading-none">
             <div className="items-center-safe inline-flex gap-1">
               <HugeiconsIcon
                 className="size-4 fill-red-500 text-red-500"
                 icon={FavouriteIcon}
               />
               <span className="translate-y-px text-white">{post.likes}</span>
-            </div>
-            <div className="inline-flex items-center gap-1">
-              <HugeiconsIcon
-                className="size-4 fill-blue-500 text-blue-500"
-                icon={Bookmark02Icon}
-              />
-              <span className="translate-y-px text-white">
-                {post.favorites}
-              </span>
             </div>
             {post.ratingCount !== undefined && post.ratingCount > 0 && (
               <div className="inline-flex items-center gap-1">
@@ -157,39 +134,11 @@ export function PostCard({ post, withTags = true }: PostCardProps) {
                 </span>
               </div>
             )}
-          </div>
-
-          {withTags && tags && tags.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {tags?.slice(0, 1).map((tag) => (
-                <TermBadge
-                  className="flex-1 justify-center"
-                  key={tag.name}
-                  tag={tag}
-                />
-              ))}
-              {tags.length > 2 && (
-                <Tooltip>
-                  <TooltipTrigger>
-                    <TermBadge
-                      tag={{ name: `+${tags.length - 2}`, color: null }}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <div className="flex max-w-md flex-wrap gap-1 overflow-y-auto">
-                      {tags.slice(2).map((tag) => (
-                        <TermBadge
-                          className="flex-1 justify-center"
-                          key={tag.name}
-                          tag={tag}
-                        />
-                      ))}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+            <div className="inline-flex items-center gap-1">
+              <HugeiconsIcon className="size-4 text-white" icon={ViewIcon} />
+              <span className="translate-y-px text-white">{post.views}</span>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </Link>

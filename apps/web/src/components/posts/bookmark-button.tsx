@@ -8,18 +8,26 @@ import { useDebounceEffect } from "@/hooks/use-debounce-effect";
 import { authClient } from "@/lib/auth-client";
 import { orpc, queryClient } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 function BookmarkButtonUI({
   isBookmarked,
   isLoading,
+  isDisabled,
   onClick,
 }: {
   isBookmarked: boolean;
   isLoading: boolean;
+  isDisabled?: boolean;
   onClick?: () => void;
 }) {
   return (
-    <Button disabled={isLoading} onClick={onClick} size="sm" variant="outline">
+    <Button
+      disabled={isLoading || isDisabled}
+      onClick={onClick}
+      size="sm"
+      variant="outline"
+    >
       <HugeiconsIcon
         className={cn(
           isBookmarked ? "fill-blue-500 stroke-blue-500" : "fill-none"
@@ -123,7 +131,18 @@ export function BookmarkButton({ postId }: { postId: string }) {
 
   // Unauthenticated state - static disabled button
   if (!auth) {
-    return <BookmarkButtonUI isBookmarked={false} isLoading={false} />;
+    return (
+      <Tooltip>
+        <TooltipTrigger>
+          <BookmarkButtonUI
+            isBookmarked={false}
+            isDisabled={true}
+            isLoading={false}
+          />
+        </TooltipTrigger>
+        <TooltipContent>Inicia sesión para guardar posts</TooltipContent>
+      </Tooltip>
+    );
   }
 
   const handleClick = () => {

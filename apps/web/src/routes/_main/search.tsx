@@ -118,7 +118,7 @@ function RouteComponent() {
     <main className="container w-full space-y-6 p-6 py-0">
       <h1 className="font-bold text-2xl">Buscar</h1>
       <Tabs onValueChange={handleTabChange} value={params.type ?? "juegos"}>
-        <TabsList className="w-full max-w-xl">
+        <TabsList className="w-full" variant="primary">
           <TabsTrigger value="juegos">Juegos</TabsTrigger>
           <TabsTrigger value="comics">Cómics</TabsTrigger>
         </TabsList>

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpcClient } from "@/lib/orpc";
-import { defaultFacehashProps } from "@/lib/utils";
+import { defaultFacehashProps, getBucketUrl } from "@/lib/utils";
 import { SignedIn } from "../auth/signed-in";
 import { SignedOut } from "../auth/signed-out";
 import { Button } from "../ui/button";
@@ -196,7 +196,13 @@ export function CommentSection({ postId }: { postId: string }) {
               >
                 <Link params={{ id: comment.author.id }} to="/user/$id">
                   <Avatar className="size-10 rounded-full ring-2 ring-background transition-transform group-hover:scale-105">
-                    <AvatarImage src={undefined} />
+                    <AvatarImage
+                      src={
+                        comment.author.image
+                          ? getBucketUrl(comment.author.image)
+                          : undefined
+                      }
+                    />
                     <AvatarFallback
                       className="rounded-full"
                       facehashProps={defaultFacehashProps}

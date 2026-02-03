@@ -126,7 +126,6 @@ function AccountsSection() {
   const queryClient = useQueryClient();
 
   const providers: Record<string, string | null> = {
-    discord: null,
     patreon: null,
   } as const;
 
