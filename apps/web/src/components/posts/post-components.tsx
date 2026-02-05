@@ -235,6 +235,7 @@ export function PostContent({ post }: { post: PostProps }) {
                 plugins={[
                   AutoScroll({
                     playOnInit: true,
+                    startDelay: 0,
                     stopOnInteraction: false,
                     speed: 1,
                   }),
