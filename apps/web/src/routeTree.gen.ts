@@ -42,6 +42,7 @@ import { Route as AdminChronosEditRouteImport } from './routes/admin/chronos/edi
 import { Route as MainUserIdRouteImport } from './routes/_main/user.$id'
 import { Route as MainPostIdRouteImport } from './routes/_main/post.$id'
 import { Route as AdminPostsEditIdRouteImport } from './routes/admin/posts/edit.$id'
+import { Route as AdminComicsEditIdRouteImport } from './routes/admin/comics/edit.$id'
 import { Route as MainPostReviewsIdRouteImport } from './routes/_main/post.reviews.$id'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -208,6 +209,11 @@ const AdminPostsEditIdRoute = AdminPostsEditIdRouteImport.update({
   path: '/posts/edit/$id',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminComicsEditIdRoute = AdminComicsEditIdRouteImport.update({
+  id: '/comics/edit/$id',
+  path: '/comics/edit/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const MainPostReviewsIdRoute = MainPostReviewsIdRouteImport.update({
   id: '/post/reviews/$id',
   path: '/post/reviews/$id',
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/admin/terms/': typeof AdminTermsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/post/reviews/$id': typeof MainPostReviewsIdRoute
+  '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRoutesByTo {
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/admin/terms': typeof AdminTermsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/post/reviews/$id': typeof MainPostReviewsIdRoute
+  '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRoutesById {
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/admin/terms/': typeof AdminTermsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/_main/post/reviews/$id': typeof MainPostReviewsIdRoute
+  '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRouteTypes {
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/admin/terms/'
     | '/admin/users/'
     | '/post/reviews/$id'
+    | '/admin/comics/edit/$id'
     | '/admin/posts/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/admin/terms'
     | '/admin/users'
     | '/post/reviews/$id'
+    | '/admin/comics/edit/$id'
     | '/admin/posts/edit/$id'
   id:
     | '__root__'
@@ -425,6 +436,7 @@ export interface FileRouteTypes {
     | '/admin/terms/'
     | '/admin/users/'
     | '/_main/post/reviews/$id'
+    | '/admin/comics/edit/$id'
     | '/admin/posts/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -670,6 +682,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPostsEditIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/comics/edit/$id': {
+      id: '/admin/comics/edit/$id'
+      path: '/comics/edit/$id'
+      fullPath: '/admin/comics/edit/$id'
+      preLoaderRoute: typeof AdminComicsEditIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/_main/post/reviews/$id': {
       id: '/_main/post/reviews/$id'
       path: '/post/reviews/$id'
@@ -733,6 +752,7 @@ interface AdminRouteRouteChildren {
   AdminPostsIndexRoute: typeof AdminPostsIndexRoute
   AdminTermsIndexRoute: typeof AdminTermsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+  AdminComicsEditIdRoute: typeof AdminComicsEditIdRoute
   AdminPostsEditIdRoute: typeof AdminPostsEditIdRoute
 }
 
@@ -749,6 +769,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminPostsIndexRoute: AdminPostsIndexRoute,
   AdminTermsIndexRoute: AdminTermsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
+  AdminComicsEditIdRoute: AdminComicsEditIdRoute,
   AdminPostsEditIdRoute: AdminPostsEditIdRoute,
 }
 

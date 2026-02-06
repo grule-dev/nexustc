@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { columns } from "@/components/admin/comics/columns";
+import { DataTable } from "@/components/admin/posts/data-table";
 import { orpcClient } from "@/lib/orpc";
-import { columns } from "../../../components/admin/posts/columns";
-import { DataTable } from "../../../components/admin/posts/data-table";
 
 export const Route = createFileRoute("/admin/comics/")({
   component: RouteComponent,
