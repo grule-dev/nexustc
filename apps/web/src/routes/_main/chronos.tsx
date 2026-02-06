@@ -41,7 +41,7 @@ function RouteComponent() {
         {data.headerImageKey && (
           <img
             alt="Header"
-            className="w-full max-w-3xl rounded-lg object-cover shadow-lg"
+            className="w-full rounded-lg object-cover shadow-lg"
             src={getBucketUrl(data.headerImageKey)}
           />
         )}
