@@ -1,6 +1,7 @@
 import { getLogger } from "@orpc/experimental-pino";
 import { and, eq, sql } from "@repo/db";
 import {
+  patron,
   post,
   postBookmark,
   postLikes,
@@ -414,12 +415,110 @@ export default {
       })
       .from(user);
 
-    const [registeredLastWeek, registeredAllTime, userCount] =
-      await Promise.all([
-        registeredLastWeekPromise,
-        registeredAllTimePromise,
-        userCountPromise,
-      ]);
+    const activePatronsCountPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(patron)
+      .where(eq(patron.isActivePatron, true));
+
+    const verifiedEmailsCountPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .where(eq(user.emailVerified, true));
+
+    const bannedUsersCountPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .where(eq(user.banned, true));
+
+    const newTodayCountPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .where(sql`${user.createdAt} >= now() - interval '1 day'`);
+
+    const newThisWeekCountPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .where(sql`${user.createdAt} >= now() - interval '7 days'`);
+
+    const usersByRolePromise = db
+      .select({
+        role: user.role,
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .groupBy(user.role)
+      .orderBy(sql`count(*) desc`);
+
+    const patronsByTierPromise = db
+      .select({
+        tier: patron.tier,
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(patron)
+      .where(eq(patron.isActivePatron, true))
+      .groupBy(patron.tier)
+      .orderBy(sql`count(*) desc`);
+
+    const activeLastDayPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .where(sql`${user.lastSeenAt} >= now() - interval '1 day'`);
+
+    const activeLastWeekPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .where(sql`${user.lastSeenAt} >= now() - interval '7 days'`);
+
+    const activeLastMonthPromise = db
+      .select({
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(user)
+      .where(sql`${user.lastSeenAt} >= now() - interval '30 days'`);
+
+    const [
+      registeredLastWeek,
+      registeredAllTime,
+      userCount,
+      activePatronsCount,
+      verifiedEmailsCount,
+      bannedUsersCount,
+      newTodayCount,
+      newThisWeekCount,
+      usersByRole,
+      patronsByTier,
+      activeLastDay,
+      activeLastWeek,
+      activeLastMonth,
+    ] = await Promise.all([
+      registeredLastWeekPromise,
+      registeredAllTimePromise,
+      userCountPromise,
+      activePatronsCountPromise,
+      verifiedEmailsCountPromise,
+      bannedUsersCountPromise,
+      newTodayCountPromise,
+      newThisWeekCountPromise,
+      usersByRolePromise,
+      patronsByTierPromise,
+      activeLastDayPromise,
+      activeLastWeekPromise,
+      activeLastMonthPromise,
+    ]);
 
     const totalUsers = userCount[0]?.count ?? 0;
     logger?.debug(
@@ -430,6 +529,16 @@ export default {
       registeredLastWeek,
       registeredAllTime,
       userCount: totalUsers,
+      activePatronsCount: activePatronsCount[0]?.count ?? 0,
+      verifiedEmailsCount: verifiedEmailsCount[0]?.count ?? 0,
+      bannedUsersCount: bannedUsersCount[0]?.count ?? 0,
+      newTodayCount: newTodayCount[0]?.count ?? 0,
+      newThisWeekCount: newThisWeekCount[0]?.count ?? 0,
+      usersByRole,
+      patronsByTier,
+      activeLastDay: activeLastDay[0]?.count ?? 0,
+      activeLastWeek: activeLastWeek[0]?.count ?? 0,
+      activeLastMonth: activeLastMonth[0]?.count ?? 0,
     };
   }),
 };

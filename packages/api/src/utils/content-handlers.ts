@@ -144,7 +144,7 @@ export async function createContent({
       const termIds = (
         input.type === "post" ? input.platforms : (input.platforms ?? [])
       )
-        .concat(input.tags, input.languages, [
+        .concat(input.tags, input.languages ?? [], [
           input.censorship,
           input.type === "post" ? input.engine : (input.engine ?? ""),
           input.type === "post" ? input.status : (input.status ?? ""),
@@ -217,7 +217,7 @@ export async function editContent({
   const termIds = (
     input.type === "post" ? input.platforms : (input.platforms ?? [])
   )
-    .concat(input.tags, input.languages, [
+    .concat(input.tags, input.languages ?? [], [
       input.censorship,
       input.type === "post" ? input.engine : (input.engine ?? ""),
       input.type === "post" ? input.status : (input.status ?? ""),

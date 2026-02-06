@@ -72,6 +72,7 @@ export const postCreateSchema = z.object({
 export const comicCreateSchema = z.object({
   ...contentBaseFields,
   type: z.literal("comic"),
+  languages: z.array(z.string()).optional(),
   version: z.string().optional(),
   status: z.string().optional(),
   engine: z.string().optional(),

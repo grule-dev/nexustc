@@ -20,10 +20,8 @@ import { Route as MainSearchRouteImport } from './routes/_main/search'
 import { Route as MainResetPasswordRouteImport } from './routes/_main/reset-password'
 import { Route as MainProfileRouteImport } from './routes/_main/profile'
 import { Route as MainPrivacyRouteImport } from './routes/_main/privacy'
-import { Route as MainPostSearchRouteImport } from './routes/_main/post-search'
 import { Route as MainLegalRouteImport } from './routes/_main/legal'
 import { Route as MainForgotPasswordRouteImport } from './routes/_main/forgot-password'
-import { Route as MainComicSearchRouteImport } from './routes/_main/comic-search'
 import { Route as MainChronosRouteImport } from './routes/_main/chronos'
 import { Route as MainAuthRouteImport } from './routes/_main/auth'
 import { Route as MainAboutRouteImport } from './routes/_main/about'
@@ -100,11 +98,6 @@ const MainPrivacyRoute = MainPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => MainRouteRoute,
 } as any)
-const MainPostSearchRoute = MainPostSearchRouteImport.update({
-  id: '/post-search',
-  path: '/post-search',
-  getParentRoute: () => MainRouteRoute,
-} as any)
 const MainLegalRoute = MainLegalRouteImport.update({
   id: '/legal',
   path: '/legal',
@@ -113,11 +106,6 @@ const MainLegalRoute = MainLegalRouteImport.update({
 const MainForgotPasswordRoute = MainForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => MainRouteRoute,
-} as any)
-const MainComicSearchRoute = MainComicSearchRouteImport.update({
-  id: '/comic-search',
-  path: '/comic-search',
   getParentRoute: () => MainRouteRoute,
 } as any)
 const MainChronosRoute = MainChronosRouteImport.update({
@@ -232,10 +220,8 @@ export interface FileRoutesByFullPath {
   '/about': typeof MainAboutRoute
   '/auth': typeof MainAuthRoute
   '/chronos': typeof MainChronosRoute
-  '/comic-search': typeof MainComicSearchRoute
   '/forgot-password': typeof MainForgotPasswordRoute
   '/legal': typeof MainLegalRoute
-  '/post-search': typeof MainPostSearchRoute
   '/privacy': typeof MainPrivacyRoute
   '/profile': typeof MainProfileRoute
   '/reset-password': typeof MainResetPasswordRoute
@@ -267,10 +253,8 @@ export interface FileRoutesByTo {
   '/about': typeof MainAboutRoute
   '/auth': typeof MainAuthRoute
   '/chronos': typeof MainChronosRoute
-  '/comic-search': typeof MainComicSearchRoute
   '/forgot-password': typeof MainForgotPasswordRoute
   '/legal': typeof MainLegalRoute
-  '/post-search': typeof MainPostSearchRoute
   '/privacy': typeof MainPrivacyRoute
   '/profile': typeof MainProfileRoute
   '/reset-password': typeof MainResetPasswordRoute
@@ -306,10 +290,8 @@ export interface FileRoutesById {
   '/_main/about': typeof MainAboutRoute
   '/_main/auth': typeof MainAuthRoute
   '/_main/chronos': typeof MainChronosRoute
-  '/_main/comic-search': typeof MainComicSearchRoute
   '/_main/forgot-password': typeof MainForgotPasswordRoute
   '/_main/legal': typeof MainLegalRoute
-  '/_main/post-search': typeof MainPostSearchRoute
   '/_main/privacy': typeof MainPrivacyRoute
   '/_main/profile': typeof MainProfileRoute
   '/_main/reset-password': typeof MainResetPasswordRoute
@@ -346,10 +328,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/chronos'
-    | '/comic-search'
     | '/forgot-password'
     | '/legal'
-    | '/post-search'
     | '/privacy'
     | '/profile'
     | '/reset-password'
@@ -381,10 +361,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/chronos'
-    | '/comic-search'
     | '/forgot-password'
     | '/legal'
-    | '/post-search'
     | '/privacy'
     | '/profile'
     | '/reset-password'
@@ -419,10 +397,8 @@ export interface FileRouteTypes {
     | '/_main/about'
     | '/_main/auth'
     | '/_main/chronos'
-    | '/_main/comic-search'
     | '/_main/forgot-password'
     | '/_main/legal'
-    | '/_main/post-search'
     | '/_main/privacy'
     | '/_main/profile'
     | '/_main/reset-password'
@@ -540,13 +516,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainPrivacyRouteImport
       parentRoute: typeof MainRouteRoute
     }
-    '/_main/post-search': {
-      id: '/_main/post-search'
-      path: '/post-search'
-      fullPath: '/post-search'
-      preLoaderRoute: typeof MainPostSearchRouteImport
-      parentRoute: typeof MainRouteRoute
-    }
     '/_main/legal': {
       id: '/_main/legal'
       path: '/legal'
@@ -559,13 +528,6 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof MainForgotPasswordRouteImport
-      parentRoute: typeof MainRouteRoute
-    }
-    '/_main/comic-search': {
-      id: '/_main/comic-search'
-      path: '/comic-search'
-      fullPath: '/comic-search'
-      preLoaderRoute: typeof MainComicSearchRouteImport
       parentRoute: typeof MainRouteRoute
     }
     '/_main/chronos': {
@@ -722,10 +684,8 @@ interface MainRouteRouteChildren {
   MainAboutRoute: typeof MainAboutRoute
   MainAuthRoute: typeof MainAuthRoute
   MainChronosRoute: typeof MainChronosRoute
-  MainComicSearchRoute: typeof MainComicSearchRoute
   MainForgotPasswordRoute: typeof MainForgotPasswordRoute
   MainLegalRoute: typeof MainLegalRoute
-  MainPostSearchRoute: typeof MainPostSearchRoute
   MainPrivacyRoute: typeof MainPrivacyRoute
   MainProfileRoute: typeof MainProfileRoute
   MainResetPasswordRoute: typeof MainResetPasswordRoute
@@ -742,10 +702,8 @@ const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainAboutRoute: MainAboutRoute,
   MainAuthRoute: MainAuthRoute,
   MainChronosRoute: MainChronosRoute,
-  MainComicSearchRoute: MainComicSearchRoute,
   MainForgotPasswordRoute: MainForgotPasswordRoute,
   MainLegalRoute: MainLegalRoute,
-  MainPostSearchRoute: MainPostSearchRoute,
   MainPrivacyRoute: MainPrivacyRoute,
   MainProfileRoute: MainProfileRoute,
   MainResetPasswordRoute: MainResetPasswordRoute,
