@@ -127,3 +127,9 @@ export const chronosUpdateSchema = z.object({
   markdownContent: z.string().max(65_535),
   markdownImageKeys: z.array(z.string()).optional(),
 });
+
+export const staticPageUpdateSchema = z.object({
+  slug: z.enum(["about", "legal", "privacy", "terms"]),
+  title: z.string().trim().min(1).max(255),
+  content: z.string().max(65_535),
+});

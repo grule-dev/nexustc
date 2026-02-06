@@ -106,6 +106,27 @@ const nav = {
       },
     ],
   },
+  staticPages: {
+    name: "Páginas",
+    links: [
+      {
+        name: "Sobre Nosotros",
+        href: "/admin/pages/about",
+      },
+      {
+        name: "Aviso Legal",
+        href: "/admin/pages/legal",
+      },
+      {
+        name: "Política de Privacidad",
+        href: "/admin/pages/privacy",
+      },
+      {
+        name: "Términos y Condiciones",
+        href: "/admin/pages/terms",
+      },
+    ],
+  },
 };
 
 function AdminLayout() {
@@ -143,6 +164,9 @@ function AdminLayout() {
           </HasPermissions>
           <HasPermissions permissions={{ chronos: ["update"] }}>
             <SidebarLinks item={nav.chronos} />
+          </HasPermissions>
+          <HasPermissions permissions={{ staticPages: ["update"] }}>
+            <SidebarLinks item={nav.staticPages} />
           </HasPermissions>
         </SidebarContent>
         <SidebarRail />

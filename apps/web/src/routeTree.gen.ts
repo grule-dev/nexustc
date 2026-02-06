@@ -34,6 +34,7 @@ import { Route as ApiPatreonWebhookRouteImport } from './routes/api/patreon/webh
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/create'
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
+import { Route as AdminPagesSlugRouteImport } from './routes/admin/pages/$slug'
 import { Route as AdminExtrasWeeklyRouteImport } from './routes/admin/extras/weekly'
 import { Route as AdminExtrasTutorialsRouteImport } from './routes/admin/extras/tutorials'
 import { Route as AdminExtrasFeaturedRouteImport } from './routes/admin/extras/featured'
@@ -169,6 +170,11 @@ const AdminPostsCreateRoute = AdminPostsCreateRouteImport.update({
   path: '/posts/create',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminPagesSlugRoute = AdminPagesSlugRouteImport.update({
+  id: '/pages/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminExtrasWeeklyRoute = AdminExtrasWeeklyRouteImport.update({
   id: '/extras/weekly',
   path: '/extras/weekly',
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
+  '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -278,6 +285,7 @@ export interface FileRoutesByTo {
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
+  '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -316,6 +324,7 @@ export interface FileRoutesById {
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
+  '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -354,6 +363,7 @@ export interface FileRouteTypes {
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
+    | '/admin/pages/$slug'
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
+    | '/admin/pages/$slug'
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
+    | '/admin/pages/$slug'
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
@@ -626,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPostsCreateRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/pages/$slug': {
+      id: '/admin/pages/$slug'
+      path: '/pages/$slug'
+      fullPath: '/admin/pages/$slug'
+      preLoaderRoute: typeof AdminPagesSlugRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/extras/weekly': {
       id: '/admin/extras/weekly'
       path: '/extras/weekly'
@@ -746,6 +765,7 @@ interface AdminRouteRouteChildren {
   AdminExtrasFeaturedRoute: typeof AdminExtrasFeaturedRoute
   AdminExtrasTutorialsRoute: typeof AdminExtrasTutorialsRoute
   AdminExtrasWeeklyRoute: typeof AdminExtrasWeeklyRoute
+  AdminPagesSlugRoute: typeof AdminPagesSlugRoute
   AdminPostsCreateRoute: typeof AdminPostsCreateRoute
   AdminTermsCreateRoute: typeof AdminTermsCreateRoute
   AdminComicsIndexRoute: typeof AdminComicsIndexRoute
@@ -763,6 +783,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminExtrasFeaturedRoute: AdminExtrasFeaturedRoute,
   AdminExtrasTutorialsRoute: AdminExtrasTutorialsRoute,
   AdminExtrasWeeklyRoute: AdminExtrasWeeklyRoute,
+  AdminPagesSlugRoute: AdminPagesSlugRoute,
   AdminPostsCreateRoute: AdminPostsCreateRoute,
   AdminTermsCreateRoute: AdminTermsCreateRoute,
   AdminComicsIndexRoute: AdminComicsIndexRoute,

@@ -11,6 +11,7 @@ export const statement = {
   comments: ["create", "self-update", "self-delete", "update", "delete"],
   ratings: ["create", "self-update", "self-delete", "delete"],
   chronos: ["view", "update"],
+  staticPages: ["update"],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -55,6 +56,7 @@ const owner = ac.newRole({
   dashboard: ["view"],
   ratings: ["create", "self-update", "self-delete", "delete"],
   chronos: ["view", "update"],
+  staticPages: ["update"],
 });
 
 export const roles = {
