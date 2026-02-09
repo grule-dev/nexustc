@@ -67,7 +67,6 @@ function RouteComponent() {
       censorship: "",
       documentStatus: "draft" as (typeof DOCUMENT_STATUSES)[number],
       tags: [] as string[],
-      languages: [] as string[],
     },
     onSubmit: async (formData) => {
       try {
@@ -209,20 +208,6 @@ function RouteComponent() {
               </DialogContent>
             </Dialog>
           </div>
-
-          <form.AppField name="languages">
-            {(field) => (
-              <field.MultiSelectField
-                label="Idiomas"
-                options={
-                  groupedTerms.language?.map((term) => ({
-                    value: term.id,
-                    label: term.name,
-                  })) ?? []
-                }
-              />
-            )}
-          </form.AppField>
 
           <form.AppField name="documentStatus">
             {(field) => (

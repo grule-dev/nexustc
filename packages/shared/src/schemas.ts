@@ -72,6 +72,7 @@ export const postCreateSchema = z.object({
 export const comicCreateSchema = z.object({
   ...contentBaseFields,
   type: z.literal("comic"),
+  languages: z.array(z.string()).optional(),
   version: z.string().optional(),
   status: z.string().optional(),
   engine: z.string().optional(),
@@ -125,4 +126,10 @@ export const chronosUpdateSchema = z.object({
   carouselImageKeys: z.array(z.string()).optional(),
   markdownContent: z.string().max(65_535),
   markdownImageKeys: z.array(z.string()).optional(),
+});
+
+export const staticPageUpdateSchema = z.object({
+  slug: z.enum(["about", "legal", "privacy", "terms"]),
+  title: z.string().trim().min(1).max(255),
+  content: z.string().max(65_535),
 });

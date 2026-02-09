@@ -9,21 +9,33 @@ export const Route = createFileRoute("/admin/users/")({
 });
 
 function RouteComponent() {
-  const { registeredLastWeek, registeredAllTime, userCount } =
-    Route.useLoaderData();
+  const data = Route.useLoaderData();
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-bold text-2xl">Usuarios</h1>
       <div className="flex flex-col gap-4">
-        <UserCounts premiumUsers={userCount} users={userCount} />
+        <SummaryCards
+          activeLastDay={data.activeLastDay}
+          activeLastWeek={data.activeLastWeek}
+          activePatronsCount={data.activePatronsCount}
+          bannedUsersCount={data.bannedUsersCount}
+          newThisWeekCount={data.newThisWeekCount}
+          newTodayCount={data.newTodayCount}
+          userCount={data.userCount}
+          verifiedEmailsCount={data.verifiedEmailsCount}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <RoleDistribution usersByRole={data.usersByRole} />
+          <PatronTiers patronsByTier={data.patronsByTier} />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Últimos 7 días</CardTitle>
             </CardHeader>
             <CardContent>
-              <UsersChart chart={registeredLastWeek} type="last7days" />
+              <UsersChart chart={data.registeredLastWeek} type="last7days" />
             </CardContent>
           </Card>
           <Card>
@@ -31,7 +43,7 @@ function RouteComponent() {
               <CardTitle>Todo el tiempo</CardTitle>
             </CardHeader>
             <CardContent>
-              <UsersChart chart={registeredAllTime} type="alltime" />
+              <UsersChart chart={data.registeredAllTime} type="alltime" />
             </CardContent>
           </Card>
         </div>
@@ -40,84 +52,108 @@ function RouteComponent() {
   );
 }
 
-function UserCounts({
-  users,
-  premiumUsers,
+function SummaryCards({
+  userCount,
+  newTodayCount,
+  newThisWeekCount,
+  activePatronsCount,
+  verifiedEmailsCount,
+  bannedUsersCount,
+  activeLastDay,
+  activeLastWeek,
 }: {
-  users: number;
-  premiumUsers: number;
+  userCount: number;
+  newTodayCount: number;
+  newThisWeekCount: number;
+  activePatronsCount: number;
+  verifiedEmailsCount: number;
+  bannedUsersCount: number;
+  activeLastDay: number;
+  activeLastWeek: number;
 }) {
   return (
-    <div className="grid grid-cols-4 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuarios Registrados</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="font-bold text-6xl">{users}</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuarios Premium</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="font-bold text-6xl">{premiumUsers}</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuarios Patreon</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="font-bold text-6xl">{premiumUsers}</p>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard title="Total Usuarios" value={userCount} />
+        <StatCard title="Nuevos Hoy" value={newTodayCount} />
+        <StatCard title="Nuevos Esta Semana" value={newThisWeekCount} />
+        <StatCard title="Patrons Activos" value={activePatronsCount} />
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard title="Emails Verificados" value={verifiedEmailsCount} />
+        <StatCard title="Usuarios Baneados" value={bannedUsersCount} />
+        <StatCard title="Activos (24h)" value={activeLastDay} />
+        <StatCard title="Activos (7d)" value={activeLastWeek} />
+      </div>
     </div>
   );
 }
 
-// function RouteComponent() {
-//   const usersQuery = useInfiniteQuery({
-//     queryKey: ["users"],
-//     queryFn: ({ pageParam }) =>
-//       authClient.admin.listUsers({
-//         query: {
-//           limit: PAGE_SIZE,
-//           offset: (pageParam - 1) * PAGE_SIZE,
-//         },
-//       }),
-//     initialPageParam: 1,
-//     getNextPageParam: ({ data, error }) => {
-//       if (error) {
-//         return;
-//       }
+function StatCard({ title, value }: { title: string; value: number }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="font-bold text-4xl">{value.toLocaleString()}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
-//       if ("limit" in data && "offset" in data) {
-//         const { limit, offset, total } = data;
+function RoleDistribution({
+  usersByRole,
+}: {
+  usersByRole: { role: string; count: number }[];
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Usuarios por Rol</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-2">
+          {usersByRole.map((item) => (
+            <li className="flex justify-between" key={item.role}>
+              <span className="capitalize">{item.role}</span>
+              <span className="font-semibold">
+                {item.count.toLocaleString()}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
 
-//         if (limit == null || offset == null) {
-//           return;
-//         }
-
-//         if (offset + limit < total) {
-//           return (offset + limit) / limit + 1;
-//         }
-//       }
-
-//       return;
-//     },
-//   });
-
-//   const pages = usersQuery.data?.pages;
-
-//   return (
-//     <main>
-//       <ul>
-//         {pages?.[pages.length - 1].data?.users.map((user) => (
-//           <li key={user.id}>{user.email}</li>
-//         ))}
-//       </ul>
-//     </main>
-//   );
-// }
+function PatronTiers({
+  patronsByTier,
+}: {
+  patronsByTier: { tier: string; count: number }[];
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Patrons por Tier</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {patronsByTier.length === 0 ? (
+          <p className="text-muted-foreground">No hay patrons activos</p>
+        ) : (
+          <ul className="space-y-2">
+            {patronsByTier.map((item) => (
+              <li className="flex justify-between" key={item.tier}>
+                <span className="capitalize">{item.tier}</span>
+                <span className="font-semibold">
+                  {item.count.toLocaleString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -41,10 +41,42 @@ function RouteComponent() {
         {data.headerImageKey && (
           <img
             alt="Header"
-            className="w-full max-w-3xl rounded-lg object-cover shadow-lg"
+            className="w-full rounded-lg object-cover shadow-lg"
             src={getBucketUrl(data.headerImageKey)}
           />
         )}
+
+        {/* Mobile horizontal carousel */}
+        {data.carouselImageKeys && data.carouselImageKeys.length > 0 && (
+          <div className="w-full md:hidden">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                AutoScroll({
+                  startDelay: 0,
+                  stopOnInteraction: false,
+                  speed: 1,
+                }),
+              ]}
+            >
+              <CarouselContent>
+                {data.carouselImageKeys.map((key, i) => (
+                  <CarouselItem className="basis-4/5" key={key}>
+                    <img
+                      alt={`Carousel ${i + 1}`}
+                      className="aspect-video w-full rounded-md border object-cover"
+                      src={getBucketUrl(key)}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
+        )}
+
         <div className="prose dark:prose-invert w-full max-w-none">
           <ReactMarkdown>{data.markdownContent}</ReactMarkdown>
         </div>

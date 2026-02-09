@@ -315,6 +315,18 @@ export const chronosPage = pgTable("chronos_page", {
   ...timestamps,
 });
 
+export const staticPage = pgTable(
+  "static_page",
+  {
+    id: text("id").primaryKey().$defaultFn(generateId),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    content: text("content").notNull().default(""),
+    ...timestamps,
+  },
+  (table) => [index("static_page_slug_idx").on(table.slug)]
+);
+
 export const postRelations = relations(post, ({ many }) => ({
   terms: many(termPostRelation),
   comments: many(comment),

@@ -6,6 +6,7 @@ import file from "./file";
 import patreon from "./patreon";
 import post from "./post";
 import rating from "./rating";
+import staticPage from "./staticPage";
 import term from "./term";
 import user from "./user";
 
@@ -19,6 +20,7 @@ export const appRouter = {
   rating,
   patreon,
   chronos,
+  staticPage,
 };
 
 export type AppRouter = typeof appRouter;

@@ -238,7 +238,7 @@ function TagCard({
       className="grow"
       preload={false}
       search={{ tag: [tag.id] }}
-      to="/post-search"
+      to="/search"
     >
       <TermBadge className="w-full justify-center" tag={tag} />
     </Link>

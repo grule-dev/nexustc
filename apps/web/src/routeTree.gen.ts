@@ -20,10 +20,8 @@ import { Route as MainSearchRouteImport } from './routes/_main/search'
 import { Route as MainResetPasswordRouteImport } from './routes/_main/reset-password'
 import { Route as MainProfileRouteImport } from './routes/_main/profile'
 import { Route as MainPrivacyRouteImport } from './routes/_main/privacy'
-import { Route as MainPostSearchRouteImport } from './routes/_main/post-search'
 import { Route as MainLegalRouteImport } from './routes/_main/legal'
 import { Route as MainForgotPasswordRouteImport } from './routes/_main/forgot-password'
-import { Route as MainComicSearchRouteImport } from './routes/_main/comic-search'
 import { Route as MainChronosRouteImport } from './routes/_main/chronos'
 import { Route as MainAuthRouteImport } from './routes/_main/auth'
 import { Route as MainAboutRouteImport } from './routes/_main/about'
@@ -36,6 +34,7 @@ import { Route as ApiPatreonWebhookRouteImport } from './routes/api/patreon/webh
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/create'
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
+import { Route as AdminPagesSlugRouteImport } from './routes/admin/pages/$slug'
 import { Route as AdminExtrasWeeklyRouteImport } from './routes/admin/extras/weekly'
 import { Route as AdminExtrasTutorialsRouteImport } from './routes/admin/extras/tutorials'
 import { Route as AdminExtrasFeaturedRouteImport } from './routes/admin/extras/featured'
@@ -44,6 +43,7 @@ import { Route as AdminChronosEditRouteImport } from './routes/admin/chronos/edi
 import { Route as MainUserIdRouteImport } from './routes/_main/user.$id'
 import { Route as MainPostIdRouteImport } from './routes/_main/post.$id'
 import { Route as AdminPostsEditIdRouteImport } from './routes/admin/posts/edit.$id'
+import { Route as AdminComicsEditIdRouteImport } from './routes/admin/comics/edit.$id'
 import { Route as MainPostReviewsIdRouteImport } from './routes/_main/post.reviews.$id'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -100,11 +100,6 @@ const MainPrivacyRoute = MainPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => MainRouteRoute,
 } as any)
-const MainPostSearchRoute = MainPostSearchRouteImport.update({
-  id: '/post-search',
-  path: '/post-search',
-  getParentRoute: () => MainRouteRoute,
-} as any)
 const MainLegalRoute = MainLegalRouteImport.update({
   id: '/legal',
   path: '/legal',
@@ -113,11 +108,6 @@ const MainLegalRoute = MainLegalRouteImport.update({
 const MainForgotPasswordRoute = MainForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => MainRouteRoute,
-} as any)
-const MainComicSearchRoute = MainComicSearchRouteImport.update({
-  id: '/comic-search',
-  path: '/comic-search',
   getParentRoute: () => MainRouteRoute,
 } as any)
 const MainChronosRoute = MainChronosRouteImport.update({
@@ -180,6 +170,11 @@ const AdminPostsCreateRoute = AdminPostsCreateRouteImport.update({
   path: '/posts/create',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminPagesSlugRoute = AdminPagesSlugRouteImport.update({
+  id: '/pages/$slug',
+  path: '/pages/$slug',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminExtrasWeeklyRoute = AdminExtrasWeeklyRouteImport.update({
   id: '/extras/weekly',
   path: '/extras/weekly',
@@ -220,6 +215,11 @@ const AdminPostsEditIdRoute = AdminPostsEditIdRouteImport.update({
   path: '/posts/edit/$id',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminComicsEditIdRoute = AdminComicsEditIdRouteImport.update({
+  id: '/comics/edit/$id',
+  path: '/comics/edit/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const MainPostReviewsIdRoute = MainPostReviewsIdRouteImport.update({
   id: '/post/reviews/$id',
   path: '/post/reviews/$id',
@@ -232,10 +232,8 @@ export interface FileRoutesByFullPath {
   '/about': typeof MainAboutRoute
   '/auth': typeof MainAuthRoute
   '/chronos': typeof MainChronosRoute
-  '/comic-search': typeof MainComicSearchRoute
   '/forgot-password': typeof MainForgotPasswordRoute
   '/legal': typeof MainLegalRoute
-  '/post-search': typeof MainPostSearchRoute
   '/privacy': typeof MainPrivacyRoute
   '/profile': typeof MainProfileRoute
   '/reset-password': typeof MainResetPasswordRoute
@@ -251,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
+  '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -261,16 +260,15 @@ export interface FileRoutesByFullPath {
   '/admin/terms/': typeof AdminTermsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/post/reviews/$id': typeof MainPostReviewsIdRoute
+  '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRoutesByTo {
   '/about': typeof MainAboutRoute
   '/auth': typeof MainAuthRoute
   '/chronos': typeof MainChronosRoute
-  '/comic-search': typeof MainComicSearchRoute
   '/forgot-password': typeof MainForgotPasswordRoute
   '/legal': typeof MainLegalRoute
-  '/post-search': typeof MainPostSearchRoute
   '/privacy': typeof MainPrivacyRoute
   '/profile': typeof MainProfileRoute
   '/reset-password': typeof MainResetPasswordRoute
@@ -287,6 +285,7 @@ export interface FileRoutesByTo {
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
+  '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -297,6 +296,7 @@ export interface FileRoutesByTo {
   '/admin/terms': typeof AdminTermsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/post/reviews/$id': typeof MainPostReviewsIdRoute
+  '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRoutesById {
@@ -306,10 +306,8 @@ export interface FileRoutesById {
   '/_main/about': typeof MainAboutRoute
   '/_main/auth': typeof MainAuthRoute
   '/_main/chronos': typeof MainChronosRoute
-  '/_main/comic-search': typeof MainComicSearchRoute
   '/_main/forgot-password': typeof MainForgotPasswordRoute
   '/_main/legal': typeof MainLegalRoute
-  '/_main/post-search': typeof MainPostSearchRoute
   '/_main/privacy': typeof MainPrivacyRoute
   '/_main/profile': typeof MainProfileRoute
   '/_main/reset-password': typeof MainResetPasswordRoute
@@ -326,6 +324,7 @@ export interface FileRoutesById {
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
+  '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -336,6 +335,7 @@ export interface FileRoutesById {
   '/admin/terms/': typeof AdminTermsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/_main/post/reviews/$id': typeof MainPostReviewsIdRoute
+  '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
 }
 export interface FileRouteTypes {
@@ -346,10 +346,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/chronos'
-    | '/comic-search'
     | '/forgot-password'
     | '/legal'
-    | '/post-search'
     | '/privacy'
     | '/profile'
     | '/reset-password'
@@ -365,6 +363,7 @@ export interface FileRouteTypes {
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
+    | '/admin/pages/$slug'
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
@@ -375,16 +374,15 @@ export interface FileRouteTypes {
     | '/admin/terms/'
     | '/admin/users/'
     | '/post/reviews/$id'
+    | '/admin/comics/edit/$id'
     | '/admin/posts/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/about'
     | '/auth'
     | '/chronos'
-    | '/comic-search'
     | '/forgot-password'
     | '/legal'
-    | '/post-search'
     | '/privacy'
     | '/profile'
     | '/reset-password'
@@ -401,6 +399,7 @@ export interface FileRouteTypes {
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
+    | '/admin/pages/$slug'
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
@@ -411,6 +410,7 @@ export interface FileRouteTypes {
     | '/admin/terms'
     | '/admin/users'
     | '/post/reviews/$id'
+    | '/admin/comics/edit/$id'
     | '/admin/posts/edit/$id'
   id:
     | '__root__'
@@ -419,10 +419,8 @@ export interface FileRouteTypes {
     | '/_main/about'
     | '/_main/auth'
     | '/_main/chronos'
-    | '/_main/comic-search'
     | '/_main/forgot-password'
     | '/_main/legal'
-    | '/_main/post-search'
     | '/_main/privacy'
     | '/_main/profile'
     | '/_main/reset-password'
@@ -439,6 +437,7 @@ export interface FileRouteTypes {
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
+    | '/admin/pages/$slug'
     | '/admin/posts/create'
     | '/admin/terms/create'
     | '/api/auth/$'
@@ -449,6 +448,7 @@ export interface FileRouteTypes {
     | '/admin/terms/'
     | '/admin/users/'
     | '/_main/post/reviews/$id'
+    | '/admin/comics/edit/$id'
     | '/admin/posts/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -540,13 +540,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainPrivacyRouteImport
       parentRoute: typeof MainRouteRoute
     }
-    '/_main/post-search': {
-      id: '/_main/post-search'
-      path: '/post-search'
-      fullPath: '/post-search'
-      preLoaderRoute: typeof MainPostSearchRouteImport
-      parentRoute: typeof MainRouteRoute
-    }
     '/_main/legal': {
       id: '/_main/legal'
       path: '/legal'
@@ -559,13 +552,6 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof MainForgotPasswordRouteImport
-      parentRoute: typeof MainRouteRoute
-    }
-    '/_main/comic-search': {
-      id: '/_main/comic-search'
-      path: '/comic-search'
-      fullPath: '/comic-search'
-      preLoaderRoute: typeof MainComicSearchRouteImport
       parentRoute: typeof MainRouteRoute
     }
     '/_main/chronos': {
@@ -652,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPostsCreateRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/pages/$slug': {
+      id: '/admin/pages/$slug'
+      path: '/pages/$slug'
+      fullPath: '/admin/pages/$slug'
+      preLoaderRoute: typeof AdminPagesSlugRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/extras/weekly': {
       id: '/admin/extras/weekly'
       path: '/extras/weekly'
@@ -708,6 +701,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPostsEditIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/comics/edit/$id': {
+      id: '/admin/comics/edit/$id'
+      path: '/comics/edit/$id'
+      fullPath: '/admin/comics/edit/$id'
+      preLoaderRoute: typeof AdminComicsEditIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/_main/post/reviews/$id': {
       id: '/_main/post/reviews/$id'
       path: '/post/reviews/$id'
@@ -722,10 +722,8 @@ interface MainRouteRouteChildren {
   MainAboutRoute: typeof MainAboutRoute
   MainAuthRoute: typeof MainAuthRoute
   MainChronosRoute: typeof MainChronosRoute
-  MainComicSearchRoute: typeof MainComicSearchRoute
   MainForgotPasswordRoute: typeof MainForgotPasswordRoute
   MainLegalRoute: typeof MainLegalRoute
-  MainPostSearchRoute: typeof MainPostSearchRoute
   MainPrivacyRoute: typeof MainPrivacyRoute
   MainProfileRoute: typeof MainProfileRoute
   MainResetPasswordRoute: typeof MainResetPasswordRoute
@@ -742,10 +740,8 @@ const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainAboutRoute: MainAboutRoute,
   MainAuthRoute: MainAuthRoute,
   MainChronosRoute: MainChronosRoute,
-  MainComicSearchRoute: MainComicSearchRoute,
   MainForgotPasswordRoute: MainForgotPasswordRoute,
   MainLegalRoute: MainLegalRoute,
-  MainPostSearchRoute: MainPostSearchRoute,
   MainPrivacyRoute: MainPrivacyRoute,
   MainProfileRoute: MainProfileRoute,
   MainResetPasswordRoute: MainResetPasswordRoute,
@@ -769,12 +765,14 @@ interface AdminRouteRouteChildren {
   AdminExtrasFeaturedRoute: typeof AdminExtrasFeaturedRoute
   AdminExtrasTutorialsRoute: typeof AdminExtrasTutorialsRoute
   AdminExtrasWeeklyRoute: typeof AdminExtrasWeeklyRoute
+  AdminPagesSlugRoute: typeof AdminPagesSlugRoute
   AdminPostsCreateRoute: typeof AdminPostsCreateRoute
   AdminTermsCreateRoute: typeof AdminTermsCreateRoute
   AdminComicsIndexRoute: typeof AdminComicsIndexRoute
   AdminPostsIndexRoute: typeof AdminPostsIndexRoute
   AdminTermsIndexRoute: typeof AdminTermsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+  AdminComicsEditIdRoute: typeof AdminComicsEditIdRoute
   AdminPostsEditIdRoute: typeof AdminPostsEditIdRoute
 }
 
@@ -785,12 +783,14 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminExtrasFeaturedRoute: AdminExtrasFeaturedRoute,
   AdminExtrasTutorialsRoute: AdminExtrasTutorialsRoute,
   AdminExtrasWeeklyRoute: AdminExtrasWeeklyRoute,
+  AdminPagesSlugRoute: AdminPagesSlugRoute,
   AdminPostsCreateRoute: AdminPostsCreateRoute,
   AdminTermsCreateRoute: AdminTermsCreateRoute,
   AdminComicsIndexRoute: AdminComicsIndexRoute,
   AdminPostsIndexRoute: AdminPostsIndexRoute,
   AdminTermsIndexRoute: AdminTermsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
+  AdminComicsEditIdRoute: AdminComicsEditIdRoute,
   AdminPostsEditIdRoute: AdminPostsEditIdRoute,
 }
 
