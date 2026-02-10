@@ -337,20 +337,131 @@ export default {
 
   getUser: publicProcedure
     .input(z.object({ id: z.string() }))
-    .handler(({ context: { db, ...ctx }, input }) => {
+    .handler(async ({ context: { db, ...ctx }, input }) => {
       const logger = getLogger(ctx);
       logger?.info(`Fetching user profile: ${input.id}`);
 
-      return db.query.user.findFirst({
-        where: (u, { eq: equals }) => equals(u.id, input.id),
-        columns: {
-          id: true,
-          name: true,
-          role: true,
-          image: true,
-          createdAt: true,
-        },
-      });
+      const result = await db
+        .select({
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          image: user.image,
+          createdAt: user.createdAt,
+          patronTier: patron.tier,
+          isActivePatron: patron.isActivePatron,
+        })
+        .from(user)
+        .leftJoin(patron, eq(patron.userId, user.id))
+        .where(eq(user.id, input.id))
+        .limit(1);
+
+      return result[0] ?? null;
+    }),
+
+  getUserBookmarks: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        limit: z.number().min(1).max(30).default(12),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(`Fetching public bookmarks for user: ${input.userId}`);
+
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
+
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
+                  json_agg(
+                    json_build_object(
+                      'id', ${term.id},
+                      'name', ${term.name},
+                      'taxonomy', ${term.taxonomy},
+                      'color', ${term.color}
+                    )
+                  )
+                `.as("terms"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
+
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
+
+      const result = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          imageObjectKeys: post.imageObjectKeys,
+          createdAt: post.createdAt,
+          views: post.views,
+
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+
+          terms: sql<
+            {
+              id: string;
+              name: string;
+              taxonomy: (typeof TAXONOMIES)[number];
+              color: string;
+            }[]
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
+
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
+        })
+        .from(postBookmark)
+        .innerJoin(post, eq(post.id, postBookmark.postId))
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
+        .where(
+          and(eq(post.status, "publish"), eq(postBookmark.userId, input.userId))
+        )
+        .limit(input.limit)
+        .offset(input.offset);
+
+      logger?.debug(
+        `Fetched ${result.length} public bookmarks for user ${input.userId}`
+      );
+
+      return result;
     }),
 
   getDashboardList: permissionProcedure({

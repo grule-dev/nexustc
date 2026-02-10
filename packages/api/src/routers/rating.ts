@@ -240,6 +240,63 @@ export default {
       return { ratings, authors, posts };
     }),
 
+  getByUserId: publicProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        limit: z.number().min(1).max(30).default(10),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .handler(async ({ context: { db, ...ctx }, input }) => {
+      const logger = getLogger(ctx);
+      logger?.info(
+        `Fetching ratings for user ${input.userId} with limit: ${input.limit}, offset: ${input.offset}`
+      );
+
+      const ratings = await db
+        .select({
+          postId: postRating.postId,
+          rating: postRating.rating,
+          review: postRating.review,
+          createdAt: postRating.createdAt,
+          updatedAt: postRating.updatedAt,
+        })
+        .from(postRating)
+        .innerJoin(post, eq(post.id, postRating.postId))
+        .where(
+          and(eq(postRating.userId, input.userId), eq(post.status, "publish"))
+        )
+        .orderBy(desc(postRating.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+
+      const postIds = [...new Set(ratings.map((r) => r.postId))];
+
+      const posts =
+        postIds.length > 0
+          ? await db
+              .select({
+                id: post.id,
+                title: post.title,
+                type: post.type,
+                imageObjectKeys: post.imageObjectKeys,
+              })
+              .from(post)
+              .where(
+                sql`${post.id} IN (${sql.join(
+                  postIds.map((id) => sql`${id}`),
+                  sql`, `
+                )})`
+              )
+          : [];
+
+      logger?.debug(
+        `Retrieved ${ratings.length} ratings with ${posts.length} posts for user ${input.userId}`
+      );
+      return { ratings, posts };
+    }),
+
   // Get current user's rating for a post
   getUserRating: publicProcedure
     .input(z.object({ postId: z.string() }))
