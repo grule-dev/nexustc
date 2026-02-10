@@ -3,6 +3,7 @@ import { and, asc, desc, eq, sql } from "@repo/db";
 import {
   comment,
   featuredPost,
+  patron,
   post,
   postBookmark,
   postLikes,
@@ -11,6 +12,8 @@ import {
   termPostRelation,
 } from "@repo/db/schema/app";
 import type { TAXONOMIES } from "@repo/shared/constants";
+import { PATRON_TIERS, type PatronTier } from "@repo/shared/constants";
+import { parseTokens, validateTokenLimit } from "@repo/shared/token-parser";
 import z from "zod";
 import {
   fixedWindowRatelimitMiddleware,
@@ -766,27 +769,95 @@ export default {
     }),
 
   createComment: protectedProcedure
+    .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
     .input(
       z.object({
         postId: z.string(),
         content: z.string().min(10).max(2048),
       })
     )
-    .handler(async ({ context: { db, session, ...context }, input }) => {
-      const logger = getLogger(context);
-      logger?.info(
-        `User ${session.user.id} creating comment on post ${input.postId}`
-      );
+    .handler(
+      async ({ context: { db, session, ...context }, input, errors }) => {
+        const logger = getLogger(context);
+        logger?.info(
+          `User ${session.user.id} creating comment on post ${input.postId}`
+        );
 
-      await db.insert(comment).values({
-        postId: input.postId,
-        authorId: session.user.id,
-        content: input.content,
-      });
-      logger?.info(
-        `Comment successfully created by user ${session.user.id} on post ${input.postId}`
-      );
-    }),
+        const tokens = parseTokens(input.content);
+
+        if (tokens.length > 0) {
+          const limitCheck = validateTokenLimit(tokens);
+          if (!limitCheck.valid) {
+            throw errors.FORBIDDEN();
+          }
+
+          let userTier: PatronTier = "none";
+          const patronRecord = await db.query.patron.findFirst({
+            where: eq(patron.userId, session.user.id),
+            columns: { tier: true, isActivePatron: true },
+          });
+          if (patronRecord?.isActivePatron) {
+            userTier = patronRecord.tier;
+          }
+          const userLevel = PATRON_TIERS[userTier].level;
+
+          const emojiTokens = tokens.filter((t) => t.type === "emoji");
+          const stickerTokens = tokens.filter((t) => t.type === "sticker");
+
+          if (emojiTokens.length > 0) {
+            const emojiNames = [...new Set(emojiTokens.map((t) => t.name))];
+            const emojis = await db.query.emoji.findMany({
+              where: (e, { and: a, eq: equals, inArray }) =>
+                a(equals(e.isActive, true), inArray(e.name, emojiNames)),
+            });
+
+            const emojiMap = new Map(emojis.map((e) => [e.name, e]));
+            for (const token of emojiTokens) {
+              const emojiRecord = emojiMap.get(token.name);
+              if (!emojiRecord) {
+                continue;
+              }
+              const requiredLevel =
+                PATRON_TIERS[emojiRecord.requiredTier as PatronTier].level;
+              if (userLevel < requiredLevel) {
+                logger?.warn(
+                  `User ${session.user.id} lacks tier for emoji "${token.name}"`
+                );
+                throw errors.FORBIDDEN();
+              }
+            }
+          }
+
+          if (stickerTokens.length > 0) {
+            const stickerNames = [...new Set(stickerTokens.map((t) => t.name))];
+            const stickers = await db.query.sticker.findMany({
+              where: (s, { and: a, eq: equals, inArray }) =>
+                a(equals(s.isActive, true), inArray(s.name, stickerNames)),
+            });
+
+            for (const stickerRecord of stickers) {
+              const requiredLevel =
+                PATRON_TIERS[stickerRecord.requiredTier as PatronTier].level;
+              if (userLevel < requiredLevel) {
+                logger?.warn(
+                  `User ${session.user.id} lacks tier for sticker "${stickerRecord.name}"`
+                );
+                throw errors.FORBIDDEN();
+              }
+            }
+          }
+        }
+
+        await db.insert(comment).values({
+          postId: input.postId,
+          authorId: session.user.id,
+          content: input.content,
+        });
+        logger?.info(
+          `Comment successfully created by user ${session.user.id} on post ${input.postId}`
+        );
+      }
+    ),
 
   getComments: publicProcedure
     .input(z.object({ postId: z.string() }))

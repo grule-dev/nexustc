@@ -106,6 +106,32 @@ const nav = {
       },
     ],
   },
+  emojis: {
+    name: "Emojis",
+    links: [
+      {
+        name: "Listar",
+        href: "/admin/emojis",
+      },
+      {
+        name: "Crear",
+        href: "/admin/emojis/create",
+      },
+    ],
+  },
+  stickers: {
+    name: "Stickers",
+    links: [
+      {
+        name: "Listar",
+        href: "/admin/stickers",
+      },
+      {
+        name: "Crear",
+        href: "/admin/stickers/create",
+      },
+    ],
+  },
   staticPages: {
     name: "Páginas",
     links: [
@@ -164,6 +190,12 @@ function AdminLayout() {
           </HasPermissions>
           <HasPermissions permissions={{ chronos: ["update"] }}>
             <SidebarLinks item={nav.chronos} />
+          </HasPermissions>
+          <HasPermissions permissions={{ emojis: ["list"] }}>
+            <SidebarLinks item={nav.emojis} />
+          </HasPermissions>
+          <HasPermissions permissions={{ stickers: ["list"] }}>
+            <SidebarLinks item={nav.stickers} />
           </HasPermissions>
           <HasPermissions permissions={{ staticPages: ["update"] }}>
             <SidebarLinks item={nav.staticPages} />

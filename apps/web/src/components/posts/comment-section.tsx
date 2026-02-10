@@ -1,5 +1,6 @@
 import { Comment01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useStore } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
@@ -8,12 +9,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "facehash";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
+import {
+  CommentContent,
+  useEmojiStickerMaps,
+} from "@/components/comments/comment-content";
+import { EmojiPicker } from "@/components/comments/emoji-picker";
+import { StickerPicker } from "@/components/comments/sticker-picker";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpcClient } from "@/lib/orpc";
 import { defaultFacehashProps, getBucketUrl } from "@/lib/utils";
 import { SignedIn } from "../auth/signed-in";
 import { SignedOut } from "../auth/signed-out";
 import { Button } from "../ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "../ui/input-group";
 import { Spinner } from "../ui/spinner";
 import { UserLabel } from "../users/user-label";
 
@@ -21,6 +34,7 @@ export function CommentSection({ postId }: { postId: string }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
+  const { emojiMap, stickerMap } = useEmojiStickerMaps();
 
   const form = useAppForm({
     validators: {
@@ -49,6 +63,14 @@ export function CommentSection({ postId }: { postId: string }) {
       }
     },
   });
+
+  const currentContent = useStore(form.store, (state) => state.values.content);
+
+  const insertToken = (token: string) => {
+    const separator =
+      currentContent && !currentContent.endsWith(" ") ? " " : "";
+    form.setFieldValue("content", `${currentContent}${separator}${token}`);
+  };
 
   const commentsQuery = useQuery({
     queryKey: ["comments", postId],
@@ -104,7 +126,7 @@ export function CommentSection({ postId }: { postId: string }) {
 
   return (
     <div
-      className="flex flex-col gap-6 rounded-3xl border bg-card p-6"
+      className="flex flex-col gap-6 rounded-3xl border bg-card p-4 md:p-6"
       ref={ref}
     >
       {/* Header with icon and title */}
@@ -129,7 +151,6 @@ export function CommentSection({ postId }: { postId: string }) {
       {/* Comment Form */}
       <SignedIn>
         <form
-          className="flex flex-col gap-3 rounded-2xl bg-muted/30 p-4"
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -138,18 +159,32 @@ export function CommentSection({ postId }: { postId: string }) {
         >
           <form.AppField name="content">
             {(field) => (
-              <field.TextareaField
-                className="min-h-24 resize-none border-0 bg-background shadow-sm"
-                label="Escribe tu comentario..."
-              />
+              <InputGroup>
+                <InputGroupTextarea
+                  className="min-h-24 resize-none border-0 bg-background shadow-sm"
+                  id="content"
+                  onChange={(e) => field.setValue(e.target.value)}
+                  placeholder="Escribe tu comentario..."
+                  value={field.state.value}
+                />
+                <InputGroupAddon align="block-end" className="border-t-none">
+                  <EmojiPicker onSelect={insertToken} />
+                  <StickerPicker
+                    currentContent={currentContent}
+                    onSelect={insertToken}
+                  />
+                  <InputGroupButton
+                    className="ml-auto"
+                    size="sm"
+                    variant="default"
+                  >
+                    <HugeiconsIcon className="size-4" icon={SentIcon} />
+                    Enviar
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
             )}
           </form.AppField>
-          <form.AppForm>
-            <form.SubmitButton className="gap-2 self-end" size="sm">
-              <HugeiconsIcon className="size-4" icon={SentIcon} />
-              Enviar
-            </form.SubmitButton>
-          </form.AppForm>
         </form>
       </SignedIn>
 
@@ -225,9 +260,11 @@ export function CommentSection({ postId }: { postId: string }) {
                       })}
                     </time>
                   </div>
-                  <p className="text-foreground/90 text-sm leading-relaxed">
-                    {comment.content}
-                  </p>
+                  <CommentContent
+                    content={comment.content}
+                    emojiMap={emojiMap}
+                    stickerMap={stickerMap}
+                  />
                 </div>
               </div>
             ))
