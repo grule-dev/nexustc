@@ -186,6 +186,7 @@ export const post = pgTable(
     version: text("version"),
     adsLinks: text("ads_links"),
     premiumLinks: text("premium_links"),
+    changelog: text("changelog").notNull().default(""),
     views: integer("views").notNull().default(0),
     imageObjectKeys: jsonb("image_object_keys").$type<string[]>(),
     ...timestamps,

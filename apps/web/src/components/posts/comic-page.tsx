@@ -10,15 +10,13 @@ import {
   FullScreenIcon,
   GridViewIcon,
   Home01Icon,
-  Image02Icon,
   MinimizeScreenIcon,
-  Share08Icon,
   StarIcon,
   Tag01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { getRouteApi, Link, Navigate } from "@tanstack/react-router";
+import { getRouteApi, Navigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -29,7 +27,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
 import type { PostType } from "@/lib/types";
 import { cn, getBucketUrl } from "@/lib/utils";
 import { RatingDisplay } from "../ratings/rating-display";
@@ -39,8 +36,7 @@ import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { BookmarkButton } from "./bookmark-button";
-import { LikeButton } from "./like-button";
+import { PostActionBar } from "./post-components";
 
 const postPageApi = getRouteApi("/_main/post/$id");
 
@@ -97,19 +93,10 @@ function ComicInfoPage({
   const hasTags = comic.terms.length > 0;
   const totalPages = allImages.length;
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.success("Enlace copiado al portapapeles");
-    } catch {
-      toast.error("No se pudo copiar el enlace");
-    }
-  };
-
   return (
     <div className="flex flex-col gap-8">
       {/* Hero Section */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="relative overflow-hidden rounded-3xl">
           {mainImage && (
             <div className="relative">
@@ -163,17 +150,9 @@ function ComicInfoPage({
                   </div>
                 </div>
               </div>
-              {/* Start Reading Button - Floating */}
-              <button
-                className="absolute top-6 right-6 flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-xl transition-all hover:scale-105 hover:shadow-2xl md:top-10 md:right-10"
-                onClick={() => setPage(0)}
-                type="button"
-              >
-                <HugeiconsIcon className="size-5" icon={Book02Icon} />
-                Comenzar a Leer
-              </button>
             </div>
           )}
+          <PostActionBar post={comic} />
         </div>
 
         {/* Right Column - Sidebar */}
@@ -205,6 +184,7 @@ function ComicInfoPage({
                     label="Censura"
                     terms={groupedTerms.censorship}
                   />
+                  <TagCategory label="Estado" terms={groupedTerms.status} />
                 </div>
               </div>
             </div>
@@ -245,49 +225,6 @@ function ComicInfoPage({
             <HugeiconsIcon className="size-5" icon={Book02Icon} />
             Comenzar a Leer
           </Button>
-        </div>
-      </div>
-
-      {/* Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <LikeButton postId={comic.id} />
-          <BookmarkButton postId={comic.id} />
-          <Button
-            nativeButton={false}
-            render={<Link params={{ id: comic.id }} to={"/post/reviews/$id"} />}
-            size="sm"
-            variant="outline"
-          >
-            <HugeiconsIcon className="size-4" icon={StarIcon} />
-            Valoraciones
-          </Button>
-          <Tooltip>
-            <TooltipTrigger
-              onClick={handleShare}
-              render={
-                <Button size="sm" variant="outline">
-                  <HugeiconsIcon className="size-4" icon={Share08Icon} />
-                  Compartir
-                </Button>
-              }
-            />
-            <TooltipContent>Copiar enlace al portapapeles</TooltipContent>
-          </Tooltip>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="flex items-center gap-4 text-muted-foreground text-sm">
-          <span className="flex items-center gap-1.5">
-            <HugeiconsIcon className="size-4" icon={Image02Icon} />
-            {totalPages} {totalPages === 1 ? "página" : "páginas"}
-          </span>
-          {hasTags && (
-            <span className="flex items-center gap-1.5">
-              <HugeiconsIcon className="size-4" icon={Tag01Icon} />
-              {comic.terms.length} tags
-            </span>
-          )}
         </div>
       </div>
 

@@ -82,6 +82,7 @@ function RouteComponent() {
       authorContent: "",
       adsLinks: "",
       premiumLinks: "",
+      changelog: "",
       documentStatus: "draft" as (typeof DOCUMENT_STATUSES)[number],
       platforms: [] as string[],
       tags: [] as string[],

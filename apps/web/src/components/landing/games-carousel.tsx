@@ -6,11 +6,10 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import type { PostType } from "@/lib/types";
 import { getBucketUrl } from "@/lib/utils";
-import { PostCard } from "./post-card";
+import { PostCard, type PostProps } from "./post-card";
 
-export function GamesCarousel({ games }: { games: PostType[] }) {
+export function GamesCarousel({ games }: { games: PostProps[] }) {
   const [api, setApi] = useState<CarouselApi | undefined>();
   const [current, setCurrent] = useState<number>(0);
 

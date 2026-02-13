@@ -4,7 +4,10 @@ import { eq } from "@repo/db";
 import { post, termPostRelation } from "@repo/db/schema/app";
 import { generateId } from "@repo/db/utils";
 import { env } from "@repo/env";
-import type { contentCreateSchema } from "@repo/shared/schemas";
+import type {
+  contentCreateSchema,
+  contentEditImagesSchema,
+} from "@repo/shared/schemas";
 import type { z } from "zod";
 import type { Context } from "../context";
 import { optimizeImageToWebp } from "../utils/images";
@@ -120,6 +123,8 @@ export async function createContent({
             input.type === "post"
               ? input.premiumLinks
               : (input.premiumLinks ?? ""),
+          changelog:
+            input.type === "post" ? input.changelog : (input.changelog ?? ""),
           version:
             input.type === "post" ? input.version : (input.version ?? ""),
           authorId: session.user?.id,
@@ -201,6 +206,8 @@ export async function editContent({
       adsLinks: input.type === "post" ? input.adsLinks : (input.adsLinks ?? ""),
       premiumLinks:
         input.type === "post" ? input.premiumLinks : (input.premiumLinks ?? ""),
+      changelog:
+        input.type === "post" ? input.changelog : (input.changelog ?? ""),
     })
     .where(eq(post.id, input.id))
     .returning({ postId: post.id });
@@ -277,6 +284,158 @@ export async function deleteContent({
     );
   }
   logger?.info(`Content ${input} successfully deleted`);
+}
+
+type ContentEditImagesInput = z.infer<typeof contentEditImagesSchema>;
+
+export async function editContentImages({
+  context: { db, ...ctx },
+  input,
+  errors,
+}: HandlerParams<ContentEditImagesInput>) {
+  const logger = getLogger(ctx);
+  logger?.info(`Editing images for ${input.type}: ${input.postId}`);
+
+  const currentPost = await db.query.post.findFirst({
+    where: (p, { eq: equals }) => equals(p.id, input.postId),
+    columns: { imageObjectKeys: true, type: true },
+  });
+
+  if (!currentPost) {
+    throw errors.NOT_FOUND();
+  }
+
+  const currentKeys = currentPost.imageObjectKeys ?? [];
+
+  for (const entry of input.order) {
+    if (entry.type === "existing" && !currentKeys.includes(entry.key)) {
+      logger?.error(`Existing key not found in current images: ${entry.key}`);
+      throw errors.NOT_FOUND();
+    }
+    if (
+      entry.type === "new" &&
+      (!input.newFiles || entry.index >= input.newFiles.length)
+    ) {
+      logger?.error(`Invalid new file index: ${entry.index}`);
+      throw errors.INTERNAL_SERVER_ERROR();
+    }
+  }
+
+  const newUploads = new Map<number, string>();
+  const successfulNewKeys: string[] = [];
+
+  const deleteNewUploads = async () => {
+    if (successfulNewKeys.length === 0) {
+      return;
+    }
+    logger?.info("Rolling back uploaded images");
+    try {
+      await getS3Client().send(
+        new DeleteObjectsCommand({
+          Bucket: env.R2_ASSETS_BUCKET_NAME,
+          Delete: {
+            Objects: successfulNewKeys.map((key) => ({ Key: key })),
+            Quiet: false,
+          },
+        })
+      );
+    } catch (error) {
+      logger?.error(
+        `[IMPORTANT] Failed to delete rollback images: ${successfulNewKeys.join(", ")}`
+      );
+      logger?.error(error);
+    }
+  };
+
+  if (input.newFiles && input.newFiles.length > 0) {
+    const newIndices = input.order
+      .filter((e) => e.type === "new")
+      .map((e) => e.index);
+    const uniqueIndices = [...new Set(newIndices)];
+
+    try {
+      const results = await Promise.allSettled(
+        uniqueIndices.map(async (index) => {
+          const file = input.newFiles![index]!;
+          const buffer = await optimizeImageToWebp(file);
+          const objectKey = `images/${input.type}/${generateId()}.webp`;
+          await getS3Client().send(
+            new PutObjectCommand({
+              Bucket: env.R2_ASSETS_BUCKET_NAME,
+              Key: objectKey,
+              Body: buffer,
+              ContentType: "image/webp",
+              ContentLength: buffer.byteLength,
+            })
+          );
+          return { index, objectKey };
+        })
+      );
+
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          newUploads.set(result.value.index, result.value.objectKey);
+          successfulNewKeys.push(result.value.objectKey);
+        }
+      }
+
+      const rejected = results.filter((r) => r.status === "rejected");
+      if (rejected.length > 0) {
+        for (const r of rejected) {
+          logger?.debug(`Upload failed: ${r.reason}`);
+        }
+        throw new Error("Failed to upload some new images");
+      }
+    } catch (error) {
+      logger?.error("Error uploading new images");
+      logger?.error(error);
+      await deleteNewUploads();
+      throw errors.INTERNAL_SERVER_ERROR();
+    }
+  }
+
+  const finalKeys: string[] = input.order.map((entry) => {
+    if (entry.type === "existing") {
+      return entry.key;
+    }
+    return newUploads.get(entry.index)!;
+  });
+
+  try {
+    await db
+      .update(post)
+      .set({ imageObjectKeys: finalKeys })
+      .where(eq(post.id, input.postId));
+  } catch (error) {
+    logger?.error("Failed to update DB with new image order");
+    logger?.error(error);
+    await deleteNewUploads();
+    throw errors.INTERNAL_SERVER_ERROR();
+  }
+
+  const keysToDelete = currentKeys.filter((key) => !finalKeys.includes(key));
+  if (keysToDelete.length > 0) {
+    try {
+      await getS3Client().send(
+        new DeleteObjectsCommand({
+          Bucket: env.R2_ASSETS_BUCKET_NAME,
+          Delete: {
+            Objects: keysToDelete.map((key) => ({ Key: key })),
+            Quiet: false,
+          },
+        })
+      );
+      logger?.debug(`Deleted ${keysToDelete.length} removed images from S3`);
+    } catch (error) {
+      logger?.error(
+        `[IMPORTANT] Failed to delete removed images: ${keysToDelete.join(", ")}`
+      );
+      logger?.error(error);
+    }
+  }
+
+  logger?.info(`Successfully updated images for ${input.type} ${input.postId}`);
+  return finalKeys;
 }
 
 export async function insertContentImages({

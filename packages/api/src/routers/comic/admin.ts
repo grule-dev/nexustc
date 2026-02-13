@@ -1,11 +1,16 @@
 import { getLogger } from "@orpc/experimental-pino";
-import { comicCreateSchema, comicEditSchema } from "@repo/shared/schemas";
+import {
+  comicCreateSchema,
+  comicEditSchema,
+  contentEditImagesSchema,
+} from "@repo/shared/schemas";
 import z from "zod";
 import { permissionProcedure } from "../../index";
 import {
   createContent,
   deleteContent,
   editContent,
+  editContentImages,
   insertContentImages,
 } from "../../utils/content-handlers";
 
@@ -79,6 +84,12 @@ export default {
   })
     .input(comicEditSchema)
     .handler(editContent),
+
+  editImages: permissionProcedure({
+    comics: ["update"],
+  })
+    .input(contentEditImagesSchema)
+    .handler(editContentImages),
 
   delete: permissionProcedure({
     comics: ["delete"],

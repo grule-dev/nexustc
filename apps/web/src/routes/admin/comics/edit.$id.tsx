@@ -1,7 +1,12 @@
 import { comicEditSchema } from "@repo/shared/schemas";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRef } from "react";
 import { toast } from "sonner";
+import {
+  ImageEditor,
+  type ImageEditorRef,
+} from "@/components/admin/image-editor";
 import {
   Card,
   CardContent,
@@ -24,12 +29,16 @@ export const Route = createFileRoute("/admin/comics/edit/$id")({
 function RouteComponent() {
   const data = Route.useLoaderData();
   const mutation = useMutation(orpc.comic.admin.edit.mutationOptions());
+  const imagesMutation = useMutation(
+    orpc.comic.admin.editImages.mutationOptions()
+  );
   const groupedTerms = Object.groupBy(
     data.prerequisites.terms,
     (item) => item.taxonomy
   );
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const imageEditorRef = useRef<ImageEditorRef>(null);
 
   const oldComic = data.oldComic!;
   const terms = Object.groupBy(oldComic.terms, (item) => item.term.taxonomy);
@@ -43,19 +52,38 @@ function RouteComponent() {
       id: oldComic.id,
       title: oldComic.title,
       censorship: terms.censorship?.[0]?.term.id ?? "",
+      status: terms.status?.[0]?.term.id ?? "",
       documentStatus: oldComic.status,
       tags: terms.tag?.map((term) => term.term.id) ?? [],
     },
     onSubmit: async (formData) => {
+      const imagePayload = imageEditorRef.current?.getPayload();
+
       await toast
-        .promise(mutation.mutateAsync(formData.value), {
-          loading: "Editando cómic...",
-          success: "Cómic editado!",
-          error: (error) => ({
-            message: `Error al editar cómic: ${error}`,
-            duration: 10_000,
-          }),
-        })
+        .promise(
+          (async () => {
+            await mutation.mutateAsync(formData.value);
+            if (imagePayload) {
+              await imagesMutation.mutateAsync({
+                postId: oldComic.id,
+                type: "comic",
+                order: imagePayload.order,
+                newFiles:
+                  imagePayload.newFiles.length > 0
+                    ? imagePayload.newFiles
+                    : undefined,
+              });
+            }
+          })(),
+          {
+            loading: "Editando cómic...",
+            success: "Cómic editado!",
+            error: (error) => ({
+              message: `Error al editar cómic: ${error}`,
+              duration: 10_000,
+            }),
+          }
+        )
         .unwrap();
       await queryClient.invalidateQueries(
         orpc.comic.admin.getDashboardList.queryOptions()
@@ -98,6 +126,20 @@ function RouteComponent() {
             )}
           </form.AppField>
 
+          <form.AppField name="status">
+            {(field) => (
+              <field.SelectField
+                label="Estado"
+                options={
+                  groupedTerms.status?.map((term) => ({
+                    value: term.id,
+                    label: term.name,
+                  })) ?? []
+                }
+              />
+            )}
+          </form.AppField>
+
           <form.AppField name="tags">
             {(field) => (
               <field.MultiSelectField
@@ -127,12 +169,10 @@ function RouteComponent() {
             )}
           </form.AppField>
 
-          <section className="col-span-2">
-            <p className="text-muted-foreground">
-              Las imágenes no pueden ser editadas, para lograr esto deberás
-              contactar con el administrador del sitio.
-            </p>
-          </section>
+          <ImageEditor
+            initialImageKeys={oldComic.imageObjectKeys ?? []}
+            ref={imageEditorRef}
+          />
         </CardContent>
         <CardFooter>
           <form.AppForm>

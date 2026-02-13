@@ -1,13 +1,18 @@
 import { getLogger } from "@orpc/experimental-pino";
 import { and, eq, inArray, sql } from "@repo/db";
 import { featuredPost, post } from "@repo/db/schema/app";
-import { contentCreateSchema, contentEditSchema } from "@repo/shared/schemas";
+import {
+  contentCreateSchema,
+  contentEditImagesSchema,
+  contentEditSchema,
+} from "@repo/shared/schemas";
 import z from "zod";
 import { permissionProcedure } from "../../index";
 import {
   createContent,
   deleteContent,
   editContent,
+  editContentImages,
   insertContentImages,
 } from "../../utils/content-handlers";
 
@@ -81,6 +86,12 @@ export default {
   })
     .input(contentEditSchema)
     .handler(editContent),
+
+  editImages: permissionProcedure({
+    posts: ["update"],
+  })
+    .input(contentEditImagesSchema)
+    .handler(editContentImages),
 
   delete: permissionProcedure({
     posts: ["delete"],

@@ -180,6 +180,7 @@ export function PostContent({ post }: { post: PostProps }) {
   const hasContent = post.content !== "";
   const hasAuthorContent = !!post.authorContent;
   const hasDownloadLinks = !!post.adsLinks;
+  const hasChangelog = !!post.changelog;
   const hasImages = (post.imageObjectKeys?.length ?? 0) > 0;
   const hasTags = post.terms.length > 0;
 
@@ -253,6 +254,12 @@ export function PostContent({ post }: { post: PostProps }) {
               <HugeiconsIcon className="size-4" icon={InformationCircleIcon} />
               Información
             </TabsTrigger>
+            {hasChangelog && (
+              <TabsTrigger className="gap-2" value="changelog">
+                <HugeiconsIcon className="size-4" icon={Calendar03Icon} />
+                Changelog
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Downloads Tab */}
@@ -290,6 +297,15 @@ export function PostContent({ post }: { post: PostProps }) {
               )}
             </div>
           </TabsContent>
+
+          {/* Changelog Tab */}
+          {hasChangelog && (
+            <TabsContent className="mt-6" value="changelog">
+              <ContentCard icon={Calendar03Icon} title="Changelog">
+                <Markdown>{post.changelog}</Markdown>
+              </ContentCard>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
