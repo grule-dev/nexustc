@@ -208,6 +208,7 @@ export async function editContent({
         input.type === "post" ? input.premiumLinks : (input.premiumLinks ?? ""),
       changelog:
         input.type === "post" ? input.changelog : (input.changelog ?? ""),
+      authorContent: input.authorContent ?? "",
     })
     .where(eq(post.id, input.id))
     .returning({ postId: post.id });
