@@ -294,15 +294,37 @@ function matchProvider(provider: string) {
 function UserBookmarks() {
   const { data } = useSuspenseQuery(orpc.user.getBookmarksFull.queryOptions());
 
+  const posts = data.filter((b) => b.type === "post");
+  const comics = data.filter((b) => b.type === "comic");
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Tus Favoritos</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        {data.map((bookmark) => (
-          <PostCard key={bookmark.id} post={bookmark} />
-        ))}
+      <CardContent>
+        <Tabs>
+          <TabsList className="w-full">
+            <TabsTrigger value="posts">Juegos</TabsTrigger>
+            <TabsTrigger value="comics">Comics</TabsTrigger>
+          </TabsList>
+          <TabsContent
+            className="grid grid-cols-2 gap-4 md:grid-cols-3"
+            value="posts"
+          >
+            {posts.map((bookmark) => (
+              <PostCard key={bookmark.id} post={bookmark} />
+            ))}
+          </TabsContent>
+          <TabsContent
+            className="grid grid-cols-2 gap-4 md:grid-cols-3"
+            value="comics"
+          >
+            {comics.map((bookmark) => (
+              <PostCard key={bookmark.id} post={bookmark} />
+            ))}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

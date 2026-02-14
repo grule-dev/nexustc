@@ -2,7 +2,6 @@ import {
   Calendar03Icon,
   Download04Icon,
   FavouriteCircleIcon,
-  Image02Icon,
   InformationCircleIcon,
   Link01Icon,
   Share08Icon,
@@ -67,39 +66,20 @@ export function PostHero({ post }: { post: PostProps }) {
             {/* Gradient overlay for text readability */}
             <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
             {/* Content overlay */}
-            <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
-              <div className="flex flex-col gap-4">
-                {/* Title and Version */}
-                <div className="flex flex-wrap items-end gap-3">
-                  <h1 className="font-bold text-3xl text-white drop-shadow-lg md:text-5xl">
-                    {post.title}
-                  </h1>
-                  {post.version && (
-                    <Badge
-                      className="mb-1 border-white/30 bg-white/20 text-white backdrop-blur-sm md:mb-2"
-                      variant="outline"
-                    >
-                      {post.version}
-                    </Badge>
-                  )}
-                </div>
-                {/* Meta Row */}
-                <div className="flex flex-wrap items-center gap-4">
-                  {post.ratingCount !== undefined && post.ratingCount > 0 && (
-                    <div className="flex items-center gap-1.5 text-white">
-                      <HugeiconsIcon
-                        className="size-4 fill-amber-400 text-amber-400"
-                        icon={StarIcon}
-                      />
-                      <span className="font-semibold">
-                        {post.averageRating?.toFixed(1)}
-                      </span>
-                      <span className="text-white/70">
-                        ({post.ratingCount} votos)
-                      </span>
-                    </div>
-                  )}
-                </div>
+            <div className="absolute inset-x-0 bottom-0 p-4 md:p-10">
+              {/* Title and Version */}
+              <div className="flex flex-wrap items-end gap-3">
+                <h1 className="font-bold text-white text-xl drop-shadow-lg md:text-5xl">
+                  {post.title}
+                </h1>
+                {post.version && (
+                  <Badge
+                    className="mb-1 border-white/30 bg-white/20 text-white backdrop-blur-sm md:mb-2"
+                    variant="outline"
+                  >
+                    {post.version}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -137,10 +117,6 @@ export function PostHero({ post }: { post: PostProps }) {
 }
 
 export function PostActionBar({ post }: { post: PostProps }) {
-  const allImages = post.imageObjectKeys ?? [];
-  const hasImages = allImages.length > 0;
-  const hasTags = post.terms.length > 0;
-
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -152,7 +128,7 @@ export function PostActionBar({ post }: { post: PostProps }) {
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-4 rounded-b-3xl border bg-card p-4 md:justify-between">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="grid grid-flow-col grid-rows-2 gap-3 md:grid-rows-1">
         <LikeButton postId={post.id} />
         <BookmarkButton postId={post.id} />
         <Button
@@ -185,18 +161,6 @@ export function PostActionBar({ post }: { post: PostProps }) {
             locale: es,
           })}
         </MetaBadge>
-        {hasImages && (
-          <span className="flex items-center gap-1.5">
-            <HugeiconsIcon className="size-4" icon={Image02Icon} />
-            {allImages.length} {allImages.length === 1 ? "imagen" : "imágenes"}
-          </span>
-        )}
-        {hasTags && (
-          <span className="flex items-center gap-1.5">
-            <HugeiconsIcon className="size-4" icon={Tag01Icon} />
-            {post.terms.length} tags
-          </span>
-        )}
       </div>
     </div>
   );
@@ -216,6 +180,7 @@ export function PostContent({ post }: { post: PostProps }) {
   const hasContent = post.content !== "";
   const hasAuthorContent = !!post.authorContent;
   const hasDownloadLinks = !!post.adsLinks;
+  const hasChangelog = !!post.changelog;
   const hasImages = (post.imageObjectKeys?.length ?? 0) > 0;
   const hasTags = post.terms.length > 0;
 
@@ -279,17 +244,32 @@ export function PostContent({ post }: { post: PostProps }) {
       <div className="flex flex-col gap-6 lg:col-span-2">
         <Tabs className="w-full" defaultValue="info">
           <TabsList className="w-full justify-start">
-            <TabsTrigger className="gap-2" value="info">
-              <HugeiconsIcon className="size-4" icon={InformationCircleIcon} />
-              Información
-            </TabsTrigger>
             {hasDownloadLinks && (
               <TabsTrigger className="gap-2" value="downloads">
                 <HugeiconsIcon className="size-4" icon={Download04Icon} />
                 Descargas
               </TabsTrigger>
             )}
+            <TabsTrigger className="gap-2" value="info">
+              <HugeiconsIcon className="size-4" icon={InformationCircleIcon} />
+              Información
+            </TabsTrigger>
+            {hasChangelog && (
+              <TabsTrigger className="gap-2" value="changelog">
+                <HugeiconsIcon className="size-4" icon={Calendar03Icon} />
+                Changelog
+              </TabsTrigger>
+            )}
           </TabsList>
+
+          {/* Downloads Tab */}
+          {hasDownloadLinks && (
+            <TabsContent className="mt-6" value="downloads">
+              <ContentCard icon={Link01Icon} title="Enlaces de Descarga">
+                <Markdown>{post.adsLinks ?? ""}</Markdown>
+              </ContentCard>
+            </TabsContent>
+          )}
 
           {/* Info Tab */}
           <TabsContent className="mt-6" value="info">
@@ -318,11 +298,11 @@ export function PostContent({ post }: { post: PostProps }) {
             </div>
           </TabsContent>
 
-          {/* Downloads Tab */}
-          {hasDownloadLinks && (
-            <TabsContent className="mt-6" value="downloads">
-              <ContentCard icon={Link01Icon} title="Enlaces de Descarga">
-                <Markdown>{post.adsLinks ?? ""}</Markdown>
+          {/* Changelog Tab */}
+          {hasChangelog && (
+            <TabsContent className="mt-6" value="changelog">
+              <ContentCard icon={Calendar03Icon} title="Changelog">
+                <Markdown>{post.changelog}</Markdown>
               </ContentCard>
             </TabsContent>
           )}

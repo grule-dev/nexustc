@@ -27,22 +27,28 @@ import { Route as MainAuthRouteImport } from './routes/_main/auth'
 import { Route as MainAboutRouteImport } from './routes/_main/about'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminTermsIndexRouteImport } from './routes/admin/terms/index'
+import { Route as AdminStickersIndexRouteImport } from './routes/admin/stickers/index'
 import { Route as AdminPostsIndexRouteImport } from './routes/admin/posts/index'
+import { Route as AdminEmojisIndexRouteImport } from './routes/admin/emojis/index'
 import { Route as AdminComicsIndexRouteImport } from './routes/admin/comics/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiPatreonWebhookRouteImport } from './routes/api/patreon/webhook'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/create'
+import { Route as AdminStickersCreateRouteImport } from './routes/admin/stickers/create'
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
 import { Route as AdminPagesSlugRouteImport } from './routes/admin/pages/$slug'
 import { Route as AdminExtrasWeeklyRouteImport } from './routes/admin/extras/weekly'
 import { Route as AdminExtrasTutorialsRouteImport } from './routes/admin/extras/tutorials'
 import { Route as AdminExtrasFeaturedRouteImport } from './routes/admin/extras/featured'
+import { Route as AdminEmojisCreateRouteImport } from './routes/admin/emojis/create'
 import { Route as AdminComicsCreateRouteImport } from './routes/admin/comics/create'
 import { Route as AdminChronosEditRouteImport } from './routes/admin/chronos/edit'
 import { Route as MainUserIdRouteImport } from './routes/_main/user.$id'
 import { Route as MainPostIdRouteImport } from './routes/_main/post.$id'
+import { Route as AdminStickersIdEditRouteImport } from './routes/admin/stickers/$id.edit'
 import { Route as AdminPostsEditIdRouteImport } from './routes/admin/posts/edit.$id'
+import { Route as AdminEmojisIdEditRouteImport } from './routes/admin/emojis/$id.edit'
 import { Route as AdminComicsEditIdRouteImport } from './routes/admin/comics/edit.$id'
 import { Route as MainPostReviewsIdRouteImport } from './routes/_main/post.reviews.$id'
 
@@ -135,9 +141,19 @@ const AdminTermsIndexRoute = AdminTermsIndexRouteImport.update({
   path: '/terms/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminStickersIndexRoute = AdminStickersIndexRouteImport.update({
+  id: '/stickers/',
+  path: '/stickers/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminPostsIndexRoute = AdminPostsIndexRouteImport.update({
   id: '/posts/',
   path: '/posts/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminEmojisIndexRoute = AdminEmojisIndexRouteImport.update({
+  id: '/emojis/',
+  path: '/emojis/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminComicsIndexRoute = AdminComicsIndexRouteImport.update({
@@ -165,6 +181,11 @@ const AdminTermsCreateRoute = AdminTermsCreateRouteImport.update({
   path: '/terms/create',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminStickersCreateRoute = AdminStickersCreateRouteImport.update({
+  id: '/stickers/create',
+  path: '/stickers/create',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminPostsCreateRoute = AdminPostsCreateRouteImport.update({
   id: '/posts/create',
   path: '/posts/create',
@@ -190,6 +211,11 @@ const AdminExtrasFeaturedRoute = AdminExtrasFeaturedRouteImport.update({
   path: '/extras/featured',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminEmojisCreateRoute = AdminEmojisCreateRouteImport.update({
+  id: '/emojis/create',
+  path: '/emojis/create',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminComicsCreateRoute = AdminComicsCreateRouteImport.update({
   id: '/comics/create',
   path: '/comics/create',
@@ -210,9 +236,19 @@ const MainPostIdRoute = MainPostIdRouteImport.update({
   path: '/post/$id',
   getParentRoute: () => MainRouteRoute,
 } as any)
+const AdminStickersIdEditRoute = AdminStickersIdEditRouteImport.update({
+  id: '/stickers/$id/edit',
+  path: '/stickers/$id/edit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminPostsEditIdRoute = AdminPostsEditIdRouteImport.update({
   id: '/posts/edit/$id',
   path: '/posts/edit/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminEmojisIdEditRoute = AdminEmojisIdEditRouteImport.update({
+  id: '/emojis/$id/edit',
+  path: '/emojis/$id/edit',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminComicsEditIdRoute = AdminComicsEditIdRouteImport.update({
@@ -246,22 +282,28 @@ export interface FileRoutesByFullPath {
   '/user/$id': typeof MainUserIdRoute
   '/admin/chronos/edit': typeof AdminChronosEditRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
+  '/admin/emojis/create': typeof AdminEmojisCreateRoute
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
+  '/admin/stickers/create': typeof AdminStickersCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics/': typeof AdminComicsIndexRoute
+  '/admin/emojis/': typeof AdminEmojisIndexRoute
   '/admin/posts/': typeof AdminPostsIndexRoute
+  '/admin/stickers/': typeof AdminStickersIndexRoute
   '/admin/terms/': typeof AdminTermsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/post/reviews/$id': typeof MainPostReviewsIdRoute
   '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
+  '/admin/emojis/$id/edit': typeof AdminEmojisIdEditRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
+  '/admin/stickers/$id/edit': typeof AdminStickersIdEditRoute
 }
 export interface FileRoutesByTo {
   '/about': typeof MainAboutRoute
@@ -282,22 +324,28 @@ export interface FileRoutesByTo {
   '/user/$id': typeof MainUserIdRoute
   '/admin/chronos/edit': typeof AdminChronosEditRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
+  '/admin/emojis/create': typeof AdminEmojisCreateRoute
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
+  '/admin/stickers/create': typeof AdminStickersCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics': typeof AdminComicsIndexRoute
+  '/admin/emojis': typeof AdminEmojisIndexRoute
   '/admin/posts': typeof AdminPostsIndexRoute
+  '/admin/stickers': typeof AdminStickersIndexRoute
   '/admin/terms': typeof AdminTermsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/post/reviews/$id': typeof MainPostReviewsIdRoute
   '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
+  '/admin/emojis/$id/edit': typeof AdminEmojisIdEditRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
+  '/admin/stickers/$id/edit': typeof AdminStickersIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -321,22 +369,28 @@ export interface FileRoutesById {
   '/_main/user/$id': typeof MainUserIdRoute
   '/admin/chronos/edit': typeof AdminChronosEditRoute
   '/admin/comics/create': typeof AdminComicsCreateRoute
+  '/admin/emojis/create': typeof AdminEmojisCreateRoute
   '/admin/extras/featured': typeof AdminExtrasFeaturedRoute
   '/admin/extras/tutorials': typeof AdminExtrasTutorialsRoute
   '/admin/extras/weekly': typeof AdminExtrasWeeklyRoute
   '/admin/pages/$slug': typeof AdminPagesSlugRoute
   '/admin/posts/create': typeof AdminPostsCreateRoute
+  '/admin/stickers/create': typeof AdminStickersCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/admin/comics/': typeof AdminComicsIndexRoute
+  '/admin/emojis/': typeof AdminEmojisIndexRoute
   '/admin/posts/': typeof AdminPostsIndexRoute
+  '/admin/stickers/': typeof AdminStickersIndexRoute
   '/admin/terms/': typeof AdminTermsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/_main/post/reviews/$id': typeof MainPostReviewsIdRoute
   '/admin/comics/edit/$id': typeof AdminComicsEditIdRoute
+  '/admin/emojis/$id/edit': typeof AdminEmojisIdEditRoute
   '/admin/posts/edit/$id': typeof AdminPostsEditIdRoute
+  '/admin/stickers/$id/edit': typeof AdminStickersIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -360,22 +414,28 @@ export interface FileRouteTypes {
     | '/user/$id'
     | '/admin/chronos/edit'
     | '/admin/comics/create'
+    | '/admin/emojis/create'
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
     | '/admin/pages/$slug'
     | '/admin/posts/create'
+    | '/admin/stickers/create'
     | '/admin/terms/create'
     | '/api/auth/$'
     | '/api/patreon/webhook'
     | '/api/rpc/$'
     | '/admin/comics/'
+    | '/admin/emojis/'
     | '/admin/posts/'
+    | '/admin/stickers/'
     | '/admin/terms/'
     | '/admin/users/'
     | '/post/reviews/$id'
     | '/admin/comics/edit/$id'
+    | '/admin/emojis/$id/edit'
     | '/admin/posts/edit/$id'
+    | '/admin/stickers/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/about'
@@ -396,22 +456,28 @@ export interface FileRouteTypes {
     | '/user/$id'
     | '/admin/chronos/edit'
     | '/admin/comics/create'
+    | '/admin/emojis/create'
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
     | '/admin/pages/$slug'
     | '/admin/posts/create'
+    | '/admin/stickers/create'
     | '/admin/terms/create'
     | '/api/auth/$'
     | '/api/patreon/webhook'
     | '/api/rpc/$'
     | '/admin/comics'
+    | '/admin/emojis'
     | '/admin/posts'
+    | '/admin/stickers'
     | '/admin/terms'
     | '/admin/users'
     | '/post/reviews/$id'
     | '/admin/comics/edit/$id'
+    | '/admin/emojis/$id/edit'
     | '/admin/posts/edit/$id'
+    | '/admin/stickers/$id/edit'
   id:
     | '__root__'
     | '/_main'
@@ -434,22 +500,28 @@ export interface FileRouteTypes {
     | '/_main/user/$id'
     | '/admin/chronos/edit'
     | '/admin/comics/create'
+    | '/admin/emojis/create'
     | '/admin/extras/featured'
     | '/admin/extras/tutorials'
     | '/admin/extras/weekly'
     | '/admin/pages/$slug'
     | '/admin/posts/create'
+    | '/admin/stickers/create'
     | '/admin/terms/create'
     | '/api/auth/$'
     | '/api/patreon/webhook'
     | '/api/rpc/$'
     | '/admin/comics/'
+    | '/admin/emojis/'
     | '/admin/posts/'
+    | '/admin/stickers/'
     | '/admin/terms/'
     | '/admin/users/'
     | '/_main/post/reviews/$id'
     | '/admin/comics/edit/$id'
+    | '/admin/emojis/$id/edit'
     | '/admin/posts/edit/$id'
+    | '/admin/stickers/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -589,11 +661,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTermsIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/stickers/': {
+      id: '/admin/stickers/'
+      path: '/stickers'
+      fullPath: '/admin/stickers/'
+      preLoaderRoute: typeof AdminStickersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/posts/': {
       id: '/admin/posts/'
       path: '/posts'
       fullPath: '/admin/posts/'
       preLoaderRoute: typeof AdminPostsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/emojis/': {
+      id: '/admin/emojis/'
+      path: '/emojis'
+      fullPath: '/admin/emojis/'
+      preLoaderRoute: typeof AdminEmojisIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/comics/': {
@@ -631,6 +717,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTermsCreateRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/stickers/create': {
+      id: '/admin/stickers/create'
+      path: '/stickers/create'
+      fullPath: '/admin/stickers/create'
+      preLoaderRoute: typeof AdminStickersCreateRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/posts/create': {
       id: '/admin/posts/create'
       path: '/posts/create'
@@ -666,6 +759,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminExtrasFeaturedRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/emojis/create': {
+      id: '/admin/emojis/create'
+      path: '/emojis/create'
+      fullPath: '/admin/emojis/create'
+      preLoaderRoute: typeof AdminEmojisCreateRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/comics/create': {
       id: '/admin/comics/create'
       path: '/comics/create'
@@ -694,11 +794,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainPostIdRouteImport
       parentRoute: typeof MainRouteRoute
     }
+    '/admin/stickers/$id/edit': {
+      id: '/admin/stickers/$id/edit'
+      path: '/stickers/$id/edit'
+      fullPath: '/admin/stickers/$id/edit'
+      preLoaderRoute: typeof AdminStickersIdEditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/posts/edit/$id': {
       id: '/admin/posts/edit/$id'
       path: '/posts/edit/$id'
       fullPath: '/admin/posts/edit/$id'
       preLoaderRoute: typeof AdminPostsEditIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/emojis/$id/edit': {
+      id: '/admin/emojis/$id/edit'
+      path: '/emojis/$id/edit'
+      fullPath: '/admin/emojis/$id/edit'
+      preLoaderRoute: typeof AdminEmojisIdEditRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/comics/edit/$id': {
@@ -762,36 +876,48 @@ interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminChronosEditRoute: typeof AdminChronosEditRoute
   AdminComicsCreateRoute: typeof AdminComicsCreateRoute
+  AdminEmojisCreateRoute: typeof AdminEmojisCreateRoute
   AdminExtrasFeaturedRoute: typeof AdminExtrasFeaturedRoute
   AdminExtrasTutorialsRoute: typeof AdminExtrasTutorialsRoute
   AdminExtrasWeeklyRoute: typeof AdminExtrasWeeklyRoute
   AdminPagesSlugRoute: typeof AdminPagesSlugRoute
   AdminPostsCreateRoute: typeof AdminPostsCreateRoute
+  AdminStickersCreateRoute: typeof AdminStickersCreateRoute
   AdminTermsCreateRoute: typeof AdminTermsCreateRoute
   AdminComicsIndexRoute: typeof AdminComicsIndexRoute
+  AdminEmojisIndexRoute: typeof AdminEmojisIndexRoute
   AdminPostsIndexRoute: typeof AdminPostsIndexRoute
+  AdminStickersIndexRoute: typeof AdminStickersIndexRoute
   AdminTermsIndexRoute: typeof AdminTermsIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
   AdminComicsEditIdRoute: typeof AdminComicsEditIdRoute
+  AdminEmojisIdEditRoute: typeof AdminEmojisIdEditRoute
   AdminPostsEditIdRoute: typeof AdminPostsEditIdRoute
+  AdminStickersIdEditRoute: typeof AdminStickersIdEditRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminChronosEditRoute: AdminChronosEditRoute,
   AdminComicsCreateRoute: AdminComicsCreateRoute,
+  AdminEmojisCreateRoute: AdminEmojisCreateRoute,
   AdminExtrasFeaturedRoute: AdminExtrasFeaturedRoute,
   AdminExtrasTutorialsRoute: AdminExtrasTutorialsRoute,
   AdminExtrasWeeklyRoute: AdminExtrasWeeklyRoute,
   AdminPagesSlugRoute: AdminPagesSlugRoute,
   AdminPostsCreateRoute: AdminPostsCreateRoute,
+  AdminStickersCreateRoute: AdminStickersCreateRoute,
   AdminTermsCreateRoute: AdminTermsCreateRoute,
   AdminComicsIndexRoute: AdminComicsIndexRoute,
+  AdminEmojisIndexRoute: AdminEmojisIndexRoute,
   AdminPostsIndexRoute: AdminPostsIndexRoute,
+  AdminStickersIndexRoute: AdminStickersIndexRoute,
   AdminTermsIndexRoute: AdminTermsIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
   AdminComicsEditIdRoute: AdminComicsEditIdRoute,
+  AdminEmojisIdEditRoute: AdminEmojisIdEditRoute,
   AdminPostsEditIdRoute: AdminPostsEditIdRoute,
+  AdminStickersIdEditRoute: AdminStickersIdEditRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

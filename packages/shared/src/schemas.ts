@@ -61,6 +61,7 @@ export const postCreateSchema = z.object({
   platforms: z.array(z.string()),
   adsLinks: z.string(),
   premiumLinks: z.string(),
+  changelog: z.string(),
   authorContent: z.string(),
   content: z
     .string()
@@ -74,12 +75,13 @@ export const comicCreateSchema = z.object({
   type: z.literal("comic"),
   languages: z.array(z.string()).optional(),
   version: z.string().optional(),
-  status: z.string().optional(),
+  status: z.string(),
   engine: z.string().optional(),
   graphics: z.string().optional(),
   platforms: z.array(z.string()).optional(),
   adsLinks: z.string().optional(),
   premiumLinks: z.string().optional(),
+  changelog: z.string().optional(),
   authorContent: z.string().optional(),
   content: z.string().optional(),
 });
@@ -126,6 +128,27 @@ export const chronosUpdateSchema = z.object({
   carouselImageKeys: z.array(z.string()).optional(),
   markdownContent: z.string().max(65_535),
   markdownImageKeys: z.array(z.string()).optional(),
+});
+
+export const contentEditImagesSchema = z.object({
+  postId: z.string(),
+  type: z.enum(["post", "comic"]),
+  order: z.array(
+    z.discriminatedUnion("type", [
+      z.object({ type: z.literal("existing"), key: z.string() }),
+      z.object({ type: z.literal("new"), index: z.number().int().min(0) }),
+    ])
+  ),
+  newFiles: z
+    .array(
+      z
+        .file()
+        .mime(["image/gif", "image/jpeg", "image/png", "image/webp"])
+        .refine((file) => file.size <= MAX_FILE_SIZE, {
+          message: "File size must be less than 10MB",
+        })
+    )
+    .optional(),
 });
 
 export const staticPageUpdateSchema = z.object({

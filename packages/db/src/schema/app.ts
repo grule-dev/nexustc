@@ -186,6 +186,7 @@ export const post = pgTable(
     version: text("version"),
     adsLinks: text("ads_links"),
     premiumLinks: text("premium_links"),
+    changelog: text("changelog").notNull().default(""),
     views: integer("views").notNull().default(0),
     imageObjectKeys: jsonb("image_object_keys").$type<string[]>(),
     ...timestamps,
@@ -326,6 +327,60 @@ export const staticPage = pgTable(
   },
   (table) => [index("static_page_slug_idx").on(table.slug)]
 );
+
+/** -------------------------------------------------------- */
+
+export const emojiTypeEnum = pgEnum("emoji_type", ["static", "animated"]);
+
+export const emoji = pgTable(
+  "emoji",
+  {
+    id: text("id").primaryKey().$defaultFn(generateId),
+    name: text("name").notNull().unique(),
+    displayName: text("display_name").notNull(),
+    type: emojiTypeEnum("type").notNull().default("static"),
+    assetKey: text("asset_key").notNull(),
+    assetFormat: text("asset_format").notNull(),
+    requiredTier: text("required_tier", { enum: PATRON_TIER_KEYS })
+      .notNull()
+      .default("level1"),
+    order: integer("order").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [
+    index("emoji_name_idx").on(table.name),
+    index("emoji_required_tier_idx").on(table.requiredTier),
+  ]
+);
+
+export const sticker = pgTable(
+  "sticker",
+  {
+    id: text("id").primaryKey().$defaultFn(generateId),
+    name: text("name").notNull().unique(),
+    displayName: text("display_name").notNull(),
+    type: emojiTypeEnum("type").notNull().default("static"),
+    assetKey: text("asset_key").notNull(),
+    assetFormat: text("asset_format").notNull(),
+    requiredTier: text("required_tier", { enum: PATRON_TIER_KEYS })
+      .notNull()
+      .default("level3"),
+    order: integer("order").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [
+    index("sticker_name_idx").on(table.name),
+    index("sticker_required_tier_idx").on(table.requiredTier),
+  ]
+);
+
+export const emojiRelations = relations(emoji, () => ({}));
+
+export const stickerRelations = relations(sticker, () => ({}));
+
+/** -------------------------------------------------------- */
 
 export const postRelations = relations(post, ({ many }) => ({
   terms: many(termPostRelation),

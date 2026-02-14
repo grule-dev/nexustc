@@ -126,6 +126,10 @@ export function getCookie(name: string): string | null {
 }
 
 export function getBucketUrl(object: string) {
+  if (object.startsWith("blob:")) {
+    return object;
+  }
+
   return `${env.VITE_ASSETS_BUCKET_URL}/${object}`;
 }
 

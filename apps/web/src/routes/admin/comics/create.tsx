@@ -65,6 +65,7 @@ function RouteComponent() {
       type: "comic" as const,
       title: "",
       censorship: "",
+      status: "",
       documentStatus: "draft" as (typeof DOCUMENT_STATUSES)[number],
       tags: [] as string[],
     },
@@ -166,6 +167,20 @@ function RouteComponent() {
                 label="Censura"
                 options={
                   groupedTerms.censorship?.map((term) => ({
+                    value: term.id,
+                    label: term.name,
+                  })) ?? []
+                }
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="status">
+            {(field) => (
+              <field.SelectField
+                label="Estado"
+                options={
+                  groupedTerms.status?.map((term) => ({
                     value: term.id,
                     label: term.name,
                   })) ?? []

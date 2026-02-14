@@ -5,24 +5,19 @@ import { getBucketUrl, getTierColor } from "@/lib/utils";
 import { Card, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
 
+export type PostProps = {
+  id: string;
+  title: string;
+  type: "post" | "comic";
+  imageObjectKeys: string[] | null;
+  favorites: number;
+  likes: number;
+  views: number;
+  averageRating?: number;
+};
+
 type PostCardProps = {
-  post: {
-    id: string;
-    title: string;
-    type: "post" | "comic";
-    imageObjectKeys: string[] | null;
-    favorites: number;
-    likes: number;
-    views: number;
-    ratingCount?: number;
-    averageRating?: number;
-    terms: {
-      name: string;
-      taxonomy: string;
-      color: string | null;
-    }[];
-  };
-  withTags?: boolean;
+  post: PostProps;
 };
 
 export function PostCard({ post }: PostCardProps) {
@@ -123,7 +118,7 @@ export function PostCard({ post }: PostCardProps) {
               />
               <span className="translate-y-px text-white">{post.likes}</span>
             </div>
-            {post.ratingCount !== undefined && post.ratingCount > 0 && (
+            {post.averageRating !== 0 && (
               <div className="inline-flex items-center gap-1">
                 <HugeiconsIcon
                   className="size-4 fill-amber-400 text-amber-400"

@@ -3,6 +3,7 @@ import { and, asc, desc, eq, sql } from "@repo/db";
 import {
   comment,
   featuredPost,
+  patron,
   post,
   postBookmark,
   postLikes,
@@ -11,6 +12,8 @@ import {
   termPostRelation,
 } from "@repo/db/schema/app";
 import type { TAXONOMIES } from "@repo/shared/constants";
+import { PATRON_TIERS, type PatronTier } from "@repo/shared/constants";
+import { parseTokens, validateTokenLimit } from "@repo/shared/token-parser";
 import z from "zod";
 import {
   fixedWindowRatelimitMiddleware,
@@ -45,25 +48,6 @@ export default {
         .groupBy(postBookmark.postId)
         .as("favorites_agg");
 
-      const termsAgg = db
-        .select({
-          postId: termPostRelation.postId,
-          terms: sql`
-            json_agg(
-              json_build_object(
-                'id', ${term.id},
-                'name', ${term.name},
-                'taxonomy', ${term.taxonomy},
-                'color', ${term.color}
-              )
-            )
-          `.as("terms"),
-        })
-        .from(termPostRelation)
-        .innerJoin(term, eq(term.id, termPostRelation.termId))
-        .groupBy(termPostRelation.postId)
-        .as("terms_agg");
-
       const ratingsAgg = db
         .select({
           postId: postRating.postId,
@@ -71,7 +55,6 @@ export default {
             sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
               "average_rating"
             ),
-          ratingCount: sql<number>`COUNT(*)::integer`.as("rating_count"),
         })
         .from(postRating)
         .groupBy(postRating.postId)
@@ -86,31 +69,17 @@ export default {
           content: post.content,
           isWeekly: post.isWeekly,
           imageObjectKeys: post.imageObjectKeys,
-          adsLinks: post.adsLinks,
-          authorContent: post.authorContent,
 
           views: post.views,
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
-
-          terms: sql<
-            {
-              id: string;
-              name: string;
-              taxonomy: (typeof TAXONOMIES)[number];
-              color: string;
-            }[]
-          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
-
           averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
-          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
 
           createdAt: post.createdAt,
         })
         .from(post)
         .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
-        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
         .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(and(eq(post.status, "publish"), eq(post.type, "post")))
         .orderBy(desc(post.createdAt))
@@ -144,25 +113,6 @@ export default {
         .groupBy(postBookmark.postId)
         .as("favorites_agg");
 
-      const termsAgg = db
-        .select({
-          postId: termPostRelation.postId,
-          terms: sql`
-          json_agg(
-            json_build_object(
-              'id', ${term.id},
-              'name', ${term.name},
-              'taxonomy', ${term.taxonomy},
-              'color', ${term.color}
-            )
-          )
-        `.as("terms"),
-        })
-        .from(termPostRelation)
-        .innerJoin(term, eq(term.id, termPostRelation.termId))
-        .groupBy(termPostRelation.postId)
-        .as("terms_agg");
-
       const ratingsAgg = db
         .select({
           postId: postRating.postId,
@@ -181,35 +131,20 @@ export default {
           id: post.id,
           title: post.title,
           type: post.type,
-          version: post.version,
           content: post.content,
           isWeekly: post.isWeekly,
           imageObjectKeys: post.imageObjectKeys,
-          adsLinks: post.adsLinks,
-          authorContent: post.authorContent,
           views: post.views,
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
-
-          terms: sql<
-            {
-              id: string;
-              name: string;
-              taxonomy: (typeof TAXONOMIES)[number];
-              color: string;
-            }[]
-          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
-
           averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
-          ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
 
           createdAt: post.createdAt,
         })
         .from(post)
         .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
-        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
         .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(and(eq(post.status, "publish"), eq(post.isWeekly, true)))
         .orderBy(asc(post.title));
@@ -243,25 +178,6 @@ export default {
         .groupBy(postBookmark.postId)
         .as("favorites_agg");
 
-      const termsAgg = db
-        .select({
-          postId: termPostRelation.postId,
-          terms: sql`
-          json_agg(
-            json_build_object(
-              'id', ${term.id},
-              'name', ${term.name},
-              'taxonomy', ${term.taxonomy},
-              'color', ${term.color}
-            )
-          )
-        `.as("terms"),
-        })
-        .from(termPostRelation)
-        .innerJoin(term, eq(term.id, termPostRelation.termId))
-        .groupBy(termPostRelation.postId)
-        .as("terms_agg");
-
       const ratingsAgg = db
         .select({
           postId: postRating.postId,
@@ -284,6 +200,7 @@ export default {
           content: post.content,
           imageObjectKeys: post.imageObjectKeys,
           adsLinks: post.adsLinks,
+          changelog: post.changelog,
           authorContent: post.authorContent,
           views: post.views,
           position: featuredPost.position,
@@ -291,15 +208,6 @@ export default {
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
-
-          terms: sql<
-            {
-              id: string;
-              name: string;
-              taxonomy: (typeof TAXONOMIES)[number];
-              color: string;
-            }[]
-          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
 
           averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
           ratingCount: sql<number>`COALESCE(${ratingsAgg.ratingCount}, 0)`,
@@ -310,7 +218,6 @@ export default {
         .innerJoin(post, eq(post.id, featuredPost.postId))
         .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
-        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
         .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
         .where(eq(post.status, "publish"))
         .orderBy(
@@ -446,6 +353,7 @@ export default {
           isWeekly: post.isWeekly,
           imageObjectKeys: post.imageObjectKeys,
           adsLinks: post.adsLinks,
+          changelog: post.changelog,
           authorContent: post.authorContent,
 
           views: post.views,
@@ -602,6 +510,7 @@ export default {
           isWeekly: post.isWeekly,
           imageObjectKeys: post.imageObjectKeys,
           adsLinks: post.adsLinks,
+          changelog: post.changelog,
           authorContent: post.authorContent,
           createdAt: post.createdAt,
           views: post.views,
@@ -766,27 +675,95 @@ export default {
     }),
 
   createComment: protectedProcedure
+    .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
     .input(
       z.object({
         postId: z.string(),
         content: z.string().min(10).max(2048),
       })
     )
-    .handler(async ({ context: { db, session, ...context }, input }) => {
-      const logger = getLogger(context);
-      logger?.info(
-        `User ${session.user.id} creating comment on post ${input.postId}`
-      );
+    .handler(
+      async ({ context: { db, session, ...context }, input, errors }) => {
+        const logger = getLogger(context);
+        logger?.info(
+          `User ${session.user.id} creating comment on post ${input.postId}`
+        );
 
-      await db.insert(comment).values({
-        postId: input.postId,
-        authorId: session.user.id,
-        content: input.content,
-      });
-      logger?.info(
-        `Comment successfully created by user ${session.user.id} on post ${input.postId}`
-      );
-    }),
+        const tokens = parseTokens(input.content);
+
+        if (tokens.length > 0) {
+          const limitCheck = validateTokenLimit(tokens);
+          if (!limitCheck.valid) {
+            throw errors.FORBIDDEN();
+          }
+
+          let userTier: PatronTier = "none";
+          const patronRecord = await db.query.patron.findFirst({
+            where: eq(patron.userId, session.user.id),
+            columns: { tier: true, isActivePatron: true },
+          });
+          if (patronRecord?.isActivePatron) {
+            userTier = patronRecord.tier;
+          }
+          const userLevel = PATRON_TIERS[userTier].level;
+
+          const emojiTokens = tokens.filter((t) => t.type === "emoji");
+          const stickerTokens = tokens.filter((t) => t.type === "sticker");
+
+          if (emojiTokens.length > 0) {
+            const emojiNames = [...new Set(emojiTokens.map((t) => t.name))];
+            const emojis = await db.query.emoji.findMany({
+              where: (e, { and: a, eq: equals, inArray }) =>
+                a(equals(e.isActive, true), inArray(e.name, emojiNames)),
+            });
+
+            const emojiMap = new Map(emojis.map((e) => [e.name, e]));
+            for (const token of emojiTokens) {
+              const emojiRecord = emojiMap.get(token.name);
+              if (!emojiRecord) {
+                continue;
+              }
+              const requiredLevel =
+                PATRON_TIERS[emojiRecord.requiredTier as PatronTier].level;
+              if (userLevel < requiredLevel) {
+                logger?.warn(
+                  `User ${session.user.id} lacks tier for emoji "${token.name}"`
+                );
+                throw errors.FORBIDDEN();
+              }
+            }
+          }
+
+          if (stickerTokens.length > 0) {
+            const stickerNames = [...new Set(stickerTokens.map((t) => t.name))];
+            const stickers = await db.query.sticker.findMany({
+              where: (s, { and: a, eq: equals, inArray }) =>
+                a(equals(s.isActive, true), inArray(s.name, stickerNames)),
+            });
+
+            for (const stickerRecord of stickers) {
+              const requiredLevel =
+                PATRON_TIERS[stickerRecord.requiredTier as PatronTier].level;
+              if (userLevel < requiredLevel) {
+                logger?.warn(
+                  `User ${session.user.id} lacks tier for sticker "${stickerRecord.name}"`
+                );
+                throw errors.FORBIDDEN();
+              }
+            }
+          }
+        }
+
+        await db.insert(comment).values({
+          postId: input.postId,
+          authorId: session.user.id,
+          content: input.content,
+        });
+        logger?.info(
+          `Comment successfully created by user ${session.user.id} on post ${input.postId}`
+        );
+      }
+    ),
 
   getComments: publicProcedure
     .input(z.object({ postId: z.string() }))

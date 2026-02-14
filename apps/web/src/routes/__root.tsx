@@ -1,6 +1,11 @@
 import { ConfirmDialogProvider } from "@omit/react-confirm-dialog";
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  HeadContent,
+  ScriptOnce,
+  Scripts,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { AgeVerificationDialog } from "@/components/age-verification-dialog";
 import { Toaster } from "@/components/ui/sonner";
@@ -44,6 +49,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
+        <ScriptOnce>{themeInitScript()}</ScriptOnce>
         <ConfirmDialogProvider
           defaultOptions={{
             confirmButton: {
@@ -88,11 +94,11 @@ function themeInitScript() {
   return `
 (function () {
   try {
-    var theme = localStorage.getItem("theme");
+    const theme = localStorage.getItem("theme");
     if (!theme) theme = "system";
 
-    var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var resolved = theme === "dark" || (theme === "system" && systemDark)
+    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const resolved = theme === "dark" || (theme === "system" && systemDark)
       ? "dark"
       : "light";
 

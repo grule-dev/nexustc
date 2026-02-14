@@ -5,6 +5,7 @@ import { ComicPage } from "@/components/posts/comic-page";
 import { CommentSection } from "@/components/posts/comment-section";
 import { PostPage } from "@/components/posts/post-components";
 import { safeOrpcClient } from "@/lib/orpc";
+import { getBucketUrl } from "@/lib/utils";
 
 const comicPageSchema = z.object({
   page: z.number().optional(),
@@ -39,6 +40,9 @@ export const Route = createFileRoute("/_main/post/$id")({
     meta: [
       {
         title: `NeXusTC - ${loaderData ? loaderData.title : "Post"}`,
+        media: loaderData?.imageObjectKeys?.[0]
+          ? getBucketUrl(loaderData?.imageObjectKeys?.[0])
+          : undefined,
       },
     ],
   }),
@@ -49,7 +53,7 @@ function RouteComponent() {
   const post = Route.useLoaderData();
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-8">
+    <main className="mx-auto w-full max-w-5xl px-2 py-4 md:px-4 md:py-8">
       <div className="flex flex-col gap-12">
         {/* Main Post Content */}
         {post.type === "post" ? (

@@ -2,9 +2,14 @@ import { postEditSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRef } from "react";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
+import {
+  ImageEditor,
+  type ImageEditorRef,
+} from "@/components/admin/image-editor";
 import {
   Card,
   CardContent,
@@ -28,12 +33,16 @@ export const Route = createFileRoute("/admin/posts/edit/$id")({
 function RouteComponent() {
   const data = Route.useLoaderData();
   const mutation = useMutation(orpc.post.admin.edit.mutationOptions());
+  const imagesMutation = useMutation(
+    orpc.post.admin.editImages.mutationOptions()
+  );
   const groupedTerms = Object.groupBy(
     data.prerequisites.terms,
     (item) => item.taxonomy
   );
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const imageEditorRef = useRef<ImageEditorRef>(null);
 
   const oldPost = data.oldPost!;
   const terms = Object.groupBy(oldPost.terms, (item) => item.term.taxonomy);
@@ -55,21 +64,40 @@ function RouteComponent() {
       authorContent: oldPost.authorContent,
       adsLinks: oldPost.adsLinks ?? "",
       premiumLinks: oldPost.premiumLinks ?? "",
+      changelog: oldPost.changelog ?? "",
       documentStatus: oldPost.status,
       platforms: terms.platform?.map((term) => term.term.id) ?? [],
       tags: terms.tag?.map((term) => term.term.id) ?? [],
       languages: terms.language?.map((term) => term.term.id) ?? [],
     },
     onSubmit: async (formData) => {
+      const imagePayload = imageEditorRef.current?.getPayload();
+
       await toast
-        .promise(mutation.mutateAsync(formData.value), {
-          loading: "Editando post...",
-          success: "Post editado!",
-          error: (error) => ({
-            message: `Error al crear post: ${error}`,
-            duration: 10_000,
-          }),
-        })
+        .promise(
+          (async () => {
+            await mutation.mutateAsync(formData.value);
+            if (imagePayload) {
+              await imagesMutation.mutateAsync({
+                postId: oldPost.id,
+                type: "post",
+                order: imagePayload.order,
+                newFiles:
+                  imagePayload.newFiles.length > 0
+                    ? imagePayload.newFiles
+                    : undefined,
+              });
+            }
+          })(),
+          {
+            loading: "Editando post...",
+            success: "Post editado!",
+            error: (error) => ({
+              message: `Error al editar post: ${error}`,
+              duration: 10_000,
+            }),
+          }
+        )
         .unwrap();
       await queryClient.invalidateQueries(
         orpc.post.admin.getDashboardList.queryOptions()
@@ -95,7 +123,7 @@ function RouteComponent() {
     >
       <Card>
         <CardHeader>
-          <CardTitle>Crear Post</CardTitle>
+          <CardTitle>Editar Post</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           <form.AppField name="title">
@@ -280,14 +308,21 @@ function RouteComponent() {
                 />
               )}
             </form.AppField>
+            <form.AppField name="changelog">
+              {(field) => (
+                <field.TextareaField
+                  className="w-full"
+                  label="Changelog"
+                  value={field.state.value}
+                />
+              )}
+            </form.AppField>
           </section>
 
-          <section className="col-span-2">
-            <p className="text-red-300">
-              Las imágenes no pueden ser editadas, para lograr esto deberás
-              contactar con el administrador del sitio.
-            </p>
-          </section>
+          <ImageEditor
+            initialImageKeys={oldPost.imageObjectKeys ?? []}
+            ref={imageEditorRef}
+          />
         </CardContent>
         <CardFooter>
           <form.AppForm>

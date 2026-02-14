@@ -2,11 +2,7 @@
   "extends": "@repo/config/tsconfig.base.json",
   "include": ["src/**/*"],
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true,
+    "noEmit": true,
     "strictNullChecks": true
   }
 }
