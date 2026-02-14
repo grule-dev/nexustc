@@ -32,19 +32,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
 import { orpcClient } from "@/lib/orpc";
-
-const statusDisplayMap = {
-  queued: "En cola",
-  uploading: "Subiendo...",
-  uploaded: "Subido",
-  error: "Error",
-} as const;
 
 export const Route = createFileRoute("/admin/posts/create")({
   component: RouteComponent,
@@ -53,13 +45,8 @@ export const Route = createFileRoute("/admin/posts/create")({
 
 function RouteComponent() {
   const data = Route.useLoaderData();
-  const {
-    parentRef,
-    selectedFiles,
-    uploadProgress,
-    handleFileChange,
-    removeFile,
-  } = useMultipleFileUpload();
+  const { parentRef, selectedFiles, handleFileChange, removeFile } =
+    useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -449,7 +436,6 @@ function RouteComponent() {
                   ref={parentRef}
                 >
                   {selectedFiles.map((file) => {
-                    const progressEntry = uploadProgress[file.name];
                     return (
                       <Card
                         className="cursor-grab"
@@ -465,7 +451,7 @@ function RouteComponent() {
                           </CardDescription>
                           <CardAction>
                             <Button
-                              disabled={progressEntry?.status === "uploading"}
+                              disabled={form.state.isSubmitting}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 removeFile(file.name);
@@ -478,35 +464,12 @@ function RouteComponent() {
                           </CardAction>
                         </CardHeader>
                         <CardContent className="flex justify-center">
-                          {!!progressEntry?.previewUrl && (
-                            <img
-                              alt={`Preview of ${file.name}`}
-                              className="max-h-32 rounded object-contain"
-                              src={progressEntry.previewUrl}
-                            />
-                          )}
+                          <img
+                            alt={`Preview of ${file.name}`}
+                            className="max-h-32 rounded object-contain"
+                            src={URL.createObjectURL(file)}
+                          />
                         </CardContent>
-                        <CardFooter className="flex-col items-start">
-                          {!!progressEntry && (
-                            <>
-                              <Progress
-                                className="h-2 w-full"
-                                value={progressEntry.progress}
-                              />
-                              <p
-                                className={`mt-1 text-xs ${
-                                  progressEntry.error
-                                    ? "text-red-500"
-                                    : "text-gray-500 dark:text-gray-400"
-                                }`}
-                              >
-                                {statusDisplayMap[progressEntry.status]}
-                                {!!progressEntry.error &&
-                                  `: ${progressEntry.error}`}
-                              </p>
-                            </>
-                          )}
-                        </CardFooter>
                       </Card>
                     );
                   })}
@@ -535,9 +498,7 @@ function RouteComponent() {
             ...post,
             id: "0",
             views: 0,
-            imageObjectKeys: selectedFiles.map(
-              (file) => uploadProgress[file.name]?.previewUrl ?? ""
-            ),
+            imageObjectKeys: selectedFiles.map(URL.createObjectURL),
             createdAt: new Date(),
             terms: post.platforms
               .concat(post.tags, post.languages, [
