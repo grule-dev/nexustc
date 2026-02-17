@@ -8,6 +8,7 @@ import {
   StarIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import type { PremiumLinksDescriptor } from "@repo/shared/constants";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -15,7 +16,7 @@ import AutoScroll from "embla-carousel-auto-scroll";
 import { useState } from "react";
 import { toast } from "sonner";
 import { TermBadge } from "@/components/term-badge";
-import type { PostType, PremiumLinksDescriptor } from "@/lib/types";
+import type { PostType } from "@/lib/types";
 import { getBucketUrl } from "@/lib/utils";
 import { Markdown } from "../markdown";
 import { RatingDisplay } from "../ratings";
@@ -42,8 +43,8 @@ export type PostProps = Omit<
 
 export function PostPage({ post }: { post: PostProps }) {
   return (
-    <div className="relative grid grid-cols-4 gap-4">
-      <div className="col-span-3 flex flex-col gap-4">
+    <div className="relative grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="flex flex-col gap-4 md:col-span-3">
         <PostHero post={post} />
         <PostCarousel post={post} />
         <PostActionBar post={post} />
@@ -194,7 +195,7 @@ export function PostTagsSection({ post }: { post: PostProps }) {
 
         <div className="flex flex-col gap-4">
           {/* Categorized Tags */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             <TagCategory label="Plataformas" terms={groupedTerms.platform} />
             <TagCategory label="Idiomas" terms={groupedTerms.language} />
             <TagCategory label="Motor" terms={groupedTerms.engine} />
@@ -332,29 +333,13 @@ export function PostInfo({ post }: { post: PostProps }) {
   const hasContent = post.content !== "";
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Synopsis */}
-      {hasContent && (
+    hasContent && (
+      <div className="flex flex-col gap-6">
         <ContentCard icon={InformationCircleIcon} title="Sinopsis">
           <Markdown>{post.content}</Markdown>
         </ContentCard>
-      )}
-
-      {/* No content fallback */}
-      {!hasContent && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-muted/30 py-16">
-          <div className="rounded-full bg-muted p-4">
-            <HugeiconsIcon
-              className="size-8 text-muted-foreground"
-              icon={InformationCircleIcon}
-            />
-          </div>
-          <p className="text-muted-foreground">
-            No hay información adicional disponible
-          </p>
-        </div>
-      )}
-    </div>
+      </div>
+    )
   );
 }
 

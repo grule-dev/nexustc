@@ -10,14 +10,20 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { motion } from "motion/react";
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { AuthDialog, AuthDialogTrigger } from "./auth/auth-dialog";
+import { AuthDialog, AuthDialogContent } from "./auth/auth-dialog";
+import { useTheme } from "./theme-provider";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
@@ -151,45 +157,64 @@ function NavButtonItem({
 function ExtrasNavMenu({ isActive }: { isActive: boolean }) {
   const { data: auth } = authClient.useSession();
   const navigate = useNavigate();
+  const [openAuth, setOpenAuth] = useState(false);
+  const { setTheme } = useTheme();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            aria-current={isActive ? "page" : undefined}
-            className={navItemVariants({ active: isActive })}
-            type="button"
-          />
-        }
-      >
-        {isActive && (
-          <motion.span
-            className="absolute -top-2 h-px w-14 rounded-full bg-primary"
-            layoutId="navbar-indicator"
-          />
-        )}
-        <HugeiconsIcon className="size-6" icon={MoreHorizontalCircle01Icon} />
-        <span className="text-xs">Extras</span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="top" sideOffset={8}>
-        {auth?.session ? (
-          <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
-            <HugeiconsIcon icon={UserIcon} />
-            Perfil
-          </DropdownMenuItem>
-        ) : (
-          <AuthDialog>
-            <AuthDialogTrigger
-              nativeButton={false}
-              render={<DropdownMenuItem />}
-            >
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              aria-current={isActive ? "page" : undefined}
+              className={navItemVariants({ active: isActive })}
+              type="button"
+            />
+          }
+        >
+          {isActive && (
+            <motion.span
+              className="absolute -top-2 h-px w-14 rounded-full bg-primary"
+              layoutId="navbar-indicator"
+            />
+          )}
+          <HugeiconsIcon className="size-6" icon={MoreHorizontalCircle01Icon} />
+          <span className="text-xs">Extras</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="center" side="top" sideOffset={8}>
+          {auth?.session ? (
+            <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+              <HugeiconsIcon icon={UserIcon} />
+              Perfil
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={() => setOpenAuth(true)}>
               <HugeiconsIcon icon={UserIcon} />
               Login
-            </AuthDialogTrigger>
-          </AuthDialog>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Tema</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => setTheme("light")}>
+                  Claro
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                  Oscuro
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("system")}>
+                  Sistema
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AuthDialog onOpenChange={setOpenAuth} open={openAuth}>
+        <AuthDialogContent />
+      </AuthDialog>
+    </>
   );
 }

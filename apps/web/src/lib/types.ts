@@ -1,8 +1,6 @@
 import type { post, postRating, term } from "@repo/db/schema/app";
 import type { PremiumLinksDescriptor } from "@repo/shared/constants";
 
-export type { PremiumLinksDescriptor };
-
 export type TermType = typeof term.$inferSelect;
 
 export type PostType = Omit<
