@@ -43,7 +43,7 @@ export type PostProps = Omit<
 
 export function PostPage({ post }: { post: PostProps }) {
   return (
-    <div className="relative grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div className="relative grid grid-cols-1 gap-4 px-1 md:grid-cols-4">
       <div className="flex flex-col gap-4 md:col-span-3">
         <PostHero post={post} />
         <PostCarousel post={post} />
@@ -139,45 +139,46 @@ export function PostActionBar({ post }: { post: PostProps }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-4 rounded-3xl border bg-card p-4 md:justify-between">
-      <div className="grid grid-flow-col grid-rows-2 gap-3 md:grid-rows-1">
-        <LikeButton postId={post.id} />
-        <BookmarkButton postId={post.id} />
-        <Button
-          nativeButton={false}
-          render={<Link params={{ id: post.id }} to={"/post/reviews/$id"} />}
-          size="sm"
-          variant="outline"
-        >
-          <RatingDisplay
-            averageRating={post.averageRating ?? 0}
-            ratingCount={post.ratingCount}
-            variant="compact"
-          />
-        </Button>
-        <Tooltip>
-          <TooltipTrigger
-            onClick={handleShare}
-            render={
-              <Button size="sm" variant="outline">
-                <HugeiconsIcon className="size-4" icon={Share08Icon} />
-                Compartir
-              </Button>
-            }
-          />
-          <TooltipContent>Copiar enlace al portapapeles</TooltipContent>
-        </Tooltip>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="flex items-center gap-4 text-muted-foreground text-sm">
-        <MetaBadge icon={Calendar03Icon}>
-          {format(post.createdAt, "PP", {
-            locale: es,
-          })}
-        </MetaBadge>
-      </div>
-    </div>
+    <Card>
+      <CardContent className="flex flex-wrap items-center justify-center gap-4 md:justify-between">
+        <div className="grid grid-flow-col grid-rows-2 gap-3 md:grid-rows-1">
+          <LikeButton postId={post.id} />
+          <BookmarkButton postId={post.id} />
+          <Button
+            nativeButton={false}
+            render={<Link params={{ id: post.id }} to={"/post/reviews/$id"} />}
+            size="sm"
+            variant="outline"
+          >
+            <RatingDisplay
+              averageRating={post.averageRating ?? 0}
+              ratingCount={post.ratingCount}
+              variant="compact"
+            />
+          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              onClick={handleShare}
+              render={
+                <Button size="sm" variant="outline">
+                  <HugeiconsIcon className="size-4" icon={Share08Icon} />
+                  Compartir
+                </Button>
+              }
+            />
+            <TooltipContent>Copiar enlace al portapapeles</TooltipContent>
+          </Tooltip>
+        </div>
+        {/* Quick Stats */}
+        <div className="flex items-center gap-4 text-muted-foreground text-sm">
+          <MetaBadge icon={Calendar03Icon}>
+            {format(post.createdAt, "PP", {
+              locale: es,
+            })}
+          </MetaBadge>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -187,13 +188,15 @@ export function PostTagsSection({ post }: { post: PostProps }) {
 
   return (
     hasTags && (
-      <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
-        <h3 className="flex items-center gap-2 font-semibold text-lg">
-          <HugeiconsIcon className="size-5" icon={InformationCircleIcon} />
-          Información
-        </h3>
+      <Card>
+        <CardHeader>
+          <CardTitle className="inline-flex items-center gap-2 font-semibold text-lg">
+            <HugeiconsIcon className="size-5" icon={InformationCircleIcon} />
+            Información
+          </CardTitle>
+        </CardHeader>
 
-        <div className="flex flex-col gap-4">
+        <CardContent className="flex flex-col gap-4">
           {/* Categorized Tags */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             <TagCategory label="Plataformas" terms={groupedTerms.platform} />
@@ -214,8 +217,8 @@ export function PostTagsSection({ post }: { post: PostProps }) {
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     )
   );
 }
@@ -229,7 +232,7 @@ export function PostSidebarContent({ post }: { post: PostProps }) {
       {/* Creator Sidebar Card (if exists) */}
       {hasCreator && (
         <Comp
-          className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 to-transparent p-5"
+          className="flex flex-col gap-4 rounded-2xl border border-secondary bg-linear-to-br from-primary/5 to-transparent p-5"
           href={post.creatorLink}
           rel="noopener"
           target="_blank"
@@ -476,13 +479,15 @@ function ContentCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
-      <h3 className="flex items-center gap-2 font-semibold text-lg">
-        <HugeiconsIcon className="size-5" icon={icon} />
-        {title}
-      </h3>
-      <div>{children}</div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 font-semibold text-lg">
+          <HugeiconsIcon className="size-5" icon={icon} />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
   );
 }
 

@@ -48,6 +48,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             __html: themeInitScript(),
           }}
         />
+
+        <script
+          crossOrigin="anonymous"
+          src="https://tweakcn.com/live-preview.min.js"
+        />
       </head>
       <body>
         <ScriptOnce>{themeInitScript()}</ScriptOnce>

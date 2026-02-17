@@ -27,6 +27,7 @@ import { SignedOut } from "../auth/signed-out";
 import { ErrorField } from "../forms/error-field";
 import { RatingDisplay } from "../ratings/rating-display";
 import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import {
   InputGroup,
   InputGroupAddon,
@@ -136,12 +137,9 @@ export function CommentSection({ post }: { post: PostProps }) {
   const commentCount = commentsQuery.data.length;
 
   return (
-    <div
-      className="flex flex-col gap-6 rounded-3xl border bg-card p-4 md:p-6"
-      ref={ref}
-    >
+    <Card ref={ref}>
       {/* Header with icon and title */}
-      <div className="flex items-center justify-between gap-3">
+      <CardHeader className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
             <HugeiconsIcon
@@ -172,159 +170,164 @@ export function CommentSection({ post }: { post: PostProps }) {
             variant="compact"
           />
         </Button>
-      </div>
+      </CardHeader>
 
-      {/* Comment Form */}
-      <SignedIn>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-        >
-          <form.AppField name="content">
-            {(field) => (
-              <div className="flex flex-col gap-2">
-                <InputGroup>
-                  <InputGroupTextarea
-                    className="min-h-24 resize-none border-0 bg-background shadow-sm"
-                    id="content"
-                    onChange={(e) => field.setValue(e.target.value)}
-                    placeholder="Escribe tu comentario..."
-                    value={field.state.value}
-                  />
-                  <InputGroupAddon align="block-end" className="border-t-none">
-                    <EmojiPicker onSelect={insertToken} />
-                    <StickerPicker
-                      currentContent={currentContent}
-                      onSelect={insertToken}
+      <CardContent>
+        {/* Comment Form */}
+        <SignedIn>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+          >
+            <form.AppField name="content">
+              {(field) => (
+                <div className="flex flex-col gap-2">
+                  <InputGroup>
+                    <InputGroupTextarea
+                      className="min-h-24 resize-none border-0 bg-background shadow-sm"
+                      id="content"
+                      onChange={(e) => field.setValue(e.target.value)}
+                      placeholder="Escribe tu comentario..."
+                      value={field.state.value}
                     />
-                    <form.Subscribe
-                      selector={(state) => [
-                        state.canSubmit,
-                        state.isSubmitting,
-                      ]}
+                    <InputGroupAddon
+                      align="block-end"
+                      className="border-t-none"
                     >
-                      {([canSubmit, isSubmitting]) => (
-                        <InputGroupButton
-                          className="ml-auto"
-                          disabled={!canSubmit}
-                          loading={isSubmitting}
-                          size="sm"
-                          type="submit"
-                          variant="default"
-                        >
-                          <HugeiconsIcon className="size-4" icon={SentIcon} />
-                          Enviar
-                        </InputGroupButton>
-                      )}
-                    </form.Subscribe>
-                  </InputGroupAddon>
-                </InputGroup>
-                {field.state.meta.errors.length > 0 && (
-                  <Item variant="outline">
-                    <ItemMedia>
-                      <HugeiconsIcon
-                        className="size-5 text-destructive"
-                        icon={AlertCircleIcon}
+                      <EmojiPicker onSelect={insertToken} />
+                      <StickerPicker
+                        currentContent={currentContent}
+                        onSelect={insertToken}
                       />
-                    </ItemMedia>
-                    <ItemContent>
-                      <ErrorField field={field} />
-                    </ItemContent>
-                  </Item>
-                )}
-              </div>
-            )}
-          </form.AppField>
-        </form>
-      </SignedIn>
-
-      {/* Sign in prompt for logged out users */}
-      <SignedOut>
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-muted/30 p-6 text-center">
-          <p className="text-muted-foreground">¿Quieres dejar un comentario?</p>
-          <Link to="/auth">
-            <Button size="sm" variant="outline">
-              Iniciar sesión
-            </Button>
-          </Link>
-        </div>
-      </SignedOut>
-
-      {/* Comments List */}
-      <ScrollArea className="max-h-96">
-        <div className="flex flex-col gap-4">
-          {commentCount === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                <HugeiconsIcon
-                  className="size-6 text-muted-foreground"
-                  icon={Comment01Icon}
-                />
-              </div>
-              <p className="text-muted-foreground">
-                Aún no hay comentarios. ¡Sé el primero!
-              </p>
-            </div>
-          ) : (
-            commentsQuery.data
-              ?.filter(
-                (
-                  comment
-                  // little workaround to convince TS that author is not null
-                ): comment is typeof comment & {
-                  author: NonNullable<typeof comment.author>;
-                } => comment.author !== null
-              )
-              .map((comment) => (
-                <div
-                  className="group flex gap-4 rounded-2xl p-4 hover:bg-muted/30"
-                  key={comment.id}
-                >
-                  <Link params={{ id: comment.author.id }} to="/user/$id">
-                    <Avatar className="size-10 rounded-full ring-2 ring-background transition-transform group-hover:scale-105">
-                      <AvatarImage
-                        src={
-                          comment.author.image
-                            ? getBucketUrl(comment.author.image)
-                            : undefined
-                        }
-                      />
-                      <AvatarFallback
-                        className="rounded-full"
-                        facehashProps={defaultFacehashProps}
-                        name={comment.author.name}
-                      />
-                    </Avatar>
-                  </Link>
-                  <div className="flex min-w-0 flex-1 flex-col gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link params={{ id: comment.author.id }} to="/user/$id">
-                        <UserLabel
-                          className="font-semibold transition-colors hover:text-primary"
-                          user={comment.author}
+                      <form.Subscribe
+                        selector={(state) => [
+                          state.canSubmit,
+                          state.isSubmitting,
+                        ]}
+                      >
+                        {([canSubmit, isSubmitting]) => (
+                          <InputGroupButton
+                            className="ml-auto"
+                            disabled={!canSubmit}
+                            loading={isSubmitting}
+                            size="sm"
+                            type="submit"
+                            variant="default"
+                          >
+                            <HugeiconsIcon className="size-4" icon={SentIcon} />
+                            Enviar
+                          </InputGroupButton>
+                        )}
+                      </form.Subscribe>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  {field.state.meta.errors.length > 0 && (
+                    <Item variant="outline">
+                      <ItemMedia>
+                        <HugeiconsIcon
+                          className="size-5 text-destructive"
+                          icon={AlertCircleIcon}
                         />
-                      </Link>
-                      <span className="text-muted-foreground text-xs">•</span>
-                      <time className="text-muted-foreground text-xs">
-                        {format(comment.createdAt, "d MMM yyyy", {
-                          locale: es,
-                        })}
-                      </time>
-                    </div>
-                    <CommentContent
-                      content={comment.content}
-                      emojiMap={emojiMap}
-                      stickerMap={stickerMap}
-                    />
-                  </div>
+                      </ItemMedia>
+                      <ItemContent>
+                        <ErrorField field={field} />
+                      </ItemContent>
+                    </Item>
+                  )}
                 </div>
-              ))
-          )}
-        </div>
-      </ScrollArea>
-    </div>
+              )}
+            </form.AppField>
+          </form>
+        </SignedIn>
+        {/* Sign in prompt for logged out users */}
+        <SignedOut>
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-muted/30 p-6 text-center">
+            <p className="text-muted-foreground">
+              ¿Quieres dejar un comentario?
+            </p>
+            <Link to="/auth">
+              <Button size="sm" variant="outline">
+                Iniciar sesión
+              </Button>
+            </Link>
+          </div>
+        </SignedOut>
+        {/* Comments List */}
+        <ScrollArea className="max-h-96">
+          <div className="flex flex-col gap-4">
+            {commentCount === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                  <HugeiconsIcon
+                    className="size-6 text-muted-foreground"
+                    icon={Comment01Icon}
+                  />
+                </div>
+                <p className="text-muted-foreground">
+                  Aún no hay comentarios. ¡Sé el primero!
+                </p>
+              </div>
+            ) : (
+              commentsQuery.data
+                ?.filter(
+                  (
+                    comment
+                    // little workaround to convince TS that author is not null
+                  ): comment is typeof comment & {
+                    author: NonNullable<typeof comment.author>;
+                  } => comment.author !== null
+                )
+                .map((comment) => (
+                  <div
+                    className="group flex gap-4 rounded-2xl p-4 hover:bg-muted/30"
+                    key={comment.id}
+                  >
+                    <Link params={{ id: comment.author.id }} to="/user/$id">
+                      <Avatar className="size-10 rounded-full ring-2 ring-background transition-transform group-hover:scale-105">
+                        <AvatarImage
+                          src={
+                            comment.author.image
+                              ? getBucketUrl(comment.author.image)
+                              : undefined
+                          }
+                        />
+                        <AvatarFallback
+                          className="rounded-full"
+                          facehashProps={defaultFacehashProps}
+                          name={comment.author.name}
+                        />
+                      </Avatar>
+                    </Link>
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link params={{ id: comment.author.id }} to="/user/$id">
+                          <UserLabel
+                            className="font-semibold transition-colors hover:text-primary"
+                            user={comment.author}
+                          />
+                        </Link>
+                        <span className="text-muted-foreground text-xs">•</span>
+                        <time className="text-muted-foreground text-xs">
+                          {format(comment.createdAt, "d MMM yyyy", {
+                            locale: es,
+                          })}
+                        </time>
+                      </div>
+                      <CommentContent
+                        content={comment.content}
+                        emojiMap={emojiMap}
+                        stickerMap={stickerMap}
+                      />
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }
