@@ -12,7 +12,13 @@ import {
   termPostRelation,
 } from "@repo/db/schema/app";
 import type { TAXONOMIES } from "@repo/shared/constants";
-import { PATRON_TIERS, type PatronTier } from "@repo/shared/constants";
+import {
+  canAccessPremiumLinks,
+  getRequiredTierLabel,
+  PATRON_TIERS,
+  type PatronTier,
+  type PremiumLinksDescriptor,
+} from "@repo/shared/constants";
 import { parseTokens, validateTokenLimit } from "@repo/shared/token-parser";
 import z from "zod";
 import {
@@ -517,6 +523,7 @@ export default {
           creatorLink: post.creatorLink,
           createdAt: post.createdAt,
           views: post.views,
+          rawPremiumLinks: post.premiumLinks,
 
           favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
           likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
@@ -560,7 +567,40 @@ export default {
         logger?.error(error);
       }
 
-      return result[0];
+      const { rawPremiumLinks, ...postData } = result[0]!;
+
+      let premiumLinksAccess: PremiumLinksDescriptor;
+
+      if (rawPremiumLinks) {
+        const statusTerm = postData.terms.find((t) => t.taxonomy === "status");
+        const statusName = statusTerm?.name;
+
+        let userTier: PatronTier = "none";
+        if (context.session?.user) {
+          const patronRecord = await db.query.patron.findFirst({
+            where: eq(patron.userId, context.session.user.id),
+            columns: { tier: true, isActivePatron: true },
+          });
+          if (patronRecord?.isActivePatron) {
+            userTier = patronRecord.tier;
+          }
+        }
+
+        if (canAccessPremiumLinks(userTier, statusName)) {
+          premiumLinksAccess = { status: "granted", content: rawPremiumLinks };
+        } else if (userTier === "none") {
+          premiumLinksAccess = { status: "denied_need_patron" };
+        } else {
+          premiumLinksAccess = {
+            status: "denied_need_upgrade",
+            requiredTierLabel: getRequiredTierLabel(userTier, statusName),
+          };
+        }
+      } else {
+        premiumLinksAccess = { status: "no_premium_links" };
+      }
+
+      return { ...postData, premiumLinksAccess };
     }),
 
   getLikes: publicProcedure

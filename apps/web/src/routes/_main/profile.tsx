@@ -56,7 +56,7 @@ function RouteComponent() {
   }
 
   if (!auth.data?.user) {
-    return <Navigate replace={true} to="/auth" />;
+    return <Navigate replace={true} to="/" />;
   }
 
   const session = auth.data;
@@ -389,7 +389,7 @@ function PatreonStatusSection() {
                   <li>Badge: {status.benefits.badge}</li>
                 )}
                 {status.benefits.adFree && <li>Experiencia sin anuncios</li>}
-                {status.benefits.premiumLinks && (
+                {status.benefits.premiumLinks.type !== "none" && (
                   <li>Acceso a enlaces premium</li>
                 )}
               </ul>

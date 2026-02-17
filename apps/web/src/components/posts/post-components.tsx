@@ -5,6 +5,7 @@ import {
   InformationCircleIcon,
   Link01Icon,
   Share08Icon,
+  StarIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
@@ -14,7 +15,7 @@ import AutoScroll from "embla-carousel-auto-scroll";
 import { useState } from "react";
 import { toast } from "sonner";
 import { TermBadge } from "@/components/term-badge";
-import type { PostType } from "@/lib/types";
+import type { PostType, PremiumLinksDescriptor } from "@/lib/types";
 import { getBucketUrl } from "@/lib/utils";
 import { Markdown } from "../markdown";
 import { RatingDisplay } from "../ratings";
@@ -360,21 +361,36 @@ export function PostInfo({ post }: { post: PostProps }) {
 export function PostContent({ post }: { post: PostProps }) {
   const hasDownloadLinks = !!post.adsLinks;
   const hasChangelog = !!post.changelog;
+  const hasPremium = post.premiumLinksAccess.status !== "no_premium_links";
 
-  if (!(hasDownloadLinks || hasChangelog)) {
+  if (!(hasDownloadLinks || hasChangelog || hasPremium)) {
     return null;
   }
 
+  const defaultTab =
+    hasPremium && post.premiumLinksAccess.status === "granted"
+      ? "premium"
+      : hasDownloadLinks
+        ? "downloads"
+        : hasChangelog
+          ? "changelog"
+          : "downloads";
+
   return (
     <div className="flex flex-col gap-8">
-      {/* Left Column - Main Content */}
       <div className="flex flex-col gap-6 lg:col-span-2">
-        <Tabs className="w-full" defaultValue="info">
+        <Tabs className="w-full" defaultValue={defaultTab}>
           <TabsList className="w-full justify-start">
             {hasDownloadLinks && (
               <TabsTrigger className="gap-2" value="downloads">
                 <HugeiconsIcon className="size-4" icon={Download04Icon} />
                 Descargas
+              </TabsTrigger>
+            )}
+            {hasPremium && (
+              <TabsTrigger className="gap-2" value="premium">
+                <HugeiconsIcon className="size-4" icon={StarIcon} />
+                Premium
               </TabsTrigger>
             )}
             {hasChangelog && (
@@ -385,7 +401,6 @@ export function PostContent({ post }: { post: PostProps }) {
             )}
           </TabsList>
 
-          {/* Downloads Tab */}
           {hasDownloadLinks && (
             <TabsContent value="downloads">
               <ContentCard icon={Link01Icon} title="Enlaces de Descarga">
@@ -394,7 +409,12 @@ export function PostContent({ post }: { post: PostProps }) {
             </TabsContent>
           )}
 
-          {/* Changelog Tab */}
+          {hasPremium && (
+            <TabsContent value="premium">
+              <PremiumLinksContent descriptor={post.premiumLinksAccess} />
+            </TabsContent>
+          )}
+
           {hasChangelog && (
             <TabsContent className="mt-6" value="changelog">
               <ContentCard icon={Calendar03Icon} title="Changelog">
@@ -404,6 +424,40 @@ export function PostContent({ post }: { post: PostProps }) {
           )}
         </Tabs>
       </div>
+    </div>
+  );
+}
+
+function PremiumLinksContent({
+  descriptor,
+}: {
+  descriptor: PremiumLinksDescriptor;
+}) {
+  if (descriptor.status === "no_premium_links") {
+    return null;
+  }
+
+  if (descriptor.status === "granted") {
+    return (
+      <ContentCard icon={StarIcon} title="Enlaces Premium">
+        <Markdown>{descriptor.content}</Markdown>
+      </ContentCard>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-muted/30 py-16">
+      <div className="rounded-full bg-muted p-4">
+        <HugeiconsIcon
+          className="size-8 text-muted-foreground"
+          icon={StarIcon}
+        />
+      </div>
+      <p className="text-center text-muted-foreground">
+        {descriptor.status === "denied_need_patron"
+          ? "Hazte patrocinador para acceder a los enlaces premium"
+          : `Necesitas ${descriptor.requiredTierLabel} o superior para acceder a estos enlaces`}
+      </p>
     </div>
   );
 }

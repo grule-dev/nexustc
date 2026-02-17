@@ -537,6 +537,7 @@ function RouteComponent() {
               ])
               .map((term) => data.terms.find((t) => t.id === term))
               .filter((term) => term !== undefined),
+            premiumLinksAccess: { status: "no_premium_links" as const },
           }}
           setVisible={setPreviewVisible}
           visible={previewVisible}
