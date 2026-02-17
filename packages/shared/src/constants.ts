@@ -40,6 +40,24 @@ export const DOCUMENT_STATUS_LABELS: Record<
 
 export const RATING_REVIEW_MAX_LENGTH = 512;
 
+export const PREMIUM_STATUS_CATEGORIES = {
+  completed: ["Finalizado", "Abandonado"],
+  ongoing: ["En Progreso", "En Emision", "En Emisión"],
+} as const;
+
+type PremiumStatusCategory = keyof typeof PREMIUM_STATUS_CATEGORIES;
+
+export type PremiumLinksAccess =
+  | { type: "none" }
+  | { type: "category"; categories: PremiumStatusCategory[] }
+  | { type: "all" };
+
+export type PremiumLinksDescriptor =
+  | { status: "no_premium_links" }
+  | { status: "granted"; content: string }
+  | { status: "denied_need_patron" }
+  | { status: "denied_need_upgrade"; requiredTierLabel: string };
+
 export const PATRON_TIER_KEYS = [
   "none",
   "level1",
@@ -57,47 +75,98 @@ export const PATRON_TIERS: Record<
     level: number;
     badge: string | null;
     adFree: boolean;
-    premiumLinks: boolean;
+    premiumLinks: PremiumLinksAccess;
   }
 > = {
-  none: { level: 0, badge: null, adFree: false, premiumLinks: false },
+  none: {
+    level: 0,
+    badge: null,
+    adFree: false,
+    premiumLinks: { type: "none" },
+  },
   level1: {
     level: 1,
     badge: "LvL 1",
     adFree: false,
-    premiumLinks: false,
+    premiumLinks: { type: "category", categories: ["completed"] },
   },
   level3: {
     level: 2,
     badge: "LvL 3",
     adFree: true,
-    premiumLinks: false,
+    premiumLinks: { type: "category", categories: ["ongoing"] },
   },
   level5: {
     level: 3,
     badge: "LvL 5",
     adFree: true,
-    premiumLinks: true,
+    premiumLinks: { type: "all" },
   },
   level8: {
     level: 3,
     badge: "LvL 8",
     adFree: true,
-    premiumLinks: true,
+    premiumLinks: { type: "all" },
   },
   level12: {
     level: 3,
     badge: "LvL 12",
     adFree: true,
-    premiumLinks: true,
+    premiumLinks: { type: "all" },
   },
   level69: {
     level: 3,
     badge: "LvL 69",
     adFree: true,
-    premiumLinks: true,
+    premiumLinks: { type: "all" },
   },
 } as const;
+
+export function canAccessPremiumLinks(
+  tier: PatronTier,
+  postStatusName: string | undefined
+): boolean {
+  const access = PATRON_TIERS[tier].premiumLinks;
+  if (access.type === "none") {
+    return false;
+  }
+  if (access.type === "all") {
+    return true;
+  }
+  if (!postStatusName) {
+    return false;
+  }
+  return access.categories.some((cat) =>
+    (PREMIUM_STATUS_CATEGORIES[cat] as readonly string[]).includes(
+      postStatusName
+    )
+  );
+}
+
+export function getRequiredTierLabel(
+  userTier: PatronTier,
+  postStatusName: string | undefined
+): string {
+  if (!postStatusName) {
+    return "LvL 5";
+  }
+
+  const userLevel = PATRON_TIERS[userTier].level;
+  const isCompleted = (
+    PREMIUM_STATUS_CATEGORIES.completed as readonly string[]
+  ).includes(postStatusName);
+  const isOngoing = (
+    PREMIUM_STATUS_CATEGORIES.ongoing as readonly string[]
+  ).includes(postStatusName);
+
+  if (isCompleted) {
+    return userLevel >= 1 ? "LvL 5" : "LvL 1";
+  }
+  if (isOngoing) {
+    return userLevel >= 2 ? "LvL 5" : "LvL 3";
+  }
+  return "LvL 5";
+}
 
 export type PatronTier = keyof typeof PATRON_TIERS;
 

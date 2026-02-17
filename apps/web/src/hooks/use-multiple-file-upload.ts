@@ -1,15 +1,9 @@
-import { useDragAndDrop } from "@formkit/drag-and-drop/react";
 import type { ChangeEvent } from "react";
+import { useState } from "react";
 import { convertImage } from "@/lib/utils";
 
 export function useMultipleFileUpload() {
-  const [parentRef, selectedFiles, setSelectedFiles] = useDragAndDrop<
-    HTMLDivElement,
-    File
-  >([], {
-    draggingClass: "border-secondary",
-    dropZoneClass: "border-secondary",
-  });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -46,8 +40,8 @@ export function useMultipleFileUpload() {
   };
 
   return {
-    parentRef,
     selectedFiles,
+    setSelectedFiles,
     handleFileChange,
     removeFile,
   };

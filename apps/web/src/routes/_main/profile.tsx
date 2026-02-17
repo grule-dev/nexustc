@@ -56,13 +56,13 @@ function RouteComponent() {
   }
 
   if (!auth.data?.user) {
-    return <Navigate replace={true} to="/auth" />;
+    return <Navigate replace={true} to="/" />;
   }
 
   const session = auth.data;
 
   return (
-    <div className="flex max-w-4xl flex-col gap-4">
+    <div className="flex w-full max-w-4xl flex-col gap-4">
       <Card className="col-span-1 col-start-1 w-full md:col-span-3 md:col-start-2">
         <CardHeader>
           <CardTitle className="font-bold text-2xl">Perfil</CardTitle>
@@ -389,7 +389,7 @@ function PatreonStatusSection() {
                   <li>Badge: {status.benefits.badge}</li>
                 )}
                 {status.benefits.adFree && <li>Experiencia sin anuncios</li>}
-                {status.benefits.premiumLinks && (
+                {status.benefits.premiumLinks.type !== "none" && (
                   <li>Acceso a enlaces premium</li>
                 )}
               </ul>

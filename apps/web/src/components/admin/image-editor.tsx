@@ -1,8 +1,8 @@
-import { useDragAndDrop } from "@formkit/drag-and-drop/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { type ChangeEvent, useImperativeHandle, useRef } from "react";
+import { type ChangeEvent, useImperativeHandle, useRef, useState } from "react";
 import { toast } from "sonner";
+import { SortableGrid } from "@/components/admin/sortable-grid";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,21 +33,23 @@ type ImageEditorProps = {
   ref: React.Ref<ImageEditorRef>;
 };
 
+function getItemId(item: ImageItem): string {
+  return item.type === "existing" ? item.key : item.previewUrl;
+}
+
+function getImageSrc(item: ImageItem): string {
+  if (item.type === "existing") {
+    return getBucketUrl(item.key);
+  }
+  return item.previewUrl;
+}
+
 export function ImageEditor({ initialImageKeys, ref }: ImageEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const initialItems: ImageItem[] = initialImageKeys.map((key) => ({
-    type: "existing",
-    key,
-  }));
-
-  const [parentRef, items, setItems] = useDragAndDrop<
-    HTMLDivElement,
-    ImageItem
-  >(initialItems, {
-    draggingClass: "border-secondary",
-    dropZoneClass: "border-secondary",
-  });
+  const [items, setItems] = useState<ImageItem[]>(() =>
+    initialImageKeys.map((key) => ({ type: "existing", key }))
+  );
 
   useImperativeHandle(ref, () => ({
     getPayload: () => {
@@ -113,58 +115,59 @@ export function ImageEditor({ initialImageKeys, ref }: ImageEditorProps) {
     });
   };
 
-  const getImageSrc = (item: ImageItem): string => {
-    if (item.type === "existing") {
-      return getBucketUrl(item.key);
-    }
-    return item.previewUrl;
-  };
-
   return (
     <section className="col-span-2 space-y-4">
       <Label>Imágenes</Label>
 
       {items.length > 0 && (
-        <div
+        <SortableGrid
           className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"
-          ref={parentRef}
+          getItemId={getItemId}
+          items={items}
+          setItems={setItems}
         >
-          {items.map((item, index) => {
-            const itemKey =
-              item.type === "existing" ? item.key : item.previewUrl;
-            return (
-              <Card className="cursor-grab" data-label={itemKey} key={itemKey}>
-                <CardHeader>
-                  <CardTitle className="text-wrap text-sm">
-                    {item.type === "existing"
-                      ? `Imagen ${index + 1}`
-                      : item.file.name}
-                  </CardTitle>
-                  <CardAction>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeItem(index);
-                      }}
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <HugeiconsIcon icon={Cancel01Icon} />
-                    </Button>
-                  </CardAction>
-                </CardHeader>
-                <CardContent className="flex justify-center">
-                  <img
-                    alt={`Imagen ${index + 1}`}
-                    className="max-h-32 rounded object-contain"
-                    src={getImageSrc(item)}
-                  />
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+          {(
+            item,
+            index,
+            { ref: sortableRef, isDragging, isSelected, onSelect }
+          ) => (
+            <Card
+              className={`cursor-grab ${isDragging ? "border-secondary" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}
+              data-label={getItemId(item)}
+              key={getItemId(item)}
+              onClick={onSelect}
+              ref={sortableRef as React.Ref<HTMLDivElement>}
+            >
+              <CardHeader>
+                <CardTitle className="text-wrap text-sm">
+                  {item.type === "existing"
+                    ? `Imagen ${index + 1}`
+                    : item.file.name}
+                </CardTitle>
+                <CardAction>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeItem(index);
+                    }}
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} />
+                  </Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <img
+                  alt={`Imagen ${index + 1}`}
+                  className="max-h-32 rounded object-contain"
+                  src={getImageSrc(item)}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </SortableGrid>
       )}
 
       {items.length === 0 && (

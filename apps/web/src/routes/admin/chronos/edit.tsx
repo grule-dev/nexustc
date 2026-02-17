@@ -5,6 +5,7 @@ import { createFileRoute, useBlocker } from "@tanstack/react-router";
 import MDEditor from "@uiw/react-md-editor";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { SortableGrid } from "@/components/admin/sortable-grid";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -216,21 +217,19 @@ function RouteComponent() {
       await Promise.all(
         presignedUrls.map((url, index) => {
           const file = carousel.selectedFiles[index];
-          carousel.setUploadProgress((prev) => ({
-            ...prev,
-            [file.name]: { ...prev[file.name], status: "uploading" },
-          }));
 
-          return uploadBlobWithProgress(file, url.presignedUrl, (progress) => {
-            carousel.setUploadProgress((prev) => ({
-              ...prev,
-              [file.name]: { ...prev[file.name], progress },
-            }));
-          }).then(() => {
-            carousel.setUploadProgress((prev) => ({
-              ...prev,
-              [file.name]: { ...prev[file.name], status: "uploaded" },
-            }));
+          return fetch(url.presignedUrl, {
+            method: "PUT",
+            body: file,
+            headers: {
+              "Content-Type": file.type ?? "application/octet-stream",
+            },
+          }).then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                `Error al subir imagen ${file.name}: ${response.statusText}`
+              );
+            }
           });
         })
       );
@@ -339,7 +338,7 @@ function RouteComponent() {
       setStickyImagePreview(null);
       setHeaderImageFile(null);
       setHeaderImagePreview(null);
-      carousel.selectedFiles.splice(0, carousel.selectedFiles.length);
+      carousel.setSelectedFiles([]);
 
       await queryClient.invalidateQueries({
         predicate: (query) => {
@@ -377,7 +376,7 @@ function RouteComponent() {
     setStickyImagePreview(null);
     setHeaderImageFile(null);
     setHeaderImagePreview(null);
-    carousel.selectedFiles.splice(0, carousel.selectedFiles.length);
+    carousel.setSelectedFiles([]);
   };
 
   const isUploading =
@@ -522,42 +521,49 @@ function RouteComponent() {
         {carousel.selectedFiles.length > 0 && (
           <div>
             <h3 className="mb-2 font-medium text-sm">Nuevas imágenes</h3>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {carousel.selectedFiles.map((file) => {
-                const progress = carousel.uploadProgress[file.name];
-                return (
-                  <div className="relative" key={file.name}>
-                    <img
-                      alt={file.name}
-                      className="aspect-video w-full rounded-md border object-cover"
-                      src={progress?.previewUrl}
-                    />
-                    {progress?.status === "uploading" && (
-                      <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50">
-                        <span className="text-sm text-white">
-                          {progress.progress}%
-                        </span>
-                      </div>
-                    )}
-                    <Button
-                      className="absolute top-2 right-2"
-                      onClick={() => carousel.removeFile(file.name)}
-                      size="sm"
-                      variant="destructive"
-                    >
-                      ×
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
+            <SortableGrid
+              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
+              getItemId={(file) => file.name}
+              items={carousel.selectedFiles}
+              setItems={carousel.setSelectedFiles}
+            >
+              {(file, _index, { ref, isDragging, isSelected, onSelect }) => (
+                <div
+                  className={`relative ${isDragging ? "border-secondary" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}
+                  key={file.name}
+                  onClick={onSelect}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      onSelect();
+                    }
+                  }}
+                  ref={ref as React.Ref<HTMLDivElement>}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <img
+                    alt={file.name}
+                    className="aspect-video w-full rounded-md border object-cover"
+                    src={URL.createObjectURL(file)}
+                  />
+                  <Button
+                    className="absolute top-2 right-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      carousel.removeFile(file.name);
+                    }}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    ×
+                  </Button>
+                </div>
+              )}
+            </SortableGrid>
           </div>
         )}
 
-        <div
-          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors hover:border-secondary"
-          ref={carousel.parentRef}
-        >
+        <div className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors hover:border-secondary">
           <HugeiconsIcon
             className="size-8 text-muted-foreground"
             icon={Upload01Icon}

@@ -5,6 +5,7 @@ import { comicCreateSchema } from "@repo/shared/schemas";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SortableGrid } from "@/components/admin/sortable-grid";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,18 +26,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
 import { orpcClient } from "@/lib/orpc";
-
-const statusDisplayMap = {
-  queued: "En cola",
-  uploading: "Subiendo...",
-  uploaded: "Subido",
-  error: "Error",
-} as const;
 
 export const Route = createFileRoute("/admin/comics/create")({
   component: RouteComponent,
@@ -45,13 +38,8 @@ export const Route = createFileRoute("/admin/comics/create")({
 
 function RouteComponent() {
   const data = Route.useLoaderData();
-  const {
-    parentRef,
-    selectedFiles,
-    uploadProgress,
-    handleFileChange,
-    removeFile,
-  } = useMultipleFileUpload();
+  const { selectedFiles, setSelectedFiles, handleFileChange, removeFile } =
+    useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
   const [tagsContent, setTagsContent] = useState("");
@@ -261,69 +249,55 @@ function RouteComponent() {
                 <h3 className="font-semibold text-md">
                   Archivos seleccionados:
                 </h3>
-                <div
+                <SortableGrid
                   className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"
-                  ref={parentRef}
+                  getItemId={(file) => file.name}
+                  items={selectedFiles}
+                  setItems={setSelectedFiles}
                 >
-                  {selectedFiles.map((file) => {
-                    const progressEntry = uploadProgress[file.name];
-                    return (
-                      <Card className="cursor-grab" key={file.name}>
-                        <CardHeader>
-                          <CardTitle className="text-wrap text-sm">
-                            {file.name}
-                          </CardTitle>
-                          <CardDescription>
-                            {(file.size / 1024).toFixed(2)} KB
-                          </CardDescription>
-                          <CardAction>
-                            <Button
-                              disabled={progressEntry?.status === "uploading"}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFile(file.name);
-                              }}
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <HugeiconsIcon icon={Cancel01Icon} />
-                            </Button>
-                          </CardAction>
-                        </CardHeader>
-                        <CardContent className="flex justify-center">
-                          {!!progressEntry?.previewUrl && (
-                            <img
-                              alt={`Preview of ${file.name}`}
-                              className="max-h-32 rounded object-contain"
-                              src={progressEntry.previewUrl}
-                            />
-                          )}
-                        </CardContent>
-                        <CardFooter className="flex-col items-start">
-                          {!!progressEntry && (
-                            <>
-                              <Progress
-                                className="h-2 w-full"
-                                value={progressEntry.progress}
-                              />
-                              <p
-                                className={`mt-1 text-xs ${
-                                  progressEntry.error
-                                    ? "text-red-500"
-                                    : "text-gray-500 dark:text-gray-400"
-                                }`}
-                              >
-                                {statusDisplayMap[progressEntry.status]}
-                                {!!progressEntry.error &&
-                                  `: ${progressEntry.error}`}
-                              </p>
-                            </>
-                          )}
-                        </CardFooter>
-                      </Card>
-                    );
-                  })}
-                </div>
+                  {(
+                    file,
+                    _index,
+                    { ref, isDragging, isSelected, onSelect }
+                  ) => (
+                    <Card
+                      className={`cursor-grab ${isDragging ? "border-secondary" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}
+                      data-label={file.name}
+                      key={file.name}
+                      onClick={onSelect}
+                      ref={ref as React.Ref<HTMLDivElement>}
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-wrap text-sm">
+                          {file.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {(file.size / 1024).toFixed(2)} KB
+                        </CardDescription>
+                        <CardAction>
+                          <Button
+                            disabled={form.state.isSubmitting}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(file.name);
+                            }}
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <HugeiconsIcon icon={Cancel01Icon} />
+                          </Button>
+                        </CardAction>
+                      </CardHeader>
+                      <CardContent className="flex justify-center">
+                        <img
+                          alt={`Preview of ${file.name}`}
+                          className="max-h-32 rounded object-contain"
+                          src={URL.createObjectURL(file)}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </SortableGrid>
               </div>
             )}
           </section>

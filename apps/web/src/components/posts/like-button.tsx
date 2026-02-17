@@ -1,7 +1,7 @@
 import { FavouriteIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useDebounceEffect } from "@/hooks/use-debounce-effect";
@@ -40,11 +40,6 @@ function LikeButtonUI({
 export function LikeButton({ postId }: { postId: string }) {
   const { data: auth } = authClient.useSession();
   const [cooldown, setCooldown] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Reset cooldown after 2 seconds
   useDebounceEffect(
@@ -123,17 +118,15 @@ export function LikeButton({ postId }: { postId: string }) {
     })
   );
 
-  if (!mounted) {
-    return null;
-  }
-
   // Unauthenticated state - static disabled button
   if (!auth) {
     return (
       <Tooltip>
-        <TooltipTrigger>
-          <LikeButtonUI isDisabled={true} isLiked={false} isLoading={false} />
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <LikeButtonUI isDisabled={true} isLiked={false} isLoading={false} />
+          }
+        />
         <TooltipContent>Inicia sesión para dar me gusta</TooltipContent>
       </Tooltip>
     );

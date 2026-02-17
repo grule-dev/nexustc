@@ -1,5 +1,6 @@
 import { ConfirmDialogProvider } from "@omit/react-confirm-dialog";
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import { formDevtoolsPlugin } from "@tanstack/react-form-devtools";
 import {
   createRootRoute,
   HeadContent,
@@ -47,6 +48,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             __html: themeInitScript(),
           }}
         />
+
+        <script
+          crossOrigin="anonymous"
+          src="https://tweakcn.com/live-preview.min.js"
+        />
       </head>
       <body>
         <ScriptOnce>{themeInitScript()}</ScriptOnce>
@@ -78,6 +84,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             position: "top-right",
           }}
           plugins={[
+            formDevtoolsPlugin(),
             {
               name: "Tanstack Router",
               render: <TanStackRouterDevtoolsPanel />,

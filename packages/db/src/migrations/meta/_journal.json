@@ -92,6 +92,13 @@
       "when": 1771001588761,
       "tag": "0012_old_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1771353174205,
+      "tag": "0013_last_sentinel",
+      "breakpoints": true
     }
   ]
 }

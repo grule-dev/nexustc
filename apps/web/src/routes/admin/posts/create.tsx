@@ -9,6 +9,7 @@ import type React from "react";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
+import { SortableGrid } from "@/components/admin/sortable-grid";
 import { Markdown } from "@/components/markdown";
 import type { PostProps } from "@/components/posts/post-components";
 import { PostPage } from "@/components/posts/post-components";
@@ -45,7 +46,7 @@ export const Route = createFileRoute("/admin/posts/create")({
 
 function RouteComponent() {
   const data = Route.useLoaderData();
-  const { parentRef, selectedFiles, handleFileChange, removeFile } =
+  const { selectedFiles, setSelectedFiles, handleFileChange, removeFile } =
     useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
@@ -66,7 +67,8 @@ function RouteComponent() {
       engine: "",
       graphics: "",
       content: "",
-      authorContent: "",
+      creatorName: "",
+      creatorLink: "",
       adsLinks: "",
       premiumLinks: "",
       changelog: "",
@@ -170,13 +172,13 @@ function RouteComponent() {
       }
 
       const values = {
-        authorContent: form.getFieldValue("authorContent"),
+        creatorName: form.getFieldValue("creatorName"),
         content: form.getFieldValue("content"),
         adsLinks: form.getFieldValue("adsLinks"),
         tags: form.getFieldValue("tags"),
       };
 
-      form.setFieldValue("authorContent", creatorBlock ?? values.authorContent);
+      form.setFieldValue("creatorName", creatorBlock ?? values.creatorName);
       form.setFieldValue("content", lore ?? values.content);
       form.setFieldValue("adsLinks", linksBlock ?? values.adsLinks);
       form.setFieldValue("tags", tagIds.length > 0 ? tagIds : values.tags);
@@ -388,21 +390,41 @@ function RouteComponent() {
             )}
           </form.AppField>
 
-          <section className="col-span-2">
-            <form.AppField name="authorContent">
-              {(field) => (
-                <field.TextareaField
-                  className="w-full"
-                  label="Autor"
-                  value={field.state.value}
-                />
-              )}
-            </form.AppField>
+          <form.AppField name="creatorName">
+            {(field) => (
+              <field.TextField
+                className="w-full"
+                label="Nombre del Creador"
+                value={field.state.value}
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="creatorLink">
+            {(field) => (
+              <field.TextField
+                className="w-full"
+                label="Link del Creador"
+                value={field.state.value}
+              />
+            )}
+          </form.AppField>
+
+          <section className="col-span-2 space-y-4">
             <form.AppField name="content">
               {(field) => (
                 <field.TextareaField
                   className="w-full"
                   label="Sinopsis"
+                  value={field.state.value}
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="changelog">
+              {(field) => (
+                <field.TextareaField
+                  className="w-full"
+                  label="Cambios"
                   value={field.state.value}
                 />
               )}
@@ -431,49 +453,55 @@ function RouteComponent() {
                 <h3 className="font-semibold text-md">
                   Archivos seleccionados:
                 </h3>
-                <div
+                <SortableGrid
                   className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"
-                  ref={parentRef}
+                  getItemId={(file) => file.name}
+                  items={selectedFiles}
+                  setItems={setSelectedFiles}
                 >
-                  {selectedFiles.map((file) => {
-                    return (
-                      <Card
-                        className="cursor-grab"
-                        data-label={file.name}
-                        key={file.name}
-                      >
-                        <CardHeader>
-                          <CardTitle className="text-wrap text-sm">
-                            {file.name}
-                          </CardTitle>
-                          <CardDescription>
-                            {(file.size / 1024).toFixed(2)} KB
-                          </CardDescription>
-                          <CardAction>
-                            <Button
-                              disabled={form.state.isSubmitting}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFile(file.name);
-                              }}
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <HugeiconsIcon icon={Cancel01Icon} />
-                            </Button>
-                          </CardAction>
-                        </CardHeader>
-                        <CardContent className="flex justify-center">
-                          <img
-                            alt={`Preview of ${file.name}`}
-                            className="max-h-32 rounded object-contain"
-                            src={URL.createObjectURL(file)}
-                          />
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+                  {(
+                    file,
+                    _index,
+                    { ref, isDragging, isSelected, onSelect }
+                  ) => (
+                    <Card
+                      className={`cursor-grab ${isDragging ? "border-secondary" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}
+                      data-label={file.name}
+                      key={file.name}
+                      onClick={onSelect}
+                      ref={ref as React.Ref<HTMLDivElement>}
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-wrap text-sm">
+                          {file.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {(file.size / 1024).toFixed(2)} KB
+                        </CardDescription>
+                        <CardAction>
+                          <Button
+                            disabled={form.state.isSubmitting}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(file.name);
+                            }}
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <HugeiconsIcon icon={Cancel01Icon} />
+                          </Button>
+                        </CardAction>
+                      </CardHeader>
+                      <CardContent className="flex justify-center">
+                        <img
+                          alt={`Preview of ${file.name}`}
+                          className="max-h-32 rounded object-contain"
+                          src={URL.createObjectURL(file)}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </SortableGrid>
               </div>
             )}
           </section>
@@ -509,6 +537,7 @@ function RouteComponent() {
               ])
               .map((term) => data.terms.find((t) => t.id === term))
               .filter((term) => term !== undefined),
+            premiumLinksAccess: { status: "no_premium_links" as const },
           }}
           setVisible={setPreviewVisible}
           visible={previewVisible}

@@ -55,14 +55,15 @@ export const postCreateSchema = z.object({
   ...contentBaseFields,
   type: z.literal("post"),
   version: z.string().trim().max(255),
-  status: z.string(),
+  status: z.string().min(1, "Debe seleccionar un estado"),
   engine: z.string(),
   graphics: z.string(),
   platforms: z.array(z.string()),
   adsLinks: z.string(),
   premiumLinks: z.string(),
   changelog: z.string(),
-  authorContent: z.string(),
+  creatorName: z.string(),
+  creatorLink: z.union([z.url("No es un link válido"), z.literal("")]),
   content: z
     .string()
     .trim()
@@ -75,14 +76,17 @@ export const comicCreateSchema = z.object({
   type: z.literal("comic"),
   languages: z.array(z.string()).optional(),
   version: z.string().optional(),
-  status: z.string(),
+  status: z.string().min(1, "Debe seleccionar un estado"),
   engine: z.string().optional(),
   graphics: z.string().optional(),
   platforms: z.array(z.string()).optional(),
   adsLinks: z.string().optional(),
   premiumLinks: z.string().optional(),
   changelog: z.string().optional(),
-  authorContent: z.string().optional(),
+  creatorName: z.string().optional(),
+  creatorLink: z
+    .union([z.url("No es un link válido"), z.literal("")])
+    .optional(),
   content: z.string().optional(),
 });
 

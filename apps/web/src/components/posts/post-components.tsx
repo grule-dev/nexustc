@@ -6,9 +6,9 @@ import {
   Link01Icon,
   Share08Icon,
   StarIcon,
-  Tag01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import type { PremiumLinksDescriptor } from "@repo/shared/constants";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -22,12 +22,15 @@ import { Markdown } from "../markdown";
 import { RatingDisplay } from "../ratings";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { ImageViewer } from "../ui/image-viewer";
 import { Separator } from "../ui/separator";
+import { Skeleton } from "../ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { BookmarkButton } from "./bookmark-button";
+import { CommentSection } from "./comment-section";
 import { LikeButton } from "./like-button";
 
 export type PostProps = Omit<
@@ -40,9 +43,19 @@ export type PostProps = Omit<
 
 export function PostPage({ post }: { post: PostProps }) {
   return (
-    <div className="flex flex-col gap-4">
-      <PostHero post={post} />
-      <PostContent post={post} />
+    <div className="relative grid grid-cols-1 gap-4 px-1 md:grid-cols-4">
+      <div className="flex flex-col gap-4 md:col-span-3">
+        <PostHero post={post} />
+        <PostCarousel post={post} />
+        <PostActionBar post={post} />
+        <PostInfo post={post} />
+        <PostContent post={post} />
+        <PostTagsSection post={post} />
+        <CommentSection post={post} />
+      </div>
+      <div>
+        <PostSidebarContent post={post} />
+      </div>
     </div>
   );
 }
@@ -51,8 +64,8 @@ export function PostHero({ post }: { post: PostProps }) {
   const mainImage = post.imageObjectKeys?.[0];
 
   return (
-    <div className="flex flex-col">
-      <div className="relative overflow-hidden rounded-t-3xl border border-b-0">
+    <div className="flex flex-col md:px-0">
+      <div className="relative overflow-hidden rounded-3xl border border-b-0">
         {/* Main Image with Gradient Overlay */}
         {mainImage && (
           <div className="relative">
@@ -74,7 +87,7 @@ export function PostHero({ post }: { post: PostProps }) {
                 </h1>
                 {post.version && (
                   <Badge
-                    className="mb-1 border-white/30 bg-white/20 text-white backdrop-blur-sm md:mb-2"
+                    className="mb-1 h-6 border-white/30 bg-white/20 text-sm text-white backdrop-blur-sm md:mb-2"
                     variant="outline"
                   >
                     {post.version}
@@ -111,7 +124,6 @@ export function PostHero({ post }: { post: PostProps }) {
           </div>
         )}
       </div>
-      <PostActionBar post={post} />
     </div>
   );
 }
@@ -127,47 +139,132 @@ export function PostActionBar({ post }: { post: PostProps }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-4 rounded-b-3xl border bg-card p-4 md:justify-between">
-      <div className="grid grid-flow-col grid-rows-2 gap-3 md:grid-rows-1">
-        <LikeButton postId={post.id} />
-        <BookmarkButton postId={post.id} />
-        <Button
-          nativeButton={false}
-          render={<Link params={{ id: post.id }} to={"/post/reviews/$id"} />}
-          size="sm"
-          variant="outline"
-        >
-          <HugeiconsIcon className="size-4" icon={StarIcon} />
-          Reviews
-        </Button>
-        <Tooltip>
-          <TooltipTrigger
-            onClick={handleShare}
-            render={
-              <Button size="sm" variant="outline">
-                <HugeiconsIcon className="size-4" icon={Share08Icon} />
-                Compartir
-              </Button>
-            }
-          />
-          <TooltipContent>Copiar enlace al portapapeles</TooltipContent>
-        </Tooltip>
-      </div>
+    <Card>
+      <CardContent className="flex flex-wrap items-center justify-center gap-4 md:justify-between">
+        <div className="grid grid-flow-col grid-rows-2 gap-3 md:grid-rows-1">
+          <LikeButton postId={post.id} />
+          <BookmarkButton postId={post.id} />
+          <Button
+            nativeButton={false}
+            render={<Link params={{ id: post.id }} to={"/post/reviews/$id"} />}
+            size="sm"
+            variant="outline"
+          >
+            <RatingDisplay
+              averageRating={post.averageRating ?? 0}
+              ratingCount={post.ratingCount}
+              variant="compact"
+            />
+          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              onClick={handleShare}
+              render={
+                <Button size="sm" variant="outline">
+                  <HugeiconsIcon className="size-4" icon={Share08Icon} />
+                  Compartir
+                </Button>
+              }
+            />
+            <TooltipContent>Copiar enlace al portapapeles</TooltipContent>
+          </Tooltip>
+        </div>
+        {/* Quick Stats */}
+        <div className="flex items-center gap-4 text-muted-foreground text-sm">
+          <MetaBadge icon={Calendar03Icon}>
+            {format(post.createdAt, "PP", {
+              locale: es,
+            })}
+          </MetaBadge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-      {/* Quick Stats */}
-      <div className="flex items-center gap-4 text-muted-foreground text-sm">
-        <MetaBadge icon={Calendar03Icon}>
-          {format(post.createdAt, "PP", {
-            locale: es,
-          })}
-        </MetaBadge>
-      </div>
+export function PostTagsSection({ post }: { post: PostProps }) {
+  const groupedTerms = Object.groupBy(post.terms, (term) => term.taxonomy);
+  const hasTags = post.terms.length > 0;
+
+  return (
+    hasTags && (
+      <Card>
+        <CardHeader>
+          <CardTitle className="inline-flex items-center gap-2 font-semibold text-lg">
+            <HugeiconsIcon className="size-5" icon={InformationCircleIcon} />
+            Información
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="flex flex-col gap-4">
+          {/* Categorized Tags */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <TagCategory label="Plataformas" terms={groupedTerms.platform} />
+            <TagCategory label="Idiomas" terms={groupedTerms.language} />
+            <TagCategory label="Motor" terms={groupedTerms.engine} />
+            <TagCategory label="Gráficos" terms={groupedTerms.graphics} />
+            <TagCategory label="Censura" terms={groupedTerms.censorship} />
+            <TagCategory label="Estado" terms={groupedTerms.status} />
+          </div>
+
+          <Separator />
+
+          {/* Main Tags */}
+          {groupedTerms.tag && groupedTerms.tag.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {groupedTerms.tag.map((term) => (
+                <TermBadge key={term.id} tag={term} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    )
+  );
+}
+
+export function PostSidebarContent({ post }: { post: PostProps }) {
+  const hasCreator = !!post.creatorName || !!post.creatorLink;
+  const Comp = post.creatorLink ? "a" : "div";
+
+  return (
+    <div className="sticky inset-0 top-4 left-0 flex flex-col gap-4">
+      {/* Creator Sidebar Card (if exists) */}
+      {hasCreator && (
+        <Comp
+          className="flex flex-col gap-4 rounded-2xl border border-secondary bg-linear-to-br from-primary/5 to-transparent p-5"
+          href={post.creatorLink}
+          rel="noopener"
+          target="_blank"
+        >
+          <h3 className="flex items-center gap-2 font-semibold text-lg">
+            <HugeiconsIcon
+              className="size-8 text-primary"
+              icon={FavouriteCircleIcon}
+            />
+            Apoya al Creador
+          </h3>
+          <span className="font-medium">{post.creatorName}</span>
+        </Comp>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recomendados</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {/* TODO: Implement recommendation system and add it here */}
+          {Array.of(1, 2, 3, 4, 5).map((_, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: temporary placeholder
+            <Skeleton className="h-40 w-full" key={index} />
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-export function PostContent({ post }: { post: PostProps }) {
-  const groupedTerms = Object.groupBy(post.terms, (term) => term.taxonomy);
+export function PostCarousel({ post }: { post: PostProps }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
 
@@ -176,73 +273,101 @@ export function PostContent({ post }: { post: PostProps }) {
     src: getBucketUrl(key),
     alt: `${post.title} - Imagen ${index + 1}`,
   }));
-
-  const hasContent = post.content !== "";
-  const hasAuthorContent = !!post.authorContent;
-  const hasDownloadLinks = !!post.adsLinks;
-  const hasChangelog = !!post.changelog;
   const hasImages = (post.imageObjectKeys?.length ?? 0) > 0;
-  const hasTags = post.terms.length > 0;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3">
-      {/* Gallery Tab */}
-      {hasImages && (
-        <div className="lg:col-span-3">
-          <div className="flex flex-col gap-6">
-            {allImages.length > 0 && (
-              <Carousel
-                opts={{
-                  align: "start",
-                  loop: true,
-                  dragFree: true,
-                }}
-                plugins={[
-                  AutoScroll({
-                    playOnInit: true,
-                    startDelay: 0,
-                    stopOnInteraction: false,
-                    speed: 1,
-                  }),
-                ]}
-              >
-                <CarouselContent>
-                  {allImages.map((image, index) => (
-                    <CarouselItem className="md:basis-1/3" key={image}>
-                      <button
-                        className="group aspect-video overflow-hidden rounded-xl border-2 transition-all"
-                        onClick={() => {
-                          setSelectedImageIndex(index);
-                          setGalleryOpen(true);
-                        }}
-                        type="button"
-                      >
-                        <img
-                          alt={`Miniatura ${index + 1}`}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                          src={getBucketUrl(image)}
-                        />
-                      </button>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            )}
+    hasImages && (
+      <div>
+        <div className="flex flex-col gap-6">
+          {allImages.length > 0 && (
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+                dragFree: true,
+              }}
+              plugins={[
+                AutoScroll({
+                  playOnInit: true,
+                  startDelay: 0,
+                  stopOnInteraction: false,
+                  speed: 1,
+                }),
+              ]}
+            >
+              <CarouselContent>
+                {allImages.map((image, index) => (
+                  <CarouselItem className="md:basis-1/3" key={image}>
+                    <button
+                      className="group aspect-video w-full overflow-hidden rounded-xl border-2 transition-all"
+                      onClick={() => {
+                        setSelectedImageIndex(index);
+                        setGalleryOpen(true);
+                      }}
+                      type="button"
+                    >
+                      <img
+                        alt={`Miniatura ${index + 1}`}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                        src={getBucketUrl(image)}
+                      />
+                    </button>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          )}
 
-            {/* Image Viewer Modal */}
-            <ImageViewer
-              images={galleryImages}
-              initialIndex={selectedImageIndex}
-              onOpenChange={setGalleryOpen}
-              open={galleryOpen}
-              title={post.title}
-            />
-          </div>
+          {/* Image Viewer Modal */}
+          <ImageViewer
+            images={galleryImages}
+            initialIndex={selectedImageIndex}
+            onOpenChange={setGalleryOpen}
+            open={galleryOpen}
+            title={post.title}
+          />
         </div>
-      )}
-      {/* Left Column - Main Content */}
+      </div>
+    )
+  );
+}
+
+export function PostInfo({ post }: { post: PostProps }) {
+  const hasContent = post.content !== "";
+
+  return (
+    hasContent && (
+      <div className="flex flex-col gap-6">
+        <ContentCard icon={InformationCircleIcon} title="Sinopsis">
+          <Markdown>{post.content}</Markdown>
+        </ContentCard>
+      </div>
+    )
+  );
+}
+
+export function PostContent({ post }: { post: PostProps }) {
+  const hasDownloadLinks = !!post.adsLinks;
+  const hasChangelog = !!post.changelog;
+  const hasPremium = post.premiumLinksAccess.status !== "no_premium_links";
+
+  if (!(hasDownloadLinks || hasChangelog || hasPremium)) {
+    return null;
+  }
+
+  const defaultTab =
+    hasPremium && post.premiumLinksAccess.status === "granted"
+      ? "premium"
+      : hasDownloadLinks
+        ? "downloads"
+        : hasChangelog
+          ? "changelog"
+          : "downloads";
+
+  return (
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-6 lg:col-span-2">
-        <Tabs className="w-full" defaultValue="info">
+        <Tabs className="w-full" defaultValue={defaultTab}>
           <TabsList className="w-full justify-start">
             {hasDownloadLinks && (
               <TabsTrigger className="gap-2" value="downloads">
@@ -250,10 +375,12 @@ export function PostContent({ post }: { post: PostProps }) {
                 Descargas
               </TabsTrigger>
             )}
-            <TabsTrigger className="gap-2" value="info">
-              <HugeiconsIcon className="size-4" icon={InformationCircleIcon} />
-              Información
-            </TabsTrigger>
+            {hasPremium && (
+              <TabsTrigger className="gap-2" value="premium">
+                <HugeiconsIcon className="size-4" icon={StarIcon} />
+                Premium
+              </TabsTrigger>
+            )}
             {hasChangelog && (
               <TabsTrigger className="gap-2" value="changelog">
                 <HugeiconsIcon className="size-4" icon={Calendar03Icon} />
@@ -262,43 +389,20 @@ export function PostContent({ post }: { post: PostProps }) {
             )}
           </TabsList>
 
-          {/* Downloads Tab */}
           {hasDownloadLinks && (
-            <TabsContent className="mt-6" value="downloads">
+            <TabsContent value="downloads">
               <ContentCard icon={Link01Icon} title="Enlaces de Descarga">
                 <Markdown>{post.adsLinks ?? ""}</Markdown>
               </ContentCard>
             </TabsContent>
           )}
 
-          {/* Info Tab */}
-          <TabsContent className="mt-6" value="info">
-            <div className="flex flex-col gap-6">
-              {/* Synopsis */}
-              {hasContent && (
-                <ContentCard icon={InformationCircleIcon} title="Sinopsis">
-                  <Markdown>{post.content}</Markdown>
-                </ContentCard>
-              )}
+          {hasPremium && (
+            <TabsContent value="premium">
+              <PremiumLinksContent descriptor={post.premiumLinksAccess} />
+            </TabsContent>
+          )}
 
-              {/* No content fallback */}
-              {!(hasContent || hasAuthorContent) && (
-                <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-muted/30 py-16">
-                  <div className="rounded-full bg-muted p-4">
-                    <HugeiconsIcon
-                      className="size-8 text-muted-foreground"
-                      icon={InformationCircleIcon}
-                    />
-                  </div>
-                  <p className="text-muted-foreground">
-                    No hay información adicional disponible
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Changelog Tab */}
           {hasChangelog && (
             <TabsContent className="mt-6" value="changelog">
               <ContentCard icon={Calendar03Icon} title="Changelog">
@@ -308,59 +412,40 @@ export function PostContent({ post }: { post: PostProps }) {
           )}
         </Tabs>
       </div>
+    </div>
+  );
+}
 
-      {/* Right Column - Sidebar */}
-      <div className="flex flex-col gap-6">
-        {/* Tags Section */}
-        {hasTags && (
-          <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
-            <h3 className="flex items-center gap-2 font-semibold text-lg">
-              <HugeiconsIcon className="size-5" icon={Tag01Icon} />
-              Tags
-            </h3>
+function PremiumLinksContent({
+  descriptor,
+}: {
+  descriptor: PremiumLinksDescriptor;
+}) {
+  if (descriptor.status === "no_premium_links") {
+    return null;
+  }
 
-            <div className="flex flex-col gap-4">
-              {/* Main Tags */}
-              {groupedTerms.tag && groupedTerms.tag.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {groupedTerms.tag.map((term) => (
-                    <TermBadge key={term.id} tag={term} />
-                  ))}
-                </div>
-              )}
+  if (descriptor.status === "granted") {
+    return (
+      <ContentCard icon={StarIcon} title="Enlaces Premium">
+        <Markdown>{descriptor.content}</Markdown>
+      </ContentCard>
+    );
+  }
 
-              <Separator />
-
-              {/* Categorized Tags */}
-              <div className="flex flex-col gap-3">
-                <TagCategory
-                  label="Plataformas"
-                  terms={groupedTerms.platform}
-                />
-                <TagCategory label="Idiomas" terms={groupedTerms.language} />
-                <TagCategory label="Motor" terms={groupedTerms.engine} />
-                <TagCategory label="Gráficos" terms={groupedTerms.graphics} />
-                <TagCategory label="Censura" terms={groupedTerms.censorship} />
-                <TagCategory label="Estado" terms={groupedTerms.status} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Author Support Sidebar Card (if exists) */}
-        {hasAuthorContent && (
-          <div className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 to-transparent p-5">
-            <h3 className="flex items-center gap-2 font-semibold text-lg">
-              <HugeiconsIcon
-                className="size-8 text-primary"
-                icon={FavouriteCircleIcon}
-              />
-              Apoya al Creador
-            </h3>
-            <Markdown>{post.authorContent}</Markdown>
-          </div>
-        )}
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-muted/30 py-16">
+      <div className="rounded-full bg-muted p-4">
+        <HugeiconsIcon
+          className="size-8 text-muted-foreground"
+          icon={StarIcon}
+        />
       </div>
+      <p className="text-center text-muted-foreground">
+        {descriptor.status === "denied_need_patron"
+          ? "Hazte patrocinador para acceder a los enlaces premium"
+          : `Necesitas ${descriptor.requiredTierLabel} o superior para acceder a estos enlaces`}
+      </p>
     </div>
   );
 }
@@ -394,13 +479,15 @@ function ContentCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-6">
-      <h2 className="flex items-center gap-2 font-bold text-xl">
-        <HugeiconsIcon className="size-5 text-primary" icon={icon} />
-        {title}
-      </h2>
-      <div>{children}</div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 font-semibold text-lg">
+          <HugeiconsIcon className="size-5" icon={icon} />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
   );
 }
 
@@ -418,14 +505,17 @@ function TagCategory({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-        {label}
-      </span>
-      <div className="flex flex-wrap gap-1.5">
-        {terms.map((term) => (
-          <TermBadge className="text-xs" key={term.id} tag={term} />
-        ))}
+    <div className="flex flex-row gap-2 rounded-md bg-muted/30 p-2">
+      <div className="h-full w-1 bg-accent" />
+      <div className="flex flex-col gap-1.5">
+        <span className="font-medium text-accent text-xs uppercase tracking-wider">
+          {label}
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {terms.map((term) => (
+            <TermBadge className="text-xs" key={term.id} tag={term} />
+          ))}
+        </div>
       </div>
     </div>
   );

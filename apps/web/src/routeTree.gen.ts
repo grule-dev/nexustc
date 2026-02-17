@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -23,7 +24,6 @@ import { Route as MainPrivacyRouteImport } from './routes/_main/privacy'
 import { Route as MainLegalRouteImport } from './routes/_main/legal'
 import { Route as MainForgotPasswordRouteImport } from './routes/_main/forgot-password'
 import { Route as MainChronosRouteImport } from './routes/_main/chronos'
-import { Route as MainAuthRouteImport } from './routes/_main/auth'
 import { Route as MainAboutRouteImport } from './routes/_main/about'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminTermsIndexRouteImport } from './routes/admin/terms/index'
@@ -52,6 +52,11 @@ import { Route as AdminEmojisIdEditRouteImport } from './routes/admin/emojis/$id
 import { Route as AdminComicsEditIdRouteImport } from './routes/admin/comics/edit.$id'
 import { Route as MainPostReviewsIdRouteImport } from './routes/_main/post.reviews.$id'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -119,11 +124,6 @@ const MainForgotPasswordRoute = MainForgotPasswordRouteImport.update({
 const MainChronosRoute = MainChronosRouteImport.update({
   id: '/chronos',
   path: '/chronos',
-  getParentRoute: () => MainRouteRoute,
-} as any)
-const MainAuthRoute = MainAuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => MainRouteRoute,
 } as any)
 const MainAboutRoute = MainAboutRouteImport.update({
@@ -265,8 +265,8 @@ const MainPostReviewsIdRoute = MainPostReviewsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/about': typeof MainAboutRoute
-  '/auth': typeof MainAuthRoute
   '/chronos': typeof MainChronosRoute
   '/forgot-password': typeof MainForgotPasswordRoute
   '/legal': typeof MainLegalRoute
@@ -306,8 +306,8 @@ export interface FileRoutesByFullPath {
   '/admin/stickers/$id/edit': typeof AdminStickersIdEditRoute
 }
 export interface FileRoutesByTo {
+  '/auth': typeof AuthRoute
   '/about': typeof MainAboutRoute
-  '/auth': typeof MainAuthRoute
   '/chronos': typeof MainChronosRoute
   '/forgot-password': typeof MainForgotPasswordRoute
   '/legal': typeof MainLegalRoute
@@ -351,8 +351,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/_main/about': typeof MainAboutRoute
-  '/_main/auth': typeof MainAuthRoute
   '/_main/chronos': typeof MainChronosRoute
   '/_main/forgot-password': typeof MainForgotPasswordRoute
   '/_main/legal': typeof MainLegalRoute
@@ -397,8 +397,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/about'
     | '/auth'
+    | '/about'
     | '/chronos'
     | '/forgot-password'
     | '/legal'
@@ -438,8 +438,8 @@ export interface FileRouteTypes {
     | '/admin/stickers/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/about'
     | '/auth'
+    | '/about'
     | '/chronos'
     | '/forgot-password'
     | '/legal'
@@ -482,8 +482,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_main'
     | '/admin'
+    | '/auth'
     | '/_main/about'
-    | '/_main/auth'
     | '/_main/chronos'
     | '/_main/forgot-password'
     | '/_main/legal'
@@ -527,6 +527,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   MainRouteRoute: typeof MainRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPatreonWebhookRoute: typeof ApiPatreonWebhookRoute
@@ -535,6 +536,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -631,13 +639,6 @@ declare module '@tanstack/react-router' {
       path: '/chronos'
       fullPath: '/chronos'
       preLoaderRoute: typeof MainChronosRouteImport
-      parentRoute: typeof MainRouteRoute
-    }
-    '/_main/auth': {
-      id: '/_main/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof MainAuthRouteImport
       parentRoute: typeof MainRouteRoute
     }
     '/_main/about': {
@@ -834,7 +835,6 @@ declare module '@tanstack/react-router' {
 
 interface MainRouteRouteChildren {
   MainAboutRoute: typeof MainAboutRoute
-  MainAuthRoute: typeof MainAuthRoute
   MainChronosRoute: typeof MainChronosRoute
   MainForgotPasswordRoute: typeof MainForgotPasswordRoute
   MainLegalRoute: typeof MainLegalRoute
@@ -852,7 +852,6 @@ interface MainRouteRouteChildren {
 
 const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainAboutRoute: MainAboutRoute,
-  MainAuthRoute: MainAuthRoute,
   MainChronosRoute: MainChronosRoute,
   MainForgotPasswordRoute: MainForgotPasswordRoute,
   MainLegalRoute: MainLegalRoute,
@@ -927,6 +926,7 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   MainRouteRoute: MainRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPatreonWebhookRoute: ApiPatreonWebhookRoute,

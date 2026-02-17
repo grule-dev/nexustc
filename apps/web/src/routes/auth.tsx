@@ -1,6 +1,6 @@
 import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { auth } from "@repo/auth";
 import { env } from "@repo/env/client";
 import { useStore } from "@tanstack/react-form";
@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-router";
 import { createMiddleware } from "@tanstack/react-start";
 import { Facehash } from "facehash";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -33,7 +33,7 @@ const redirectMiddleware = createMiddleware().server(
   }
 );
 
-export const Route = createFileRoute("/_main/auth")({
+export const Route = createFileRoute("/auth")({
   component: RouteComponent,
   beforeLoad: async () => {
     const session = await authClient.getSession();
@@ -96,6 +96,9 @@ function RouteComponent() {
   const [tab, setTab] = useState("login");
   const [error, setError] = useState<string>();
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const loginTurnstileRef = useRef<TurnstileInstance>(null);
+  const registerTurnstileRef = useRef<TurnstileInstance>(null);
+
   const navigate = useNavigate();
 
   const loginForm = useAppForm({
@@ -150,6 +153,7 @@ function RouteComponent() {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
         loginForm.resetField("turnstileToken");
+        loginTurnstileRef.current?.reset();
         formApi.setErrorMap({});
       }
     },
@@ -204,6 +208,7 @@ function RouteComponent() {
         setError(err instanceof Error ? err.message : "Error desconocido");
       } finally {
         registerForm.resetField("turnstileToken");
+        registerTurnstileRef.current?.reset();
       }
     },
   });
@@ -214,151 +219,163 @@ function RouteComponent() {
   );
 
   return (
-    <Card className="min-w-sm">
-      <CardHeader>
-        <h1 className="text-center font-bold text-3xl text-primary">
-          NeXusTC
-          <span className="align-super font-normal text-xs">+18</span>
-          <span className="font-normal text-xs"> BETA</span>
-        </h1>
-      </CardHeader>
-      <CardContent>
-        <Tabs
-          defaultValue="login"
-          onValueChange={(newTab) => {
-            setTab(newTab);
-            loginForm.resetField("turnstileToken");
-            registerForm.resetField("turnstileToken");
-            setError(undefined); // Clear errors when switching tabs
-          }}
-          value={tab}
-        >
-          <TabsList className="w-full">
-            <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-            <TabsTrigger value="register">Registrarse</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login">
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                loginForm.handleSubmit();
-              }}
-            >
-              <loginForm.AppField name="email">
-                {(field) => <field.TextField label="Email" type="email" />}
-              </loginForm.AppField>
-              <loginForm.AppField name="password">
-                {(field) => (
-                  <field.TextField label="Contraseña" type="password" />
+    <main className="flex h-dvh w-full items-center justify-center p-4 md:p-0">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <Link to="/">
+            <h1 className="text-center font-bold text-3xl text-primary">
+              NeXusTC
+              <span className="align-super font-normal text-xs">+18</span>
+              <span className="font-normal text-xs"> BETA</span>
+            </h1>
+          </Link>
+        </CardHeader>
+        <CardContent>
+          <Tabs
+            defaultValue="login"
+            onValueChange={(newTab) => {
+              setTab(newTab);
+              loginForm.resetField("turnstileToken");
+              registerForm.resetField("turnstileToken");
+              loginTurnstileRef.current?.reset();
+              registerTurnstileRef.current?.reset();
+              setError(undefined); // Clear errors when switching tabs
+            }}
+            value={tab}
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+              <TabsTrigger value="register">Registrarse</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+              <form
+                className="flex flex-col gap-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  loginForm.handleSubmit();
+                }}
+              >
+                <loginForm.AppField name="email">
+                  {(field) => <field.TextField label="Email" type="email" />}
+                </loginForm.AppField>
+                <loginForm.AppField name="password">
+                  {(field) => (
+                    <field.TextField label="Contraseña" type="password" />
+                  )}
+                </loginForm.AppField>
+                <Link to="/forgot-password">
+                  <Button className="p-0" type="button" variant="link">
+                    ¿Olvidaste tu contraseña?
+                  </Button>
+                </Link>
+                <loginForm.AppField name="turnstileToken">
+                  {(field) => (
+                    <TurnstileContainer
+                      ref={loginTurnstileRef}
+                      setToken={(token) => field.setValue(token)}
+                    />
+                  )}
+                </loginForm.AppField>
+                {!!error && (
+                  <Alert variant="destructive">
+                    <HugeiconsIcon icon={AlertCircleIcon} />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 )}
-              </loginForm.AppField>
-              <Link to="/forgot-password">
-                <Button className="p-0" type="button" variant="link">
-                  ¿Olvidaste tu contraseña?
-                </Button>
-              </Link>
-              <loginForm.AppField name="turnstileToken">
-                {(field) => (
-                  <TurnstileContainer
-                    setToken={(token) => field.setValue(token)}
+                <loginForm.AppForm>
+                  <loginForm.SubmitButton>
+                    Iniciar Sesión
+                  </loginForm.SubmitButton>
+                </loginForm.AppForm>
+                {!!showVerificationDialog && (
+                  <Alert variant="default">
+                    <AlertTitle>Verifica tu correo</AlertTitle>
+                    <AlertDescription>
+                      <span>
+                        Se ha enviado una verificación a su casilla de correo.
+                        <br />
+                        Por favor, verifiquela para poder acceder al sitio,
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </form>
+            </TabsContent>
+            <TabsContent value="register">
+              <form
+                className="flex flex-col gap-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  registerForm.handleSubmit();
+                }}
+              >
+                <div className="flex w-full justify-center">
+                  <Facehash
+                    name={registerName}
+                    {...defaultFacehashProps}
+                    className="w-full place-items-center rounded-full border"
+                    size={128}
                   />
+                </div>
+                <registerForm.AppField name="name">
+                  {(field) => (
+                    <field.TextField
+                      label="Nombre de Usuario"
+                      placeholder="Usuario"
+                    />
+                  )}
+                </registerForm.AppField>
+                <registerForm.AppField name="email">
+                  {(field) => <field.TextField label="Email" type="email" />}
+                </registerForm.AppField>
+                <registerForm.AppField name="password">
+                  {(field) => (
+                    <field.TextField label="Contraseña" type="password" />
+                  )}
+                </registerForm.AppField>
+                <registerForm.AppField name="confirmPassword">
+                  {(field) => (
+                    <field.TextField
+                      label="Confirmar Contraseña"
+                      type="password"
+                    />
+                  )}
+                </registerForm.AppField>
+                <registerForm.AppField name="turnstileToken">
+                  {(field) => (
+                    <TurnstileContainer
+                      ref={registerTurnstileRef}
+                      setToken={(token) => field.setValue(token)}
+                    />
+                  )}
+                </registerForm.AppField>
+                {!!error && (
+                  <Alert variant="destructive">
+                    <HugeiconsIcon icon={AlertCircleIcon} />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 )}
-              </loginForm.AppField>
-              {!!error && (
-                <Alert variant="destructive">
-                  <HugeiconsIcon icon={AlertCircleIcon} />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <loginForm.AppForm>
-                <loginForm.SubmitButton>Iniciar Sesión</loginForm.SubmitButton>
-              </loginForm.AppForm>
-              {!!showVerificationDialog && (
-                <Alert variant="default">
-                  <AlertTitle>Verifica tu correo</AlertTitle>
-                  <AlertDescription>
-                    <span>
-                      Se ha enviado una verificación a su casilla de correo.
-                      <br />
-                      Por favor, verifiquela para poder acceder al sitio,
-                    </span>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </form>
-          </TabsContent>
-          <TabsContent value="register">
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                registerForm.handleSubmit();
-              }}
-            >
-              <div className="flex w-full justify-center">
-                <Facehash
-                  name={registerName}
-                  {...defaultFacehashProps}
-                  className="w-full place-items-center rounded-full border"
-                  size={128}
-                />
-              </div>
-              <registerForm.AppField name="name">
-                {(field) => (
-                  <field.TextField
-                    label="Nombre de Usuario"
-                    placeholder="Usuario"
-                  />
-                )}
-              </registerForm.AppField>
-              <registerForm.AppField name="email">
-                {(field) => <field.TextField label="Email" type="email" />}
-              </registerForm.AppField>
-              <registerForm.AppField name="password">
-                {(field) => (
-                  <field.TextField label="Contraseña" type="password" />
-                )}
-              </registerForm.AppField>
-              <registerForm.AppField name="confirmPassword">
-                {(field) => (
-                  <field.TextField
-                    label="Confirmar Contraseña"
-                    type="password"
-                  />
-                )}
-              </registerForm.AppField>
-              <registerForm.AppField name="turnstileToken">
-                {(field) => (
-                  <TurnstileContainer
-                    setToken={(token) => field.setValue(token)}
-                  />
-                )}
-              </registerForm.AppField>
-              {!!error && (
-                <Alert variant="destructive">
-                  <HugeiconsIcon icon={AlertCircleIcon} />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <registerForm.AppForm>
-                <registerForm.SubmitButton>
-                  Registrarse
-                </registerForm.SubmitButton>
-              </registerForm.AppForm>
-            </form>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+                <registerForm.AppForm>
+                  <registerForm.SubmitButton>
+                    Registrarse
+                  </registerForm.SubmitButton>
+                </registerForm.AppForm>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </main>
   );
 }
 
 function TurnstileContainer({
+  ref,
   setToken,
 }: {
+  ref?: React.RefObject<TurnstileInstance | null>;
   setToken: (token: string) => void;
 }) {
   return (
@@ -366,9 +383,10 @@ function TurnstileContainer({
       onError={() => setToken("")}
       onSuccess={setToken}
       options={{
-        theme: "auto",
         size: "flexible",
+        theme: "auto",
       }}
+      ref={ref}
       siteKey={env.VITE_TURNSTILE_SITE_KEY}
     />
   );

@@ -1,4 +1,5 @@
 import type { post, postRating, term } from "@repo/db/schema/app";
+import type { PremiumLinksDescriptor } from "@repo/shared/constants";
 
 export type TermType = typeof term.$inferSelect;
 
@@ -12,6 +13,7 @@ export type PostType = Omit<
   terms: Omit<TermType, "createdAt" | "updatedAt">[];
   averageRating?: number;
   ratingCount?: number;
+  premiumLinksAccess: PremiumLinksDescriptor;
 };
 
 export type RatingType = typeof postRating.$inferSelect;

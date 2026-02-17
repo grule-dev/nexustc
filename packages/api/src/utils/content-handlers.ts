@@ -128,7 +128,8 @@ export async function createContent({
           version:
             input.type === "post" ? input.version : (input.version ?? ""),
           authorId: session.user?.id,
-          authorContent: input.authorContent ?? "",
+          creatorName: input.creatorName ?? "",
+          creatorLink: input.creatorLink ?? "",
           status: input.documentStatus,
           imageObjectKeys: successfulImageUploads,
           views: 0,
@@ -208,7 +209,8 @@ export async function editContent({
         input.type === "post" ? input.premiumLinks : (input.premiumLinks ?? ""),
       changelog:
         input.type === "post" ? input.changelog : (input.changelog ?? ""),
-      authorContent: input.authorContent ?? "",
+      creatorName: input.creatorName ?? "",
+      creatorLink: input.creatorLink ?? "",
     })
     .where(eq(post.id, input.id))
     .returning({ postId: post.id });
