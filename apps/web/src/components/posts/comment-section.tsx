@@ -59,7 +59,6 @@ export function CommentSection({ post }: { post: PostProps }) {
       content: "",
     },
     onSubmit: async (formData) => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       try {
         await orpcClient.post.createComment({
