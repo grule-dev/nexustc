@@ -5,7 +5,6 @@ import {
   InformationCircleIcon,
   Link01Icon,
   Share08Icon,
-  Tag01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
@@ -21,12 +20,15 @@ import { Markdown } from "../markdown";
 import { RatingDisplay } from "../ratings";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { ImageViewer } from "../ui/image-viewer";
 import { Separator } from "../ui/separator";
+import { Skeleton } from "../ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { BookmarkButton } from "./bookmark-button";
+import { CommentSection } from "./comment-section";
 import { LikeButton } from "./like-button";
 
 export type PostProps = Omit<
@@ -39,9 +41,19 @@ export type PostProps = Omit<
 
 export function PostPage({ post }: { post: PostProps }) {
   return (
-    <div className="flex flex-col gap-4">
-      <PostHero post={post} />
-      <PostContent post={post} />
+    <div className="relative grid grid-cols-4 gap-4">
+      <div className="col-span-3 flex flex-col gap-4">
+        <PostHero post={post} />
+        <PostCarousel post={post} />
+        <PostActionBar post={post} />
+        <PostInfo post={post} />
+        <PostContent post={post} />
+        <PostTagsSection post={post} />
+        <CommentSection post={post} />
+      </div>
+      <div>
+        <PostSidebarContent post={post} />
+      </div>
     </div>
   );
 }
@@ -51,7 +63,7 @@ export function PostHero({ post }: { post: PostProps }) {
 
   return (
     <div className="flex flex-col md:px-0">
-      <div className="relative overflow-hidden rounded-t-3xl border border-b-0">
+      <div className="relative overflow-hidden rounded-3xl border border-b-0">
         {/* Main Image with Gradient Overlay */}
         {mainImage && (
           <div className="relative">
@@ -110,7 +122,6 @@ export function PostHero({ post }: { post: PostProps }) {
           </div>
         )}
       </div>
-      <PostActionBar post={post} />
     </div>
   );
 }
@@ -126,7 +137,7 @@ export function PostActionBar({ post }: { post: PostProps }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-4 rounded-b-3xl border bg-card p-4 md:justify-between">
+    <div className="flex flex-wrap items-center justify-center gap-4 rounded-3xl border bg-card p-4 md:justify-between">
       <div className="grid grid-flow-col grid-rows-2 gap-3 md:grid-rows-1">
         <LikeButton postId={post.id} />
         <BookmarkButton postId={post.id} />
@@ -168,8 +179,87 @@ export function PostActionBar({ post }: { post: PostProps }) {
   );
 }
 
-export function PostContent({ post }: { post: PostProps }) {
+export function PostTagsSection({ post }: { post: PostProps }) {
   const groupedTerms = Object.groupBy(post.terms, (term) => term.taxonomy);
+  const hasTags = post.terms.length > 0;
+
+  return (
+    hasTags && (
+      <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
+        <h3 className="flex items-center gap-2 font-semibold text-lg">
+          <HugeiconsIcon className="size-5" icon={InformationCircleIcon} />
+          Información
+        </h3>
+
+        <div className="flex flex-col gap-4">
+          {/* Categorized Tags */}
+          <div className="grid grid-cols-3 gap-3">
+            <TagCategory label="Plataformas" terms={groupedTerms.platform} />
+            <TagCategory label="Idiomas" terms={groupedTerms.language} />
+            <TagCategory label="Motor" terms={groupedTerms.engine} />
+            <TagCategory label="Gráficos" terms={groupedTerms.graphics} />
+            <TagCategory label="Censura" terms={groupedTerms.censorship} />
+            <TagCategory label="Estado" terms={groupedTerms.status} />
+          </div>
+
+          <Separator />
+
+          {/* Main Tags */}
+          {groupedTerms.tag && groupedTerms.tag.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {groupedTerms.tag.map((term) => (
+                <TermBadge key={term.id} tag={term} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  );
+}
+
+export function PostSidebarContent({ post }: { post: PostProps }) {
+  const hasCreator = !!post.creatorName || !!post.creatorLink;
+  const Comp = post.creatorLink ? "a" : "div";
+
+  return (
+    <div className="sticky inset-0 top-4 left-0 flex flex-col gap-4">
+      {/* Creator Sidebar Card (if exists) */}
+      {hasCreator && (
+        <Comp
+          className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 to-transparent p-5"
+          href={post.creatorLink}
+          rel="noopener"
+          target="_blank"
+        >
+          <h3 className="flex items-center gap-2 font-semibold text-lg">
+            <HugeiconsIcon
+              className="size-8 text-primary"
+              icon={FavouriteCircleIcon}
+            />
+            Apoya al Creador
+          </h3>
+          <span className="font-medium">{post.creatorName}</span>
+        </Comp>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recomendados</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {/* TODO: Implement recommendation system and add it here */}
+          {Array.of(1, 2, 3, 4, 5).map((_, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: temporary placeholder
+            <Skeleton className="h-40 w-full" key={index} />
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function PostCarousel({ post }: { post: PostProps }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
 
@@ -178,70 +268,105 @@ export function PostContent({ post }: { post: PostProps }) {
     src: getBucketUrl(key),
     alt: `${post.title} - Imagen ${index + 1}`,
   }));
-
-  const hasContent = post.content !== "";
-  const hasAuthorContent = !!post.authorContent;
-  const hasDownloadLinks = !!post.adsLinks;
-  const hasChangelog = !!post.changelog;
   const hasImages = (post.imageObjectKeys?.length ?? 0) > 0;
-  const hasTags = post.terms.length > 0;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3">
-      {/* Gallery Tab */}
-      {hasImages && (
-        <div className="lg:col-span-3">
-          <div className="flex flex-col gap-6">
-            {allImages.length > 0 && (
-              <Carousel
-                opts={{
-                  align: "start",
-                  loop: true,
-                  dragFree: true,
-                }}
-                plugins={[
-                  AutoScroll({
-                    playOnInit: true,
-                    startDelay: 0,
-                    stopOnInteraction: false,
-                    speed: 1,
-                  }),
-                ]}
-              >
-                <CarouselContent>
-                  {allImages.map((image, index) => (
-                    <CarouselItem className="md:basis-1/3" key={image}>
-                      <button
-                        className="group aspect-video w-full overflow-hidden rounded-xl border-2 transition-all"
-                        onClick={() => {
-                          setSelectedImageIndex(index);
-                          setGalleryOpen(true);
-                        }}
-                        type="button"
-                      >
-                        <img
-                          alt={`Miniatura ${index + 1}`}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                          src={getBucketUrl(image)}
-                        />
-                      </button>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            )}
+    hasImages && (
+      <div>
+        <div className="flex flex-col gap-6">
+          {allImages.length > 0 && (
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+                dragFree: true,
+              }}
+              plugins={[
+                AutoScroll({
+                  playOnInit: true,
+                  startDelay: 0,
+                  stopOnInteraction: false,
+                  speed: 1,
+                }),
+              ]}
+            >
+              <CarouselContent>
+                {allImages.map((image, index) => (
+                  <CarouselItem className="md:basis-1/3" key={image}>
+                    <button
+                      className="group aspect-video w-full overflow-hidden rounded-xl border-2 transition-all"
+                      onClick={() => {
+                        setSelectedImageIndex(index);
+                        setGalleryOpen(true);
+                      }}
+                      type="button"
+                    >
+                      <img
+                        alt={`Miniatura ${index + 1}`}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                        src={getBucketUrl(image)}
+                      />
+                    </button>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          )}
 
-            {/* Image Viewer Modal */}
-            <ImageViewer
-              images={galleryImages}
-              initialIndex={selectedImageIndex}
-              onOpenChange={setGalleryOpen}
-              open={galleryOpen}
-              title={post.title}
+          {/* Image Viewer Modal */}
+          <ImageViewer
+            images={galleryImages}
+            initialIndex={selectedImageIndex}
+            onOpenChange={setGalleryOpen}
+            open={galleryOpen}
+            title={post.title}
+          />
+        </div>
+      </div>
+    )
+  );
+}
+
+export function PostInfo({ post }: { post: PostProps }) {
+  const hasContent = post.content !== "";
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Synopsis */}
+      {hasContent && (
+        <ContentCard icon={InformationCircleIcon} title="Sinopsis">
+          <Markdown>{post.content}</Markdown>
+        </ContentCard>
+      )}
+
+      {/* No content fallback */}
+      {!hasContent && (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-muted/30 py-16">
+          <div className="rounded-full bg-muted p-4">
+            <HugeiconsIcon
+              className="size-8 text-muted-foreground"
+              icon={InformationCircleIcon}
             />
           </div>
+          <p className="text-muted-foreground">
+            No hay información adicional disponible
+          </p>
         </div>
       )}
+    </div>
+  );
+}
+
+export function PostContent({ post }: { post: PostProps }) {
+  const hasDownloadLinks = !!post.adsLinks;
+  const hasChangelog = !!post.changelog;
+
+  if (!(hasDownloadLinks || hasChangelog)) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
       {/* Left Column - Main Content */}
       <div className="flex flex-col gap-6 lg:col-span-2">
         <Tabs className="w-full" defaultValue="info">
@@ -252,10 +377,6 @@ export function PostContent({ post }: { post: PostProps }) {
                 Descargas
               </TabsTrigger>
             )}
-            <TabsTrigger className="gap-2" value="info">
-              <HugeiconsIcon className="size-4" icon={InformationCircleIcon} />
-              Información
-            </TabsTrigger>
             {hasChangelog && (
               <TabsTrigger className="gap-2" value="changelog">
                 <HugeiconsIcon className="size-4" icon={Calendar03Icon} />
@@ -266,39 +387,12 @@ export function PostContent({ post }: { post: PostProps }) {
 
           {/* Downloads Tab */}
           {hasDownloadLinks && (
-            <TabsContent className="mt-6" value="downloads">
+            <TabsContent value="downloads">
               <ContentCard icon={Link01Icon} title="Enlaces de Descarga">
                 <Markdown>{post.adsLinks ?? ""}</Markdown>
               </ContentCard>
             </TabsContent>
           )}
-
-          {/* Info Tab */}
-          <TabsContent className="mt-6" value="info">
-            <div className="flex flex-col gap-6">
-              {/* Synopsis */}
-              {hasContent && (
-                <ContentCard icon={InformationCircleIcon} title="Sinopsis">
-                  <Markdown>{post.content}</Markdown>
-                </ContentCard>
-              )}
-
-              {/* No content fallback */}
-              {!(hasContent || hasAuthorContent) && (
-                <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed bg-muted/30 py-16">
-                  <div className="rounded-full bg-muted p-4">
-                    <HugeiconsIcon
-                      className="size-8 text-muted-foreground"
-                      icon={InformationCircleIcon}
-                    />
-                  </div>
-                  <p className="text-muted-foreground">
-                    No hay información adicional disponible
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
 
           {/* Changelog Tab */}
           {hasChangelog && (
@@ -309,59 +403,6 @@ export function PostContent({ post }: { post: PostProps }) {
             </TabsContent>
           )}
         </Tabs>
-      </div>
-
-      {/* Right Column - Sidebar */}
-      <div className="flex flex-col gap-6">
-        {/* Tags Section */}
-        {hasTags && (
-          <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
-            <h3 className="flex items-center gap-2 font-semibold text-lg">
-              <HugeiconsIcon className="size-5" icon={Tag01Icon} />
-              Tags
-            </h3>
-
-            <div className="flex flex-col gap-4">
-              {/* Main Tags */}
-              {groupedTerms.tag && groupedTerms.tag.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {groupedTerms.tag.map((term) => (
-                    <TermBadge key={term.id} tag={term} />
-                  ))}
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Categorized Tags */}
-              <div className="flex flex-col gap-3">
-                <TagCategory
-                  label="Plataformas"
-                  terms={groupedTerms.platform}
-                />
-                <TagCategory label="Idiomas" terms={groupedTerms.language} />
-                <TagCategory label="Motor" terms={groupedTerms.engine} />
-                <TagCategory label="Gráficos" terms={groupedTerms.graphics} />
-                <TagCategory label="Censura" terms={groupedTerms.censorship} />
-                <TagCategory label="Estado" terms={groupedTerms.status} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Author Support Sidebar Card (if exists) */}
-        {hasAuthorContent && (
-          <div className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 to-transparent p-5">
-            <h3 className="flex items-center gap-2 font-semibold text-lg">
-              <HugeiconsIcon
-                className="size-8 text-primary"
-                icon={FavouriteCircleIcon}
-              />
-              Apoya al Creador
-            </h3>
-            <Markdown>{post.authorContent}</Markdown>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -396,11 +437,11 @@ function ContentCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-6">
-      <h2 className="flex items-center gap-2 font-bold text-xl">
-        <HugeiconsIcon className="size-5 text-primary" icon={icon} />
+    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
+      <h3 className="flex items-center gap-2 font-semibold text-lg">
+        <HugeiconsIcon className="size-5" icon={icon} />
         {title}
-      </h2>
+      </h3>
       <div>{children}</div>
     </div>
   );
@@ -420,14 +461,17 @@ function TagCategory({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-        {label}
-      </span>
-      <div className="flex flex-wrap gap-1.5">
-        {terms.map((term) => (
-          <TermBadge className="text-xs" key={term.id} tag={term} />
-        ))}
+    <div className="flex flex-row gap-2 rounded-md bg-muted/30 p-2">
+      <div className="h-full w-1 bg-accent" />
+      <div className="flex flex-col gap-1.5">
+        <span className="font-medium text-accent text-xs uppercase tracking-wider">
+          {label}
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {terms.map((term) => (
+            <TermBadge className="text-xs" key={term.id} tag={term} />
+          ))}
+        </div>
       </div>
     </div>
   );

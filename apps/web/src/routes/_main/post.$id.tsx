@@ -2,7 +2,6 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import z from "zod";
 import { ComicPage } from "@/components/posts/comic-page";
-import { CommentSection } from "@/components/posts/comment-section";
 import { PostPage } from "@/components/posts/post-components";
 import { safeOrpcClient } from "@/lib/orpc";
 import { getBucketUrl } from "@/lib/utils";
@@ -53,7 +52,7 @@ function RouteComponent() {
   const post = Route.useLoaderData();
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-2 py-4 md:px-4 md:py-8">
+    <main className="w-full px-2 py-4 md:px-8">
       <div className="flex flex-col gap-12">
         {/* Main Post Content */}
         {post.type === "post" ? (
@@ -61,8 +60,6 @@ function RouteComponent() {
         ) : (
           <ComicPage comic={post} />
         )}
-
-        <CommentSection post={post} />
       </div>
     </main>
   );

@@ -61,7 +61,8 @@ function RouteComponent() {
       engine: terms.engine?.[0]?.term.id ?? "",
       graphics: terms.graphics?.[0].term.id ?? "",
       content: oldPost.content,
-      authorContent: oldPost.authorContent,
+      creatorName: oldPost.creatorName,
+      creatorLink: oldPost.creatorLink,
       adsLinks: oldPost.adsLinks ?? "",
       premiumLinks: oldPost.premiumLinks ?? "",
       changelog: oldPost.changelog ?? "",
@@ -289,16 +290,27 @@ function RouteComponent() {
             )}
           </form.AppField>
 
+          <form.AppField name="creatorName">
+            {(field) => (
+              <field.TextField
+                className="w-full"
+                label="Nombre del Creador"
+                value={field.state.value}
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="creatorLink">
+            {(field) => (
+              <field.TextField
+                className="w-full"
+                label="Link del Creador"
+                value={field.state.value}
+              />
+            )}
+          </form.AppField>
+
           <section className="col-span-2">
-            <form.AppField name="authorContent">
-              {(field) => (
-                <field.TextareaField
-                  className="w-full"
-                  label="Autor"
-                  value={field.state.value}
-                />
-              )}
-            </form.AppField>
             <form.AppField name="content">
               {(field) => (
                 <field.TextareaField

@@ -67,7 +67,8 @@ function RouteComponent() {
       engine: "",
       graphics: "",
       content: "",
-      authorContent: "",
+      creatorName: "",
+      creatorLink: "",
       adsLinks: "",
       premiumLinks: "",
       changelog: "",
@@ -171,13 +172,13 @@ function RouteComponent() {
       }
 
       const values = {
-        authorContent: form.getFieldValue("authorContent"),
+        creatorName: form.getFieldValue("creatorName"),
         content: form.getFieldValue("content"),
         adsLinks: form.getFieldValue("adsLinks"),
         tags: form.getFieldValue("tags"),
       };
 
-      form.setFieldValue("authorContent", creatorBlock ?? values.authorContent);
+      form.setFieldValue("creatorName", creatorBlock ?? values.creatorName);
       form.setFieldValue("content", lore ?? values.content);
       form.setFieldValue("adsLinks", linksBlock ?? values.adsLinks);
       form.setFieldValue("tags", tagIds.length > 0 ? tagIds : values.tags);
@@ -389,21 +390,41 @@ function RouteComponent() {
             )}
           </form.AppField>
 
-          <section className="col-span-2">
-            <form.AppField name="authorContent">
-              {(field) => (
-                <field.TextareaField
-                  className="w-full"
-                  label="Autor"
-                  value={field.state.value}
-                />
-              )}
-            </form.AppField>
+          <form.AppField name="creatorName">
+            {(field) => (
+              <field.TextField
+                className="w-full"
+                label="Nombre del Creador"
+                value={field.state.value}
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="creatorLink">
+            {(field) => (
+              <field.TextField
+                className="w-full"
+                label="Link del Creador"
+                value={field.state.value}
+              />
+            )}
+          </form.AppField>
+
+          <section className="col-span-2 space-y-4">
             <form.AppField name="content">
               {(field) => (
                 <field.TextareaField
                   className="w-full"
                   label="Sinopsis"
+                  value={field.state.value}
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="changelog">
+              {(field) => (
+                <field.TextareaField
+                  className="w-full"
+                  label="Cambios"
                   value={field.state.value}
                 />
               )}

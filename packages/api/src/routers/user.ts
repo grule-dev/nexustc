@@ -111,7 +111,8 @@ export default {
           isWeekly: post.isWeekly,
           imageObjectKeys: post.imageObjectKeys,
           adsLinks: post.adsLinks,
-          authorContent: post.authorContent,
+          creatorName: post.creatorName,
+          creatorLink: post.creatorLink,
           createdAt: post.createdAt,
           views: post.views,
 
