@@ -5,6 +5,7 @@ import { comicCreateSchema } from "@repo/shared/schemas";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SortableGrid } from "@/components/admin/sortable-grid";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/admin/comics/create")({
 
 function RouteComponent() {
   const data = Route.useLoaderData();
-  const { parentRef, selectedFiles, handleFileChange, removeFile } =
+  const { selectedFiles, setSelectedFiles, handleFileChange, removeFile } =
     useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
@@ -248,15 +249,23 @@ function RouteComponent() {
                 <h3 className="font-semibold text-md">
                   Archivos seleccionados:
                 </h3>
-                <div
+                <SortableGrid
                   className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"
-                  ref={parentRef}
+                  getItemId={(file) => file.name}
+                  items={selectedFiles}
+                  setItems={setSelectedFiles}
                 >
-                  {selectedFiles.map((file) => (
+                  {(
+                    file,
+                    _index,
+                    { ref, isDragging, isSelected, onSelect }
+                  ) => (
                     <Card
-                      className="cursor-grab"
+                      className={`cursor-grab ${isDragging ? "border-secondary" : ""} ${isSelected ? "ring-2 ring-primary" : ""}`}
                       data-label={file.name}
                       key={file.name}
+                      onClick={onSelect}
+                      ref={ref as React.Ref<HTMLDivElement>}
                     >
                       <CardHeader>
                         <CardTitle className="text-wrap text-sm">
@@ -287,8 +296,8 @@ function RouteComponent() {
                         />
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
+                  )}
+                </SortableGrid>
               </div>
             )}
           </section>
