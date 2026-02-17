@@ -216,21 +216,19 @@ function RouteComponent() {
       await Promise.all(
         presignedUrls.map((url, index) => {
           const file = carousel.selectedFiles[index];
-          carousel.setUploadProgress((prev) => ({
-            ...prev,
-            [file.name]: { ...prev[file.name], status: "uploading" },
-          }));
 
-          return uploadBlobWithProgress(file, url.presignedUrl, (progress) => {
-            carousel.setUploadProgress((prev) => ({
-              ...prev,
-              [file.name]: { ...prev[file.name], progress },
-            }));
-          }).then(() => {
-            carousel.setUploadProgress((prev) => ({
-              ...prev,
-              [file.name]: { ...prev[file.name], status: "uploaded" },
-            }));
+          return fetch(url.presignedUrl, {
+            method: "PUT",
+            body: file,
+            headers: {
+              "Content-Type": file.type ?? "application/octet-stream",
+            },
+          }).then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                `Error al subir imagen ${file.name}: ${response.statusText}`
+              );
+            }
           });
         })
       );
@@ -524,21 +522,13 @@ function RouteComponent() {
             <h3 className="mb-2 font-medium text-sm">Nuevas imágenes</h3>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {carousel.selectedFiles.map((file) => {
-                const progress = carousel.uploadProgress[file.name];
                 return (
                   <div className="relative" key={file.name}>
                     <img
                       alt={file.name}
                       className="aspect-video w-full rounded-md border object-cover"
-                      src={progress?.previewUrl}
+                      src={URL.createObjectURL(file)}
                     />
-                    {progress?.status === "uploading" && (
-                      <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50">
-                        <span className="text-sm text-white">
-                          {progress.progress}%
-                        </span>
-                      </div>
-                    )}
                     <Button
                       className="absolute top-2 right-2"
                       onClick={() => carousel.removeFile(file.name)}

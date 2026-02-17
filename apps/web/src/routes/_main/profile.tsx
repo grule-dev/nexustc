@@ -62,7 +62,7 @@ function RouteComponent() {
   const session = auth.data;
 
   return (
-    <div className="flex max-w-4xl flex-col gap-4">
+    <div className="flex w-full max-w-4xl flex-col gap-4">
       <Card className="col-span-1 col-start-1 w-full md:col-span-3 md:col-start-2">
         <CardHeader>
           <CardTitle className="font-bold text-2xl">Perfil</CardTitle>

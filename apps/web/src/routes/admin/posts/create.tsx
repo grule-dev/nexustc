@@ -435,44 +435,42 @@ function RouteComponent() {
                   className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"
                   ref={parentRef}
                 >
-                  {selectedFiles.map((file) => {
-                    return (
-                      <Card
-                        className="cursor-grab"
-                        data-label={file.name}
-                        key={file.name}
-                      >
-                        <CardHeader>
-                          <CardTitle className="text-wrap text-sm">
-                            {file.name}
-                          </CardTitle>
-                          <CardDescription>
-                            {(file.size / 1024).toFixed(2)} KB
-                          </CardDescription>
-                          <CardAction>
-                            <Button
-                              disabled={form.state.isSubmitting}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFile(file.name);
-                              }}
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <HugeiconsIcon icon={Cancel01Icon} />
-                            </Button>
-                          </CardAction>
-                        </CardHeader>
-                        <CardContent className="flex justify-center">
-                          <img
-                            alt={`Preview of ${file.name}`}
-                            className="max-h-32 rounded object-contain"
-                            src={URL.createObjectURL(file)}
-                          />
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                  {selectedFiles.map((file) => (
+                    <Card
+                      className="cursor-grab"
+                      data-label={file.name}
+                      key={file.name}
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-wrap text-sm">
+                          {file.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {(file.size / 1024).toFixed(2)} KB
+                        </CardDescription>
+                        <CardAction>
+                          <Button
+                            disabled={form.state.isSubmitting}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(file.name);
+                            }}
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <HugeiconsIcon icon={Cancel01Icon} />
+                          </Button>
+                        </CardAction>
+                      </CardHeader>
+                      <CardContent className="flex justify-center">
+                        <img
+                          alt={`Preview of ${file.name}`}
+                          className="max-h-32 rounded object-contain"
+                          src={URL.createObjectURL(file)}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
             )}

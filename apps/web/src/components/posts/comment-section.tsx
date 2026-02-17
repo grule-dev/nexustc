@@ -1,4 +1,8 @@
-import { Comment01Icon, SentIcon } from "@hugeicons/core-free-icons";
+import {
+  AlertCircleIcon,
+  Comment01Icon,
+  SentIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useStore } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +24,8 @@ import { orpcClient } from "@/lib/orpc";
 import { defaultFacehashProps, getBucketUrl } from "@/lib/utils";
 import { SignedIn } from "../auth/signed-in";
 import { SignedOut } from "../auth/signed-out";
+import { ErrorField } from "../forms/error-field";
+import { RatingDisplay } from "../ratings/rating-display";
 import { Button } from "../ui/button";
 import {
   InputGroup,
@@ -27,10 +33,12 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from "../ui/input-group";
+import { Item, ItemContent, ItemMedia } from "../ui/item";
 import { Spinner } from "../ui/spinner";
 import { UserLabel } from "../users/user-label";
+import type { PostProps } from "./post-components";
 
-export function CommentSection({ postId }: { postId: string }) {
+export function CommentSection({ post }: { post: PostProps }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
@@ -49,13 +57,15 @@ export function CommentSection({ postId }: { postId: string }) {
       content: "",
     },
     onSubmit: async (formData) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
         await orpcClient.post.createComment({
-          postId,
+          postId: post.id,
           content: formData.value.content,
         });
         queryClient.invalidateQueries({
-          queryKey: ["comments", postId],
+          queryKey: ["comments", post.id],
         });
         form.reset();
       } catch (error) {
@@ -73,10 +83,10 @@ export function CommentSection({ postId }: { postId: string }) {
   };
 
   const commentsQuery = useQuery({
-    queryKey: ["comments", postId],
+    queryKey: ["comments", post.id],
     queryFn: async () => {
       const { comments, authors } = await orpcClient.post.getComments({
-        postId,
+        postId: post.id,
       });
 
       const authorMap = new Map(authors.map((a) => [a.id, a]));
@@ -130,22 +140,37 @@ export function CommentSection({ postId }: { postId: string }) {
       ref={ref}
     >
       {/* Header with icon and title */}
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-          <HugeiconsIcon
-            className="size-5 text-primary"
-            icon={Comment01Icon}
-            strokeWidth={2}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+            <HugeiconsIcon
+              className="size-5 text-primary"
+              icon={Comment01Icon}
+              strokeWidth={2}
+            />
+          </div>
+          <div className="flex flex-col">
+            <h2 className="font-bold text-2xl">Comentarios</h2>
+            {commentCount > 0 && (
+              <span className="text-muted-foreground text-sm">
+                {commentCount}{" "}
+                {commentCount === 1 ? "comentario" : "comentarios"}
+              </span>
+            )}
+          </div>
+        </div>
+        <Button
+          nativeButton={false}
+          render={<Link params={{ id: post.id }} to={"/post/reviews/$id"} />}
+          size="sm"
+          variant="outline"
+        >
+          <RatingDisplay
+            averageRating={post.averageRating ?? 0}
+            ratingCount={post.ratingCount}
+            variant="compact"
           />
-        </div>
-        <div className="flex flex-col">
-          <h2 className="font-bold text-2xl">Comentarios</h2>
-          {commentCount > 0 && (
-            <span className="text-muted-foreground text-sm">
-              {commentCount} {commentCount === 1 ? "comentario" : "comentarios"}
-            </span>
-          )}
-        </div>
+        </Button>
       </div>
 
       {/* Comment Form */}
@@ -159,30 +184,57 @@ export function CommentSection({ postId }: { postId: string }) {
         >
           <form.AppField name="content">
             {(field) => (
-              <InputGroup>
-                <InputGroupTextarea
-                  className="min-h-24 resize-none border-0 bg-background shadow-sm"
-                  id="content"
-                  onChange={(e) => field.setValue(e.target.value)}
-                  placeholder="Escribe tu comentario..."
-                  value={field.state.value}
-                />
-                <InputGroupAddon align="block-end" className="border-t-none">
-                  <EmojiPicker onSelect={insertToken} />
-                  <StickerPicker
-                    currentContent={currentContent}
-                    onSelect={insertToken}
+              <div className="flex flex-col gap-2">
+                <InputGroup>
+                  <InputGroupTextarea
+                    className="min-h-24 resize-none border-0 bg-background shadow-sm"
+                    id="content"
+                    onChange={(e) => field.setValue(e.target.value)}
+                    placeholder="Escribe tu comentario..."
+                    value={field.state.value}
                   />
-                  <InputGroupButton
-                    className="ml-auto"
-                    size="sm"
-                    variant="default"
-                  >
-                    <HugeiconsIcon className="size-4" icon={SentIcon} />
-                    Enviar
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
+                  <InputGroupAddon align="block-end" className="border-t-none">
+                    <EmojiPicker onSelect={insertToken} />
+                    <StickerPicker
+                      currentContent={currentContent}
+                      onSelect={insertToken}
+                    />
+                    <form.Subscribe
+                      selector={(state) => [
+                        state.canSubmit,
+                        state.isSubmitting,
+                      ]}
+                    >
+                      {([canSubmit, isSubmitting]) => (
+                        <InputGroupButton
+                          className="ml-auto"
+                          disabled={!canSubmit}
+                          loading={isSubmitting}
+                          size="sm"
+                          type="submit"
+                          variant="default"
+                        >
+                          <HugeiconsIcon className="size-4" icon={SentIcon} />
+                          Enviar
+                        </InputGroupButton>
+                      )}
+                    </form.Subscribe>
+                  </InputGroupAddon>
+                </InputGroup>
+                {field.state.meta.errors.length > 0 && (
+                  <Item variant="outline">
+                    <ItemMedia>
+                      <HugeiconsIcon
+                        className="size-5 text-destructive"
+                        icon={AlertCircleIcon}
+                      />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ErrorField field={field} />
+                    </ItemContent>
+                  </Item>
+                )}
+              </div>
             )}
           </form.AppField>
         </form>

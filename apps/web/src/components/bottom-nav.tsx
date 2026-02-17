@@ -12,6 +12,7 @@ import { cva } from "class-variance-authority";
 import { motion } from "motion/react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { AuthDialog, AuthDialogTrigger } from "./auth/auth-dialog";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -151,9 +152,6 @@ function ExtrasNavMenu({ isActive }: { isActive: boolean }) {
   const { data: auth } = authClient.useSession();
   const navigate = useNavigate();
 
-  const profileHref = auth?.session ? "/profile" : "/auth";
-  const profileLabel = auth?.session ? "Perfil" : "Auth";
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -175,10 +173,22 @@ function ExtrasNavMenu({ isActive }: { isActive: boolean }) {
         <span className="text-xs">Extras</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" side="top" sideOffset={8}>
-        <DropdownMenuItem onClick={() => navigate({ to: profileHref })}>
-          <HugeiconsIcon icon={UserIcon} />
-          {profileLabel}
-        </DropdownMenuItem>
+        {auth?.session ? (
+          <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+            <HugeiconsIcon icon={UserIcon} />
+            Perfil
+          </DropdownMenuItem>
+        ) : (
+          <AuthDialog>
+            <AuthDialogTrigger
+              nativeButton={false}
+              render={<DropdownMenuItem />}
+            >
+              <HugeiconsIcon icon={UserIcon} />
+              Login
+            </AuthDialogTrigger>
+          </AuthDialog>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

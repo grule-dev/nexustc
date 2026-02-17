@@ -25,18 +25,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
 import { orpcClient } from "@/lib/orpc";
-
-const statusDisplayMap = {
-  queued: "En cola",
-  uploading: "Subiendo...",
-  uploaded: "Subido",
-  error: "Error",
-} as const;
 
 export const Route = createFileRoute("/admin/comics/create")({
   component: RouteComponent,
@@ -45,13 +37,8 @@ export const Route = createFileRoute("/admin/comics/create")({
 
 function RouteComponent() {
   const data = Route.useLoaderData();
-  const {
-    parentRef,
-    selectedFiles,
-    uploadProgress,
-    handleFileChange,
-    removeFile,
-  } = useMultipleFileUpload();
+  const { parentRef, selectedFiles, handleFileChange, removeFile } =
+    useMultipleFileUpload();
   const groupedTerms = Object.groupBy(data.terms, (item) => item.taxonomy);
   const navigate = useNavigate();
   const [tagsContent, setTagsContent] = useState("");
@@ -265,64 +252,42 @@ function RouteComponent() {
                   className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6"
                   ref={parentRef}
                 >
-                  {selectedFiles.map((file) => {
-                    const progressEntry = uploadProgress[file.name];
-                    return (
-                      <Card className="cursor-grab" key={file.name}>
-                        <CardHeader>
-                          <CardTitle className="text-wrap text-sm">
-                            {file.name}
-                          </CardTitle>
-                          <CardDescription>
-                            {(file.size / 1024).toFixed(2)} KB
-                          </CardDescription>
-                          <CardAction>
-                            <Button
-                              disabled={progressEntry?.status === "uploading"}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFile(file.name);
-                              }}
-                              size="icon"
-                              variant="ghost"
-                            >
-                              <HugeiconsIcon icon={Cancel01Icon} />
-                            </Button>
-                          </CardAction>
-                        </CardHeader>
-                        <CardContent className="flex justify-center">
-                          {!!progressEntry?.previewUrl && (
-                            <img
-                              alt={`Preview of ${file.name}`}
-                              className="max-h-32 rounded object-contain"
-                              src={progressEntry.previewUrl}
-                            />
-                          )}
-                        </CardContent>
-                        <CardFooter className="flex-col items-start">
-                          {!!progressEntry && (
-                            <>
-                              <Progress
-                                className="h-2 w-full"
-                                value={progressEntry.progress}
-                              />
-                              <p
-                                className={`mt-1 text-xs ${
-                                  progressEntry.error
-                                    ? "text-red-500"
-                                    : "text-gray-500 dark:text-gray-400"
-                                }`}
-                              >
-                                {statusDisplayMap[progressEntry.status]}
-                                {!!progressEntry.error &&
-                                  `: ${progressEntry.error}`}
-                              </p>
-                            </>
-                          )}
-                        </CardFooter>
-                      </Card>
-                    );
-                  })}
+                  {selectedFiles.map((file) => (
+                    <Card
+                      className="cursor-grab"
+                      data-label={file.name}
+                      key={file.name}
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-wrap text-sm">
+                          {file.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {(file.size / 1024).toFixed(2)} KB
+                        </CardDescription>
+                        <CardAction>
+                          <Button
+                            disabled={form.state.isSubmitting}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFile(file.name);
+                            }}
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <HugeiconsIcon icon={Cancel01Icon} />
+                          </Button>
+                        </CardAction>
+                      </CardHeader>
+                      <CardContent className="flex justify-center">
+                        <img
+                          alt={`Preview of ${file.name}`}
+                          className="max-h-32 rounded object-contain"
+                          src={URL.createObjectURL(file)}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
             )}

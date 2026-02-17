@@ -7,8 +7,8 @@ export function useMultipleFileUpload() {
     HTMLDivElement,
     File
   >([], {
-    draggingClass: "border-secondary",
-    dropZoneClass: "border-secondary",
+    multiDrag: true,
+    selectedClass: "bg-blue-500 text-white",
   });
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {

@@ -62,7 +62,7 @@ function RouteComponent() {
           <ComicPage comic={post} />
         )}
 
-        <CommentSection postId={post.id} />
+        <CommentSection post={post} />
       </div>
     </main>
   );

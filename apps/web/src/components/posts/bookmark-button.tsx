@@ -1,7 +1,7 @@
 import { Bookmark02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useDebounceEffect } from "@/hooks/use-debounce-effect";
@@ -42,11 +42,6 @@ function BookmarkButtonUI({
 export function BookmarkButton({ postId }: { postId: string }) {
   const { data: auth } = authClient.useSession();
   const [cooldown, setCooldown] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Reset cooldown after 2 seconds
   useDebounceEffect(
@@ -125,21 +120,19 @@ export function BookmarkButton({ postId }: { postId: string }) {
     })
   );
 
-  if (!mounted) {
-    return null;
-  }
-
   // Unauthenticated state - static disabled button
   if (!auth) {
     return (
       <Tooltip>
-        <TooltipTrigger>
-          <BookmarkButtonUI
-            isBookmarked={false}
-            isDisabled={true}
-            isLoading={false}
-          />
-        </TooltipTrigger>
+        <TooltipTrigger
+          render={
+            <BookmarkButtonUI
+              isBookmarked={false}
+              isDisabled={true}
+              isLoading={false}
+            />
+          }
+        />
         <TooltipContent>Inicia sesión para guardar posts</TooltipContent>
       </Tooltip>
     );

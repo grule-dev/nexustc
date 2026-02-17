@@ -5,7 +5,6 @@ import {
   InformationCircleIcon,
   Link01Icon,
   Share08Icon,
-  StarIcon,
   Tag01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
@@ -51,7 +50,7 @@ export function PostHero({ post }: { post: PostProps }) {
   const mainImage = post.imageObjectKeys?.[0];
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col md:px-0">
       <div className="relative overflow-hidden rounded-t-3xl border border-b-0">
         {/* Main Image with Gradient Overlay */}
         {mainImage && (
@@ -74,7 +73,7 @@ export function PostHero({ post }: { post: PostProps }) {
                 </h1>
                 {post.version && (
                   <Badge
-                    className="mb-1 border-white/30 bg-white/20 text-white backdrop-blur-sm md:mb-2"
+                    className="mb-1 h-6 border-white/30 bg-white/20 text-sm text-white backdrop-blur-sm md:mb-2"
                     variant="outline"
                   >
                     {post.version}
@@ -137,8 +136,11 @@ export function PostActionBar({ post }: { post: PostProps }) {
           size="sm"
           variant="outline"
         >
-          <HugeiconsIcon className="size-4" icon={StarIcon} />
-          Reviews
+          <RatingDisplay
+            averageRating={post.averageRating ?? 0}
+            ratingCount={post.ratingCount}
+            variant="compact"
+          />
         </Button>
         <Tooltip>
           <TooltipTrigger
@@ -210,7 +212,7 @@ export function PostContent({ post }: { post: PostProps }) {
                   {allImages.map((image, index) => (
                     <CarouselItem className="md:basis-1/3" key={image}>
                       <button
-                        className="group aspect-video overflow-hidden rounded-xl border-2 transition-all"
+                        className="group aspect-video w-full overflow-hidden rounded-xl border-2 transition-all"
                         onClick={() => {
                           setSelectedImageIndex(index);
                           setGalleryOpen(true);
