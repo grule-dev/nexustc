@@ -34,6 +34,7 @@ import { Route as AdminComicsIndexRouteImport } from './routes/admin/comics/inde
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as ApiPatreonWebhookRouteImport } from './routes/api/patreon/webhook'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as AdminUsersManageRouteImport } from './routes/admin/users/manage'
 import { Route as AdminTermsCreateRouteImport } from './routes/admin/terms/create'
 import { Route as AdminStickersCreateRouteImport } from './routes/admin/stickers/create'
 import { Route as AdminPostsCreateRouteImport } from './routes/admin/posts/create'
@@ -176,6 +177,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersManageRoute = AdminUsersManageRouteImport.update({
+  id: '/users/manage',
+  path: '/users/manage',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminTermsCreateRoute = AdminTermsCreateRouteImport.update({
   id: '/terms/create',
   path: '/terms/create',
@@ -290,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/stickers/create': typeof AdminStickersCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/admin/users/manage': typeof AdminUsersManageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/stickers/create': typeof AdminStickersCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/admin/users/manage': typeof AdminUsersManageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -377,6 +385,7 @@ export interface FileRoutesById {
   '/admin/posts/create': typeof AdminPostsCreateRoute
   '/admin/stickers/create': typeof AdminStickersCreateRoute
   '/admin/terms/create': typeof AdminTermsCreateRoute
+  '/admin/users/manage': typeof AdminUsersManageRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/patreon/webhook': typeof ApiPatreonWebhookRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
@@ -422,6 +431,7 @@ export interface FileRouteTypes {
     | '/admin/posts/create'
     | '/admin/stickers/create'
     | '/admin/terms/create'
+    | '/admin/users/manage'
     | '/api/auth/$'
     | '/api/patreon/webhook'
     | '/api/rpc/$'
@@ -464,6 +474,7 @@ export interface FileRouteTypes {
     | '/admin/posts/create'
     | '/admin/stickers/create'
     | '/admin/terms/create'
+    | '/admin/users/manage'
     | '/api/auth/$'
     | '/api/patreon/webhook'
     | '/api/rpc/$'
@@ -508,6 +519,7 @@ export interface FileRouteTypes {
     | '/admin/posts/create'
     | '/admin/stickers/create'
     | '/admin/terms/create'
+    | '/admin/users/manage'
     | '/api/auth/$'
     | '/api/patreon/webhook'
     | '/api/rpc/$'
@@ -711,6 +723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users/manage': {
+      id: '/admin/users/manage'
+      path: '/users/manage'
+      fullPath: '/admin/users/manage'
+      preLoaderRoute: typeof AdminUsersManageRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/terms/create': {
       id: '/admin/terms/create'
       path: '/terms/create'
@@ -883,6 +902,7 @@ interface AdminRouteRouteChildren {
   AdminPostsCreateRoute: typeof AdminPostsCreateRoute
   AdminStickersCreateRoute: typeof AdminStickersCreateRoute
   AdminTermsCreateRoute: typeof AdminTermsCreateRoute
+  AdminUsersManageRoute: typeof AdminUsersManageRoute
   AdminComicsIndexRoute: typeof AdminComicsIndexRoute
   AdminEmojisIndexRoute: typeof AdminEmojisIndexRoute
   AdminPostsIndexRoute: typeof AdminPostsIndexRoute
@@ -907,6 +927,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminPostsCreateRoute: AdminPostsCreateRoute,
   AdminStickersCreateRoute: AdminStickersCreateRoute,
   AdminTermsCreateRoute: AdminTermsCreateRoute,
+  AdminUsersManageRoute: AdminUsersManageRoute,
   AdminComicsIndexRoute: AdminComicsIndexRoute,
   AdminEmojisIndexRoute: AdminEmojisIndexRoute,
   AdminPostsIndexRoute: AdminPostsIndexRoute,

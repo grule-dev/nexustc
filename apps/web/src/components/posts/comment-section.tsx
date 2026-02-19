@@ -59,7 +59,6 @@ export function CommentSection({ post }: { post: PostProps }) {
       content: "",
     },
     onSubmit: async (formData) => {
-
       try {
         await orpcClient.post.createComment({
           postId: post.id,
