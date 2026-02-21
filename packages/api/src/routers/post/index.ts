@@ -1,5 +1,5 @@
 import { getLogger } from "@orpc/experimental-pino";
-import { and, asc, desc, eq, sql } from "@repo/db";
+import { and, asc, desc, eq, getRedis, ne, sql } from "@repo/db";
 import {
   comment,
   featuredPost,
@@ -27,6 +27,8 @@ import {
   publicProcedure,
 } from "../../index";
 import admin from "./admin";
+
+const RECOMMENDATION_LIMIT = 5;
 
 export default {
   // TODO: implement caching here, very heavily used endpoint
@@ -849,6 +851,160 @@ export default {
       );
       logger?.info(`View count incremented for post ${input.postId}`);
       return { comments, authors };
+    }),
+
+  getRelated: publicProcedure
+    .use(fixedWindowRatelimitMiddleware({ limit: 30, windowSeconds: 60 }))
+    .input(z.object({ postId: z.string(), type: z.enum(["post", "comic"]) }))
+    .handler(async ({ context: { db, ...context }, input }) => {
+      const logger = getLogger(context);
+      logger?.info(`Fetching related posts for: ${input.postId}`);
+
+      const cacheKey = `rec:${input.postId}`;
+
+      try {
+        const redis = await getRedis();
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          logger?.debug(`Cache hit for related posts: ${input.postId}`);
+          return JSON.parse(cached);
+        }
+      } catch (error) {
+        logger?.warn("Redis cache read failed for related posts");
+        logger?.warn(error);
+      }
+
+      const currentTerms = db
+        .select({ termId: termPostRelation.termId })
+        .from(termPostRelation)
+        .where(eq(termPostRelation.postId, input.postId));
+
+      const weightCase = sql`CASE ${term.taxonomy}
+        WHEN 'tag' THEN 3
+        WHEN 'engine' THEN 2
+        WHEN 'graphics' THEN 2
+        WHEN 'censorship' THEN 2
+        WHEN 'status' THEN 2
+        WHEN 'language' THEN 1
+        WHEN 'platform' THEN 1
+        ELSE 1
+      END`;
+
+      const termWeightSubquery = db
+        .select({
+          postId: termPostRelation.postId,
+          weightedCount: sql<number>`SUM(${weightCase})`.as("weighted_count"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .where(sql`${termPostRelation.termId} IN (${currentTerms})`)
+        .groupBy(termPostRelation.postId)
+        .as("term_weight");
+
+      const likesAgg = db
+        .select({
+          postId: postLikes.postId,
+          count: sql<number>`COUNT(*)`.as("likes_count"),
+        })
+        .from(postLikes)
+        .groupBy(postLikes.postId)
+        .as("likes_agg");
+
+      const favoritesAgg = db
+        .select({
+          postId: postBookmark.postId,
+          count: sql<number>`COUNT(*)`.as("favorites_count"),
+        })
+        .from(postBookmark)
+        .groupBy(postBookmark.postId)
+        .as("favorites_agg");
+
+      const ratingsAgg = db
+        .select({
+          postId: postRating.postId,
+          averageRating:
+            sql<number>`COALESCE(AVG(${postRating.rating})::float, 0)`.as(
+              "average_rating"
+            ),
+        })
+        .from(postRating)
+        .groupBy(postRating.postId)
+        .as("ratings_agg");
+
+      const termsAgg = db
+        .select({
+          postId: termPostRelation.postId,
+          terms: sql`
+            json_agg(
+              json_build_object(
+                'id', ${term.id},
+                'name', ${term.name},
+                'taxonomy', ${term.taxonomy},
+                'color', ${term.color}
+              )
+            )
+          `.as("terms"),
+        })
+        .from(termPostRelation)
+        .innerJoin(term, eq(term.id, termPostRelation.termId))
+        .groupBy(termPostRelation.postId)
+        .as("terms_agg");
+
+      const results = await db
+        .select({
+          id: post.id,
+          title: post.title,
+          type: post.type,
+          imageObjectKeys: post.imageObjectKeys,
+          views: post.views,
+          likes: sql<number>`COALESCE(${likesAgg.count}, 0)`,
+          favorites: sql<number>`COALESCE(${favoritesAgg.count}, 0)`,
+          averageRating: sql<number>`COALESCE(${ratingsAgg.averageRating}, 0)`,
+          terms: sql<
+            {
+              id: string;
+              name: string;
+              taxonomy: string;
+              color: string;
+            }[]
+          >`COALESCE(${termsAgg.terms}, '[]'::json)`,
+          score: sql<number>`
+            COALESCE(${termWeightSubquery.weightedCount}, 0) * 10
+            + LN(COALESCE(${post.views}, 0) + 1)
+            + COALESCE(${ratingsAgg.averageRating}, 0) * 0.5
+            + COALESCE(${likesAgg.count}, 0) * 0.2
+            + COALESCE(${favoritesAgg.count}, 0) * 0.3
+          `.as("score"),
+        })
+        .from(post)
+        .innerJoin(termWeightSubquery, eq(termWeightSubquery.postId, post.id))
+        .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
+        .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
+        .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
+        .leftJoin(termsAgg, eq(termsAgg.postId, post.id))
+        .where(
+          and(
+            eq(post.status, "publish"),
+            eq(post.type, input.type),
+            ne(post.id, input.postId)
+          )
+        )
+        .orderBy(sql`score DESC`)
+        .limit(RECOMMENDATION_LIMIT);
+
+      const data = results.map(({ score, ...rest }) => rest);
+
+      try {
+        const redis = await getRedis();
+        await redis.set(cacheKey, JSON.stringify(data), { EX: 720 });
+        logger?.debug(`Cached related posts for: ${input.postId}`);
+      } catch (error) {
+        logger?.warn("Redis cache write failed for related posts");
+        logger?.warn(error);
+      }
+
+      logger?.info(`Found ${data.length} related posts for: ${input.postId}`);
+      return data;
     }),
 
   admin,

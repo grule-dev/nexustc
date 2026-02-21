@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import type { PremiumLinksDescriptor } from "@repo/shared/constants";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -16,8 +17,13 @@ import AutoScroll from "embla-carousel-auto-scroll";
 import { useState } from "react";
 import { toast } from "sonner";
 import { TermBadge } from "@/components/term-badge";
+import { orpcClient } from "@/lib/orpc";
 import type { PostType } from "@/lib/types";
 import { getBucketUrl } from "@/lib/utils";
+import {
+  PostCard,
+  type PostProps as PostCardProps,
+} from "../landing/post-card";
 import { Markdown } from "../markdown";
 import { RatingDisplay } from "../ratings";
 import { Badge } from "../ui/badge";
@@ -35,7 +41,7 @@ import { LikeButton } from "./like-button";
 
 export type PostProps = Omit<
   PostType,
-  "likes" | "favorites" | "isWeekly" | "type" | "status"
+  "likes" | "favorites" | "isWeekly" | "status"
 > & {
   averageRating?: number;
   ratingCount?: number;
@@ -227,9 +233,14 @@ export function PostSidebarContent({ post }: { post: PostProps }) {
   const hasCreator = !!post.creatorName || !!post.creatorLink;
   const Comp = post.creatorLink ? "a" : "div";
 
+  const { data: related, isLoading } = useQuery({
+    queryKey: ["related", post.id],
+    queryFn: () =>
+      orpcClient.post.getRelated({ postId: post.id, type: post.type }),
+  });
+
   return (
     <div className="sticky inset-0 top-4 left-0 flex flex-col gap-4">
-      {/* Creator Sidebar Card (if exists) */}
       {hasCreator && (
         <Comp
           className="flex flex-col gap-4 rounded-2xl border border-secondary bg-linear-to-br from-primary/5 to-transparent p-5"
@@ -253,10 +264,18 @@ export function PostSidebarContent({ post }: { post: PostProps }) {
           <CardTitle>Recomendados</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {/* TODO: Implement recommendation system and add it here */}
-          {Array.of(1, 2, 3, 4, 5).map((_, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: temporary placeholder
-            <Skeleton className="h-40 w-full" key={index} />
+          {isLoading &&
+            Array.from({ length: 5 }, (_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: loading placeholder
+              <Skeleton className="h-28 w-full rounded-xl" key={i} />
+            ))}
+          {!isLoading && related?.length === 0 && (
+            <p className="text-center text-muted-foreground text-sm">
+              Sin recomendaciones disponibles
+            </p>
+          )}
+          {related?.map((item: PostCardProps) => (
+            <PostCard key={item.id} post={item} />
           ))}
         </CardContent>
       </Card>
