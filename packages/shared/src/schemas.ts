@@ -80,8 +80,8 @@ export const comicCreateSchema = z.object({
   engine: z.string().optional(),
   graphics: z.string().optional(),
   platforms: z.array(z.string()).optional(),
-  adsLinks: z.string().optional(),
-  premiumLinks: z.string().optional(),
+  adsLinks: z.string(),
+  premiumLinks: z.string(),
   changelog: z.string().optional(),
   creatorName: z.string().optional(),
   creatorLink: z

@@ -2,10 +2,13 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { DOCUMENT_STATUSES } from "@repo/shared/constants";
 import { comicCreateSchema } from "@repo/shared/schemas";
+import { useStore } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
 import { SortableGrid } from "@/components/admin/sortable-grid";
+import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useMultipleFileUpload } from "@/hooks/use-multiple-file-upload";
@@ -54,6 +58,8 @@ function RouteComponent() {
       title: "",
       censorship: "",
       status: "",
+      adsLinks: "",
+      premiumLinks: "",
       documentStatus: "draft" as (typeof DOCUMENT_STATUSES)[number],
       tags: [] as string[],
     },
@@ -92,6 +98,12 @@ function RouteComponent() {
       }
     },
   });
+
+  const adsLinks = useStore(form.store, (state) => state.values.adsLinks);
+  const premiumLinks = useStore(
+    form.store,
+    (state) => state.values.premiumLinks
+  );
 
   const extractTags = () => {
     if (tagsContent.trim() === "") {
@@ -148,6 +160,44 @@ function RouteComponent() {
               <field.TextField label="Nombre" placeholder="Nombre" required />
             )}
           </form.AppField>
+
+          <div className="col-span-2 flex flex-row gap-4">
+            <div className="flex-1 space-y-4">
+              <form.AppField name="adsLinks">
+                {(field) => (
+                  <field.TextareaField
+                    className="h-40 resize-none"
+                    label="Links con Anuncios"
+                  />
+                )}
+              </form.AppField>
+            </div>
+            <Separator orientation="vertical" />
+            <div className="flex flex-1 flex-col gap-4">
+              <form.AppField name="premiumLinks">
+                {(field) => (
+                  <field.TextareaField
+                    className="h-40 resize-none"
+                    label="Links Premium"
+                  />
+                )}
+              </form.AppField>
+            </div>
+          </div>
+
+          <div className="col-span-2 flex flex-row gap-4">
+            <div className="flex-1 space-y-4 rounded-md bg-background p-4 [&_a]:text-primary">
+              <Markdown>{adsLinks}</Markdown>
+            </div>
+            <Separator orientation="vertical" />
+            <div className="flex-1 space-y-4 rounded-md bg-background p-4 [&_a]:text-primary">
+              <Markdown>{premiumLinks}</Markdown>
+            </div>
+          </div>
+
+          <div className="col-span-2">
+            <GenerateMarkdownLinkDialog />
+          </div>
 
           <form.AppField name="censorship">
             {(field) => (
