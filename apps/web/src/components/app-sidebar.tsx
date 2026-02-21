@@ -67,12 +67,11 @@ export function AppSidebar() {
                 render={<Link to="/" />}
                 size="lg"
               >
-                <h1 className="line-clamp-1 font-bold text-2xl">
+                <h1 className="line-clamp-2 text-center font-bold text-2xl">
                   N
-                  <span className="group-data-[state=collapsed]:hidden">
+                  <span className="transition-[opacity,transform] duration-300 group-data-[state=collapsed]:scale-x-0 group-data-[state=collapsed]:opacity-0">
                     eXusTC
                     <span className="align-super font-normal text-xs">+18</span>
-                    <span className="font-normal text-xs"> BETA</span>
                   </span>
                 </h1>
               </SidebarMenuButton>

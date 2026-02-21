@@ -481,7 +481,7 @@ function ContentCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-semibold text-lg">
+        <CardTitle className="flex items-center gap-2">
           <HugeiconsIcon className="size-5" icon={icon} />
           {title}
         </CardTitle>

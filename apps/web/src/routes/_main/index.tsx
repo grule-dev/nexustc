@@ -61,7 +61,7 @@ export const Route = createFileRoute("/_main/")({
 
 function HomeComponent() {
   return (
-    <main className="grid w-full gap-4 px-2 md:grid-cols-3 md:px-4">
+    <main className="grid w-full gap-4 px-2 md:grid-cols-4 md:px-4">
       <MainContent />
       <Sidebar />
     </main>
@@ -72,11 +72,11 @@ function MainContent() {
   const { weeklyGames } = Route.useLoaderData();
 
   return (
-    <div className="flex w-full flex-col items-center gap-8 md:col-span-2">
+    <div className="flex w-full flex-col items-center gap-8 md:col-span-3">
       <HeroSection />
-      <h1 className="font-extrabold text-2xl">Juegos de la Semana</h1>
+      <h1 className="font-bold text-3xl leading-tight">Juegos de la Semana</h1>
       <GamesCarousel games={weeklyGames.data ?? []} />
-      <h1 className="font-extrabold text-3xl">Juegos Recientes</h1>
+      <h1 className="font-bold text-3xl leading-tight">Juegos Recientes</h1>
       <RecentPosts />
     </div>
   );
@@ -92,7 +92,7 @@ function Sidebar() {
     <section className="flex w-full flex-col items-center gap-4">
       <Card className="w-full">
         <CardHeader className="flex items-center justify-between">
-          <CardTitle className="inline-flex items-center gap-2 text-sm">
+          <CardTitle className="inline-flex items-center gap-2">
             <HugeiconsIcon className="size-5" icon={UserGroupIcon} /> Usuarios
             Recientes
           </CardTitle>
@@ -115,7 +115,7 @@ function Sidebar() {
       </Card>
       <Card className="w-full">
         <CardHeader className="flex items-center justify-between">
-          <CardTitle className="inline-flex items-center gap-2 text-sm">
+          <CardTitle className="inline-flex items-center gap-2">
             <HugeiconsIcon className="size-4" icon={Tag01Icon} />
             Tags
           </CardTitle>

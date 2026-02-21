@@ -4,19 +4,30 @@ import { cn } from "@/lib/utils";
 
 function Card({
   className,
+  children,
   size = "default",
   ...props
 }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
   return (
-    <div
-      className={cn(
-        "group/card flex flex-col gap-6 overflow-hidden rounded-2xl bg-card py-6 text-card-foreground text-sm ring-1 ring-secondary has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
-        className
-      )}
-      data-size={size}
-      data-slot="card"
-      {...props}
-    />
+    <div className="w-full rounded-[calc(var(--radius-xl)+3px)] border border-white/60 text-card-foreground text-sm dark:border-border/30">
+      <div className="rounded-[calc(var(--radius-xl)+2px)] border border-black/10 dark:border-neutral-900/80">
+        <div className="rounded-[calc(var(--radius-xl)+1px)] border border-white/50 dark:border-neutral-950">
+          <div className="rounded-[calc(var(--radius-xl))] border border-neutral-950/20 dark:border-neutral-900/70">
+            <div
+              className={cn(
+                "group/card flex flex-col gap-6 overflow-hidden rounded-[calc(var(--radius-xl)-1px)] border border-white/50 bg-linear-to-b from-card/70 to-secondary/50 py-6 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 dark:border-neutral-700/50 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+                className
+              )}
+              data-size={size}
+              data-slot="card"
+              {...props}
+            >
+              {children}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -36,7 +47,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("font-medium text-base", className)}
+      className={cn("text-lg", className)}
       data-slot="card-title"
       {...props}
     />

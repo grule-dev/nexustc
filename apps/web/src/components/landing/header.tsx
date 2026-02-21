@@ -10,26 +10,21 @@ import {
   AuthDialogContent,
   AuthDialogTrigger,
 } from "../auth/auth-dialog";
+import { Logo } from "../logo";
 import { Button } from "../ui/button";
 import { SidebarTrigger } from "../ui/sidebar";
 
 export function Header() {
   return (
     <header className="w-full px-2 pt-2">
-      <div className="flex w-full flex-col items-center gap-4 rounded-lg border bg-primary/50 p-4 backdrop-blur">
+      <div className="flex w-full flex-col items-center gap-4 rounded-lg bg-linear-to-b from-primary to-primary/50 p-4">
         <div className="flex w-full items-center justify-between">
           <div className="hidden md:block">
-            <SidebarTrigger />
+            <SidebarTrigger className="text-primary-foreground" />
           </div>
           <BackButton />
           <Link to="/">
-            <h1 className="font-bold text-primary-foreground text-xl md:text-3xl">
-              NeXusTC
-              <span className="align-super font-normal text-xs md:text-sm">
-                +18
-              </span>
-              <span className="font-normal text-xs md:text-sm"> BETA</span>
-            </h1>
+            <Logo />
           </Link>
           <ProfileNavItem />
         </div>

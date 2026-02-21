@@ -170,7 +170,7 @@ export function CommentSection({ post }: { post: PostProps }) {
         </Button>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="flex flex-col gap-4">
         {/* Comment Form */}
         <SignedIn>
           <form
@@ -191,10 +191,7 @@ export function CommentSection({ post }: { post: PostProps }) {
                       placeholder="Escribe tu comentario..."
                       value={field.state.value}
                     />
-                    <InputGroupAddon
-                      align="block-end"
-                      className="border-t-none"
-                    >
+                    <InputGroupAddon align="block-end" className="">
                       <EmojiPicker onSelect={insertToken} />
                       <StickerPicker
                         currentContent={currentContent}
