@@ -61,9 +61,8 @@ export function SetPasswordDialog({
           }}
         >
           <div className="space-y-4">
-            <form.AppField name="newPassword">
               {(field) => (
-                <field.TextField label="Nueva contraseña" type="password" />
+                <field.TextField label="Nueva contraseña" type="password" required />
               )}
             </form.AppField>
             <form.AppForm>
