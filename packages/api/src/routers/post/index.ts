@@ -577,25 +577,30 @@ export default {
         const statusTerm = postData.terms.find((t) => t.taxonomy === "status");
         const statusName = statusTerm?.name;
 
-        let userTier: PatronTier = "none";
+        let tier: PatronTier = "none";
         if (context.session?.user) {
           const patronRecord = await db.query.patron.findFirst({
             where: eq(patron.userId, context.session.user.id),
             columns: { tier: true, isActivePatron: true },
           });
           if (patronRecord?.isActivePatron) {
-            userTier = patronRecord.tier;
+            tier = patronRecord.tier;
           }
         }
 
-        if (canAccessPremiumLinks(userTier, statusName)) {
+        if (
+          canAccessPremiumLinks(
+            { role: context.session?.user.role, tier },
+            statusName
+          )
+        ) {
           premiumLinksAccess = { status: "granted", content: rawPremiumLinks };
-        } else if (userTier === "none") {
+        } else if (tier === "none") {
           premiumLinksAccess = { status: "denied_need_patron" };
         } else {
           premiumLinksAccess = {
             status: "denied_need_upgrade",
-            requiredTierLabel: getRequiredTierLabel(userTier, statusName),
+            requiredTierLabel: getRequiredTierLabel(tier, statusName),
           };
         }
       } else {

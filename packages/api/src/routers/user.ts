@@ -10,7 +10,11 @@ import {
   termPostRelation,
   user,
 } from "@repo/db/schema/app";
-import type { TAXONOMIES } from "@repo/shared/constants";
+import {
+  canBookmark,
+  type PatronTier,
+  type TAXONOMIES,
+} from "@repo/shared/constants";
 import * as z from "zod";
 import {
   fixedWindowRatelimitMiddleware,
@@ -155,13 +159,44 @@ export default {
   toggleBookmark: protectedProcedure
     .use(fixedWindowRatelimitMiddleware({ limit: 10, windowSeconds: 60 }))
     .input(z.object({ bookmarked: z.boolean(), postId: z.string() }))
-    .handler(async ({ context: { db, session, ...ctx }, input }) => {
+    .handler(async ({ context: { db, session, ...ctx }, input, errors }) => {
       const logger = getLogger(ctx);
       logger?.info(
         `User ${session.user.id} toggling bookmark for post ${input.postId} to ${input.bookmarked}`
       );
 
+      let tier: PatronTier = "none";
+      if (session?.user) {
+        const patronRecord = await db.query.patron.findFirst({
+          where: eq(patron.userId, session.user.id),
+          columns: { tier: true, isActivePatron: true },
+        });
+        if (patronRecord?.isActivePatron) {
+          tier = patronRecord.tier;
+        }
+      }
+
       if (input.bookmarked) {
+        const bookmarks = await db
+          .select({ count: sql<number>`count(*)`.as("count") })
+          .from(postBookmark)
+          .where(eq(postBookmark.userId, session.user.id));
+        const bookmarkCount = bookmarks[0]?.count ?? 0;
+
+        if (
+          !canBookmark(
+            { role: session.user.role ?? "user", tier },
+            bookmarkCount
+          )
+        ) {
+          logger?.warn(
+            `User ${session.user.id} has reached bookmark limit for tier ${tier}`
+          );
+          throw errors.FORBIDDEN({
+            message: "Límite de favoritos alcanzado para tu nivel.",
+          });
+        }
+
         await db
           .insert(postBookmark)
           .values({

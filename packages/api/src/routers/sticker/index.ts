@@ -6,21 +6,14 @@ import { patron, sticker } from "@repo/db/schema/app";
 import { env } from "@repo/env";
 import {
   PATRON_TIER_KEYS,
-  PATRON_TIERS,
   type PatronTier,
+  userMeetsTierLevel,
 } from "@repo/shared/constants";
 import z from "zod";
 import { permissionProcedure, publicProcedure } from "../../index";
 import { getS3Client } from "../../utils/s3";
 
 const ASSET_MAX_SIZE_BYTES = 1024 * 1024 * 2; // 2MB
-
-function userMeetsTier(
-  userTier: PatronTier,
-  requiredTier: PatronTier
-): boolean {
-  return PATRON_TIERS[userTier].level >= PATRON_TIERS[requiredTier].level;
-}
 
 export default {
   list: publicProcedure.handler(
@@ -34,23 +27,24 @@ export default {
         .where(eq(sticker.isActive, true))
         .orderBy(asc(sticker.order), asc(sticker.name));
 
-      let userTier: PatronTier = "none";
+      let tier: PatronTier = "none";
       if (session?.user) {
         const patronRecord = await db.query.patron.findFirst({
           where: eq(patron.userId, session.user.id),
           columns: { tier: true, isActivePatron: true },
         });
         if (patronRecord?.isActivePatron) {
-          userTier = patronRecord.tier;
+          tier = patronRecord.tier;
         }
       }
 
-      logger?.debug(
-        `Returning ${stickers.length} stickers for tier ${userTier}`
-      );
+      logger?.debug(`Returning ${stickers.length} stickers for tier ${tier}`);
       return stickers.map((s) => ({
         ...s,
-        locked: !userMeetsTier(userTier, s.requiredTier as PatronTier),
+        locked: !userMeetsTierLevel(
+          { role: session?.user.role, tier },
+          s.requiredTier as PatronTier
+        ),
       }));
     }
   ),

@@ -76,6 +76,7 @@ export const PATRON_TIERS: Record<
     badge: string | null;
     adFree: boolean;
     premiumLinks: PremiumLinksAccess;
+    maxBookmarks: number; // Optional: max bookmarks allowed for this tier
   }
 > = {
   none: {
@@ -83,50 +84,76 @@ export const PATRON_TIERS: Record<
     badge: null,
     adFree: false,
     premiumLinks: { type: "none" },
+    maxBookmarks: 5,
   },
   level1: {
     level: 1,
     badge: "LvL 1",
     adFree: false,
     premiumLinks: { type: "category", categories: ["completed"] },
+    maxBookmarks: 10,
   },
   level3: {
     level: 2,
     badge: "LvL 3",
     adFree: true,
     premiumLinks: { type: "category", categories: ["ongoing"] },
+    maxBookmarks: 10,
   },
   level5: {
     level: 3,
     badge: "LvL 5",
     adFree: true,
     premiumLinks: { type: "all" },
+    maxBookmarks: 15,
   },
   level8: {
     level: 3,
     badge: "LvL 8",
     adFree: true,
     premiumLinks: { type: "all" },
+    maxBookmarks: 50,
   },
   level12: {
     level: 3,
     badge: "LvL 12",
     adFree: true,
     premiumLinks: { type: "all" },
+    maxBookmarks: Number.POSITIVE_INFINITY,
   },
   level69: {
     level: 3,
     badge: "LvL 69",
     adFree: true,
     premiumLinks: { type: "all" },
+    maxBookmarks: Number.POSITIVE_INFINITY,
   },
 } as const;
 
+export function userMeetsTierLevel(
+  user: { role?: string; tier: PatronTier },
+  requiredTier: PatronTier
+): boolean {
+  if (
+    user.role === "owner" ||
+    user.role === "admin" ||
+    user.role === "moderator"
+  ) {
+    return true;
+  }
+
+  return PATRON_TIERS[user.tier].level >= PATRON_TIERS[requiredTier].level;
+}
+
 export function canAccessPremiumLinks(
-  tier: PatronTier,
+  user: { role?: string; tier: PatronTier },
   postStatusName: string | undefined
 ): boolean {
-  const access = PATRON_TIERS[tier].premiumLinks;
+  if (user.role && user.role !== "user") {
+    return true;
+  }
+
+  const access = PATRON_TIERS[user.tier].premiumLinks;
   if (access.type === "none") {
     return false;
   }
@@ -141,6 +168,18 @@ export function canAccessPremiumLinks(
       postStatusName
     )
   );
+}
+
+export function canBookmark(
+  user: { role: string; tier: PatronTier },
+  currentBookmarks: number
+): boolean {
+  if (user.role && user.role !== "user") {
+    return true;
+  }
+
+  const maxBookmarks = PATRON_TIERS[user.tier].maxBookmarks;
+  return currentBookmarks < maxBookmarks;
 }
 
 export function getRequiredTierLabel(
