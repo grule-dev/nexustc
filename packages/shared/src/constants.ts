@@ -149,7 +149,11 @@ export function canAccessPremiumLinks(
   user: { role?: string; tier: PatronTier },
   postStatusName: string | undefined
 ): boolean {
-  if (user.role && user.role !== "user") {
+  if (
+    user.role === "owner" ||
+    user.role === "admin" ||
+    user.role === "moderator"
+  ) {
     return true;
   }
 
@@ -171,7 +175,7 @@ export function canAccessPremiumLinks(
 }
 
 export function canBookmark(
-  user: { role: string; tier: PatronTier },
+  user: { role?: string; tier: PatronTier },
   currentBookmarks: number
 ): boolean {
   if (user.role && user.role !== "user") {

@@ -982,7 +982,7 @@ export default {
           `.as("score"),
         })
         .from(post)
-        .innerJoin(termWeightSubquery, eq(termWeightSubquery.postId, post.id))
+        .leftJoin(termWeightSubquery, eq(termWeightSubquery.postId, post.id))
         .leftJoin(likesAgg, eq(likesAgg.postId, post.id))
         .leftJoin(favoritesAgg, eq(favoritesAgg.postId, post.id))
         .leftJoin(ratingsAgg, eq(ratingsAgg.postId, post.id))
@@ -999,13 +999,15 @@ export default {
 
       const data = results.map(({ score, ...rest }) => rest);
 
-      try {
-        const redis = await getRedis();
-        await redis.set(cacheKey, JSON.stringify(data), { EX: 720 });
-        logger?.debug(`Cached related posts for: ${input.postId}`);
-      } catch (error) {
-        logger?.warn("Redis cache write failed for related posts");
-        logger?.warn(error);
+      if (data.length > 0) {
+        try {
+          const redis = await getRedis();
+          await redis.set(cacheKey, JSON.stringify(data), { EX: 720 });
+          logger?.debug(`Cached related posts for: ${input.postId}`);
+        } catch (error) {
+          logger?.warn("Redis cache write failed for related posts");
+          logger?.warn(error);
+        }
       }
 
       logger?.info(`Found ${data.length} related posts for: ${input.postId}`);
