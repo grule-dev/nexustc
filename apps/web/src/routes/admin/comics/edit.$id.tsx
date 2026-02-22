@@ -2,8 +2,7 @@ import { comicEditSchema } from "@repo/shared/schemas";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef } from "react";
-import Markdown from "react-markdown";
+import { Markdown } from "@/components/markdown";
 import { toast } from "sonner";
 import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
 import {
