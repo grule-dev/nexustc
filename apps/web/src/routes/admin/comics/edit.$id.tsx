@@ -1,12 +1,15 @@
 import { comicEditSchema } from "@repo/shared/schemas";
+import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
 import { toast } from "sonner";
+import { GenerateMarkdownLinkDialog } from "@/components/admin/generate-md-link-dialog";
 import {
   ImageEditor,
   type ImageEditorRef,
 } from "@/components/admin/image-editor";
+import { Markdown } from "@/components/markdown";
 import {
   Card,
   CardContent,
@@ -14,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpc, orpcClient } from "@/lib/orpc";
 
@@ -53,6 +57,8 @@ function RouteComponent() {
       title: oldComic.title,
       censorship: terms.censorship?.[0]?.term.id ?? "",
       status: terms.status?.[0]?.term.id ?? "",
+      adsLinks: oldComic.adsLinks ?? "",
+      premiumLinks: oldComic.premiumLinks ?? "",
       documentStatus: oldComic.status,
       tags: terms.tag?.map((term) => term.term.id) ?? [],
     },
@@ -92,6 +98,12 @@ function RouteComponent() {
     },
   });
 
+  const adsLinks = useStore(form.store, (state) => state.values.adsLinks);
+  const premiumLinks = useStore(
+    form.store,
+    (state) => state.values.premiumLinks
+  );
+
   return (
     <form
       className="flex flex-col gap-4"
@@ -111,6 +123,44 @@ function RouteComponent() {
               <field.TextField label="Nombre" placeholder="Nombre" required />
             )}
           </form.AppField>
+
+          <div className="col-span-2 flex flex-row gap-4">
+            <div className="flex-1 space-y-4">
+              <form.AppField name="adsLinks">
+                {(field) => (
+                  <field.TextareaField
+                    className="h-40 resize-none"
+                    label="Links con Anuncios"
+                  />
+                )}
+              </form.AppField>
+            </div>
+            <Separator orientation="vertical" />
+            <div className="flex flex-1 flex-col gap-4">
+              <form.AppField name="premiumLinks">
+                {(field) => (
+                  <field.TextareaField
+                    className="h-40 resize-none"
+                    label="Links Premium"
+                  />
+                )}
+              </form.AppField>
+            </div>
+          </div>
+
+          <div className="col-span-2 flex flex-row gap-4">
+            <div className="flex-1 space-y-4 rounded-md bg-background p-4 [&_a]:text-primary">
+              <Markdown>{adsLinks}</Markdown>
+            </div>
+            <Separator orientation="vertical" />
+            <div className="flex-1 space-y-4 rounded-md bg-background p-4 [&_a]:text-primary">
+              <Markdown>{premiumLinks}</Markdown>
+            </div>
+          </div>
+
+          <div className="col-span-2">
+            <GenerateMarkdownLinkDialog />
+          </div>
 
           <form.AppField name="censorship">
             {(field) => (

@@ -6,21 +6,14 @@ import { emoji, patron } from "@repo/db/schema/app";
 import { env } from "@repo/env";
 import {
   PATRON_TIER_KEYS,
-  PATRON_TIERS,
   type PatronTier,
+  userMeetsTierLevel,
 } from "@repo/shared/constants";
 import z from "zod";
 import { permissionProcedure, publicProcedure } from "../../index";
 import { getS3Client } from "../../utils/s3";
 
 const ASSET_MAX_SIZE_BYTES = 1024 * 1024 * 2; // 2MB
-
-function userMeetsTier(
-  userTier: PatronTier,
-  requiredTier: PatronTier
-): boolean {
-  return PATRON_TIERS[userTier].level >= PATRON_TIERS[requiredTier].level;
-}
 
 export default {
   list: publicProcedure.handler(
@@ -34,21 +27,24 @@ export default {
         .where(eq(emoji.isActive, true))
         .orderBy(asc(emoji.order), asc(emoji.name));
 
-      let userTier: PatronTier = "none";
+      let tier: PatronTier = "none";
       if (session?.user) {
         const patronRecord = await db.query.patron.findFirst({
           where: eq(patron.userId, session.user.id),
           columns: { tier: true, isActivePatron: true },
         });
         if (patronRecord?.isActivePatron) {
-          userTier = patronRecord.tier;
+          tier = patronRecord.tier;
         }
       }
 
-      logger?.debug(`Returning ${emojis.length} emojis for tier ${userTier}`);
+      logger?.debug(`Returning ${emojis.length} emojis for tier ${tier}`);
       return emojis.map((e) => ({
         ...e,
-        locked: !userMeetsTier(userTier, e.requiredTier as PatronTier),
+        locked: !userMeetsTierLevel(
+          { role: session?.user.role, tier },
+          e.requiredTier as PatronTier
+        ),
       }));
     }
   ),

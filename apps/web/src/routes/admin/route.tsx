@@ -1,5 +1,8 @@
+import type { Permissions } from "@repo/shared/permissions";
+import type { AtLeastOne } from "@repo/shared/types";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { Suspense } from "react";
+import { ImpersonationBanner } from "@/components/admin/users/impersonation-banner";
 import { HasPermissions } from "@/components/auth/has-role";
 import Loader from "@/components/loader";
 import {
@@ -38,6 +41,11 @@ const nav = {
       {
         name: "Listar",
         href: "/admin/users",
+      },
+      {
+        name: "Gestionar",
+        href: "/admin/users/manage",
+        permissions: { user: ["set-role"] } as AtLeastOne<Permissions>,
       },
     ],
   },
@@ -204,6 +212,7 @@ function AdminLayout() {
         <SidebarRail />
       </Sidebar>
       <main className="container w-full p-4">
+        <ImpersonationBanner />
         <Suspense fallback={<Loader />}>
           <Outlet />
         </Suspense>
@@ -212,26 +221,40 @@ function AdminLayout() {
   );
 }
 
-function SidebarLinks({
-  item,
-}: {
-  item: { name: string; links: { name: string; href: string }[] };
-}) {
+type NavLink = {
+  name: string;
+  href: string;
+  permissions?: AtLeastOne<Permissions>;
+};
+
+function SidebarLinks({ item }: { item: { name: string; links: NavLink[] } }) {
   return (
     <SidebarGroup key={item.name}>
       <SidebarGroupLabel>{item.name}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {item.links.map((link) => (
-            <SidebarMenuItem key={link.name}>
-              <SidebarMenuButton
-                render={<Link to={link.href} />}
-                variant="default"
-              >
-                {link.name}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {item.links.map((link) => {
+            const menuItem = (
+              <SidebarMenuItem key={link.name}>
+                <SidebarMenuButton
+                  render={<Link to={link.href} />}
+                  variant="default"
+                >
+                  {link.name}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+
+            if (link.permissions) {
+              return (
+                <HasPermissions key={link.name} permissions={link.permissions}>
+                  {menuItem}
+                </HasPermissions>
+              );
+            }
+
+            return menuItem;
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

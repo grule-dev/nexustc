@@ -73,9 +73,7 @@ function RouteComponent() {
         <h1 className="font-bold text-2xl">Tutoriales</h1>
         <div className="space-y-4">
           <form.AppField name="title">
-            {(field) => (
-              <field.TextField label="Título" placeholder="Título" required />
-            )}
+            {(field) => <field.TextField label="Título" placeholder="Título" />}
           </form.AppField>
           <form.AppField name="embedUrl">
             {(field) => (

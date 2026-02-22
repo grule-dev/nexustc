@@ -17,23 +17,26 @@ import {
 } from "./utils/redis-operations";
 
 export const o = os.$context<Context>().errors({
-  RATE_LIMITED: {
-    status: 429,
-    data: z.object({
-      retryAfter: z.number(),
-    }),
-  },
-  NOT_FOUND: {
-    status: 404,
-  },
-  INTERNAL_SERVER_ERROR: {
-    status: 500,
+  BAD_REQUEST: {
+    status: 400,
   },
   UNAUTHORIZED: {
     status: 401,
   },
   FORBIDDEN: {
     status: 403,
+  },
+  NOT_FOUND: {
+    status: 404,
+  },
+  RATE_LIMITED: {
+    status: 429,
+    data: z.object({
+      retryAfter: z.number(),
+    }),
+  },
+  INTERNAL_SERVER_ERROR: {
+    status: 500,
   },
 });
 
