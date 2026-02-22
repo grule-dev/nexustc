@@ -89,7 +89,6 @@ function RouteComponent() {
               <field.TextareaField
                 label="Descripción"
                 placeholder="Descripción"
-                required
               />
             )}
           </form.AppField>
