@@ -468,6 +468,7 @@ export default {
         .select({
           id: post.id,
           title: post.title,
+          version: post.version,
           type: post.type,
           imageObjectKeys: post.imageObjectKeys,
           createdAt: post.createdAt,

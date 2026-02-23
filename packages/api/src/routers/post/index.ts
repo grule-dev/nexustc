@@ -15,9 +15,9 @@ import type { TAXONOMIES } from "@repo/shared/constants";
 import {
   canAccessPremiumLinks,
   getRequiredTierLabel,
-  PATRON_TIERS,
   type PatronTier,
   type PremiumLinksDescriptor,
+  userMeetsTierLevel,
 } from "@repo/shared/constants";
 import { parseTokens, validateTokenLimit } from "@repo/shared/token-parser";
 import z from "zod";
@@ -138,6 +138,7 @@ export default {
         .select({
           id: post.id,
           title: post.title,
+          version: post.version,
           type: post.type,
           content: post.content,
           isWeekly: post.isWeekly,
@@ -755,7 +756,8 @@ export default {
           if (patronRecord?.isActivePatron) {
             userTier = patronRecord.tier;
           }
-          const userLevel = PATRON_TIERS[userTier].level;
+
+          const userCtx = { role: session.user.role, tier: userTier };
 
           const emojiTokens = tokens.filter((t) => t.type === "emoji");
           const stickerTokens = tokens.filter((t) => t.type === "sticker");
@@ -773,9 +775,12 @@ export default {
               if (!emojiRecord) {
                 continue;
               }
-              const requiredLevel =
-                PATRON_TIERS[emojiRecord.requiredTier as PatronTier].level;
-              if (userLevel < requiredLevel) {
+              if (
+                !userMeetsTierLevel(
+                  userCtx,
+                  emojiRecord.requiredTier as PatronTier
+                )
+              ) {
                 logger?.warn(
                   `User ${session.user.id} lacks tier for emoji "${token.name}"`
                 );
@@ -792,9 +797,12 @@ export default {
             });
 
             for (const stickerRecord of stickers) {
-              const requiredLevel =
-                PATRON_TIERS[stickerRecord.requiredTier as PatronTier].level;
-              if (userLevel < requiredLevel) {
+              if (
+                !userMeetsTierLevel(
+                  userCtx,
+                  stickerRecord.requiredTier as PatronTier
+                )
+              ) {
                 logger?.warn(
                   `User ${session.user.id} lacks tier for sticker "${stickerRecord.name}"`
                 );
