@@ -105,7 +105,6 @@ export function EmojiPicker({ onSelect }: EmojiPickerProps) {
                   key={e.id}
                   onClick={() => {
                     onSelect(`:${e.name}:`);
-                    setOpen(false);
                   }}
                   type="button"
                 >

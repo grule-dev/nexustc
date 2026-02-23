@@ -18,6 +18,7 @@ import {
   useEmojiStickerMaps,
 } from "@/components/comments/comment-content";
 import { EmojiPicker } from "@/components/comments/emoji-picker";
+import { RichCommentInput } from "@/components/comments/rich-comment-input";
 import { StickerPicker } from "@/components/comments/sticker-picker";
 import { useAppForm } from "@/hooks/use-app-form";
 import { orpcClient } from "@/lib/orpc";
@@ -32,7 +33,6 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupTextarea,
 } from "../ui/input-group";
 import { Item, ItemContent, ItemMedia } from "../ui/item";
 import { ScrollArea } from "../ui/scroll-area";
@@ -184,11 +184,12 @@ export function CommentSection({ post }: { post: PostProps }) {
               {(field) => (
                 <div className="flex flex-col gap-2">
                   <InputGroup>
-                    <InputGroupTextarea
-                      className="min-h-24 resize-none border-0 bg-background shadow-sm"
-                      id="content"
-                      onChange={(e) => field.setValue(e.target.value)}
+                    <RichCommentInput
+                      className="min-h-24 w-full border-0 bg-background shadow-none"
+                      emojiMap={emojiMap}
+                      onChange={(v) => field.setValue(v)}
                       placeholder="Escribe tu comentario..."
+                      stickerMap={stickerMap}
                       value={field.state.value}
                     />
                     <InputGroupAddon align="block-end" className="">

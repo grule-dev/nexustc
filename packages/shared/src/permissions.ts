@@ -40,6 +40,7 @@ const moderator = ac.newRole({
 });
 
 const admin = ac.newRole({
+  user: ["create", "set-role"],
   files: ["upload"],
   posts: ["create", "list", "update", "delete"],
   comics: ["create", "list", "update", "delete"],
@@ -84,3 +85,20 @@ export type Permissions = {
 };
 
 export type Role = keyof typeof roles;
+
+export const ROLE_HIERARCHY: Role[] = [
+  "user",
+  "uploader",
+  "moderator",
+  "admin",
+  "owner",
+];
+
+export function getRoleLevel(role: Role): number {
+  return ROLE_HIERARCHY.indexOf(role);
+}
+
+export function getAllowedRoles(actorRole: Role): Role[] {
+  const level = getRoleLevel(actorRole);
+  return ROLE_HIERARCHY.filter((_, i) => i < level);
+}

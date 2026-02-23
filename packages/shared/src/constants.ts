@@ -58,6 +58,14 @@ export type PremiumLinksDescriptor =
   | { status: "denied_need_patron" }
   | { status: "denied_need_upgrade"; requiredTierLabel: string };
 
+export const ROLE_LABELS: Record<string, string> = {
+  owner: "AlphaNeXusTC⁺¹⁸",
+  admin: "Alpha⁺¹⁸",
+  moderator: "BetaTC⁺¹⁸",
+  uploader: "DEALER⁺¹⁸",
+  user: "Sobrino⁺¹⁸",
+};
+
 export const PATRON_TIER_KEYS = [
   "none",
   "level1",

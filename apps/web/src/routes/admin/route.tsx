@@ -1,3 +1,5 @@
+import { ChevronRight } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { Permissions } from "@repo/shared/permissions";
 import type { AtLeastOne } from "@repo/shared/types";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
@@ -6,15 +8,21 @@ import { ImpersonationBanner } from "@/components/admin/users/impersonation-bann
 import { HasPermissions } from "@/components/auth/has-role";
 import Loader from "@/components/loader";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
@@ -173,41 +181,45 @@ function AdminLayout() {
           </h1>
         </SidebarHeader>
         <SidebarContent>
-          <HasPermissions permissions={{ user: ["list"] }}>
-            <SidebarLinks item={nav.users} />
-          </HasPermissions>
-          <HasPermissions
-            permissions={{
-              terms: ["list", "create"],
-            }}
-          >
-            <SidebarLinks item={nav.terms} />
-          </HasPermissions>
-          <HasPermissions
-            permissions={{
-              posts: ["list", "create"],
-            }}
-          >
-            <SidebarLinks item={nav.posts} />
-          </HasPermissions>
-          <HasPermissions permissions={{ comics: ["create"] }}>
-            <SidebarLinks item={nav.comics} />
-          </HasPermissions>
-          <HasPermissions permissions={{ posts: ["create"] }}>
-            <SidebarLinks item={nav.extras} />
-          </HasPermissions>
-          <HasPermissions permissions={{ chronos: ["update"] }}>
-            <SidebarLinks item={nav.chronos} />
-          </HasPermissions>
-          <HasPermissions permissions={{ emojis: ["list"] }}>
-            <SidebarLinks item={nav.emojis} />
-          </HasPermissions>
-          <HasPermissions permissions={{ stickers: ["list"] }}>
-            <SidebarLinks item={nav.stickers} />
-          </HasPermissions>
-          <HasPermissions permissions={{ staticPages: ["update"] }}>
-            <SidebarLinks item={nav.staticPages} />
-          </HasPermissions>
+          <SidebarGroup>
+            <SidebarMenu>
+              <HasPermissions permissions={{ user: ["list"] }}>
+                <SidebarLinks item={nav.users} />
+              </HasPermissions>
+              <HasPermissions
+                permissions={{
+                  terms: ["list", "create"],
+                }}
+              >
+                <SidebarLinks item={nav.terms} />
+              </HasPermissions>
+              <HasPermissions
+                permissions={{
+                  posts: ["list", "create"],
+                }}
+              >
+                <SidebarLinks item={nav.posts} />
+              </HasPermissions>
+              <HasPermissions permissions={{ comics: ["create"] }}>
+                <SidebarLinks item={nav.comics} />
+              </HasPermissions>
+              <HasPermissions permissions={{ posts: ["create"] }}>
+                <SidebarLinks item={nav.extras} />
+              </HasPermissions>
+              <HasPermissions permissions={{ chronos: ["update"] }}>
+                <SidebarLinks item={nav.chronos} />
+              </HasPermissions>
+              <HasPermissions permissions={{ emojis: ["list"] }}>
+                <SidebarLinks item={nav.emojis} />
+              </HasPermissions>
+              <HasPermissions permissions={{ stickers: ["list"] }}>
+                <SidebarLinks item={nav.stickers} />
+              </HasPermissions>
+              <HasPermissions permissions={{ staticPages: ["update"] }}>
+                <SidebarLinks item={nav.staticPages} />
+              </HasPermissions>
+            </SidebarMenu>
+          </SidebarGroup>
         </SidebarContent>
         <SidebarRail />
       </Sidebar>
@@ -229,34 +241,44 @@ type NavLink = {
 
 function SidebarLinks({ item }: { item: { name: string; links: NavLink[] } }) {
   return (
-    <SidebarGroup key={item.name}>
-      <SidebarGroupLabel>{item.name}</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {item.links.map((link) => {
-            const menuItem = (
-              <SidebarMenuItem key={link.name}>
-                <SidebarMenuButton
-                  render={<Link to={link.href} />}
-                  variant="default"
-                >
-                  {link.name}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-
-            if (link.permissions) {
-              return (
-                <HasPermissions key={link.name} permissions={link.permissions}>
-                  {menuItem}
-                </HasPermissions>
+    <Collapsible className="group/collapsible">
+      <SidebarMenuItem>
+        <CollapsibleTrigger>
+          <SidebarMenuButton tooltip={item.name}>
+            <span>{item.name}</span>
+            <HugeiconsIcon
+              className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+              icon={ChevronRight}
+            />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.links?.map((link) => {
+              const subItem = (
+                <SidebarMenuSubItem key={link.name}>
+                  <SidebarMenuSubButton render={<Link to={link.href} />}>
+                    {link.name}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
               );
-            }
 
-            return menuItem;
-          })}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+              if (link.permissions) {
+                return (
+                  <HasPermissions
+                    key={link.name}
+                    permissions={link.permissions}
+                  >
+                    {subItem}
+                  </HasPermissions>
+                );
+              }
+
+              return subItem;
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
   );
 }

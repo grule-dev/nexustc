@@ -1,6 +1,7 @@
 import { FavouriteIcon, StarIcon, ViewIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { Badge } from "@/components/ui/badge";
 import { getBucketUrl, getTierColor } from "@/lib/utils";
 import { Card, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
@@ -8,6 +9,7 @@ import { Separator } from "../ui/separator";
 export type PostProps = {
   id: string;
   title: string;
+  version: string | null;
   type: "post" | "comic";
   imageObjectKeys: string[] | null;
   favorites: number;
@@ -108,7 +110,17 @@ export function PostCard({ post }: PostCardProps) {
           )}
         </div>
         <CardContent className="flex flex-col items-center space-y-2">
-          <h3 className="line-clamp-2 font-semibold text-lg">{post.title}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="line-clamp-2 font-semibold text-lg">{post.title}</h3>
+            {post.version && (
+              <Badge
+                className="border-white/30 bg-white/20 text-white backdrop-blur-sm"
+                variant="outline"
+              >
+                {post.version}
+              </Badge>
+            )}
+          </div>
           <Separator orientation="horizontal" />
           <div className="bottom-2 left-2 flex flex-row items-center gap-3 rounded-lg leading-none">
             <div className="items-center-safe inline-flex gap-1">
