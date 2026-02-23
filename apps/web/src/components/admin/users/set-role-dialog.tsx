@@ -1,3 +1,4 @@
+import { ROLE_LABELS } from "@repo/shared/constants";
 import type { Role } from "@repo/shared/permissions";
 import { toast } from "sonner";
 import {
@@ -12,11 +13,11 @@ import { authClient } from "@/lib/auth-client";
 import type { AdminUser } from "./types";
 
 const roleOptions = [
-  { value: "owner", label: "Owner" },
-  { value: "admin", label: "Admin" },
-  { value: "moderator", label: "Moderator" },
-  { value: "uploader", label: "Uploader" },
-  { value: "user", label: "User" },
+  { value: "user", label: ROLE_LABELS.user },
+  { value: "uploader", label: ROLE_LABELS.uploader },
+  { value: "moderator", label: ROLE_LABELS.moderator },
+  { value: "admin", label: ROLE_LABELS.admin },
+  { value: "owner", label: ROLE_LABELS.owner },
 ];
 
 export function SetRoleDialog({

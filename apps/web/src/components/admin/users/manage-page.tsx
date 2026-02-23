@@ -20,11 +20,11 @@ import { UsersDataTable } from "./users-data-table";
 const filterOptions = [
   { value: "all", label: "Todos" },
   { value: "banned", label: "Baneados" },
-  { value: "role:owner", label: "Rol: owner" },
-  { value: "role:admin", label: "Rol: admin" },
-  { value: "role:moderator", label: "Rol: moderator" },
-  { value: "role:uploader", label: "Rol: uploader" },
-  { value: "role:user", label: "Rol: user" },
+  { value: "role:owner", label: "Rol: AlphaNeXusTC⁺¹⁸" },
+  { value: "role:admin", label: "Rol: Alpha⁺¹⁸" },
+  { value: "role:moderator", label: "Rol: BetaTC⁺¹⁸" },
+  { value: "role:uploader", label: "Rol: DEALER⁺¹⁸" },
+  { value: "role:user", label: "Rol: Sobrino⁺¹⁸" },
 ];
 
 export function UserManagePage() {
@@ -119,8 +119,11 @@ export function UserManagePage() {
           }}
           value={filter}
         >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
+          <SelectTrigger className="w-50">
+            <SelectValue>
+              {filterOptions.find((opt) => opt.value === filter)?.label ??
+                "Todos"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {filterOptions.map((opt) => (
