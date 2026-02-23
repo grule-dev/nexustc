@@ -254,13 +254,28 @@ function SidebarLinks({ item }: { item: { name: string; links: NavLink[] } }) {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {item.links?.map((link) => (
-              <SidebarMenuSubItem key={link.name}>
-                <SidebarMenuSubButton render={<Link to={link.href} />}>
-                  {link.name}
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
+            {item.links?.map((link) => {
+              const subItem = (
+                <SidebarMenuSubItem key={link.name}>
+                  <SidebarMenuSubButton render={<Link to={link.href} />}>
+                    {link.name}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              );
+
+              if (link.permissions) {
+                return (
+                  <HasPermissions
+                    key={link.name}
+                    permissions={link.permissions}
+                  >
+                    {subItem}
+                  </HasPermissions>
+                );
+              }
+
+              return subItem;
+            })}
           </SidebarMenuSub>
         </CollapsibleContent>
       </SidebarMenuItem>
