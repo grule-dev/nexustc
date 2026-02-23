@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ROLE_LABELS } from "../../../../../../packages/shared/src/constants";
+import { ROLE_LABELS } from "@repo/shared/constants";
 import type { AdminUser } from "./types";
 import { UserActionsDropdown } from "./user-actions-dropdown";
 
