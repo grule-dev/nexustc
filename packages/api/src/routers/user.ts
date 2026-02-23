@@ -1,4 +1,5 @@
 import { getLogger } from "@orpc/experimental-pino";
+import { auth } from "@repo/auth";
 import { and, eq, sql } from "@repo/db";
 import {
   patron,
@@ -15,6 +16,12 @@ import {
   type PatronTier,
   type TAXONOMIES,
 } from "@repo/shared/constants";
+import {
+  getAllowedRoles,
+  getRoleLevel,
+  ROLE_HIERARCHY,
+  type Role,
+} from "@repo/shared/permissions";
 import * as z from "zod";
 import {
   fixedWindowRatelimitMiddleware,
@@ -514,6 +521,111 @@ export default {
       },
     });
   }),
+
+  admin: {
+    createUser: permissionProcedure({
+      user: ["create"],
+    })
+      .input(
+        z.object({
+          name: z.string().min(1),
+          email: z.string().email(),
+          password: z.string().min(8),
+          role: z.enum(ROLE_HIERARCHY as [Role, ...Role[]]),
+        })
+      )
+      .handler(async ({ context: { session, ...ctx }, input, errors }) => {
+        const logger = getLogger(ctx);
+        const actorRole = session.user.role as Role;
+        const allowed = getAllowedRoles(actorRole);
+
+        if (!allowed.includes(input.role)) {
+          logger?.warn(
+            `User ${session.user.id} (${actorRole}) attempted to create user with role ${input.role}`
+          );
+          throw errors.FORBIDDEN({
+            message: "No puedes asignar un rol igual o superior al tuyo.",
+          });
+        }
+
+        logger?.info(
+          `User ${session.user.id} creating new user with role ${input.role}`
+        );
+
+        const created = await auth.api.createUser({
+          body: {
+            name: input.name,
+            email: input.email,
+            password: input.password,
+            role: input.role,
+          },
+        });
+
+        return { id: created.user.id };
+      }),
+
+    setRole: permissionProcedure({
+      user: ["set-role"],
+    })
+      .input(
+        z.object({
+          userId: z.string(),
+          role: z.enum(ROLE_HIERARCHY as [Role, ...Role[]]),
+        })
+      )
+      .handler(async ({ context: { db, session, ...ctx }, input, errors }) => {
+        const logger = getLogger(ctx);
+        const actorRole = session.user.role as Role;
+        const actorLevel = getRoleLevel(actorRole);
+        const allowed = getAllowedRoles(actorRole);
+
+        if (!allowed.includes(input.role)) {
+          logger?.warn(
+            `User ${session.user.id} (${actorRole}) attempted to set role ${input.role}`
+          );
+          throw errors.FORBIDDEN({
+            message: "No puedes asignar un rol igual o superior al tuyo.",
+          });
+        }
+
+        const targetUser = await db.query.user.findFirst({
+          where: eq(user.id, input.userId),
+          columns: { role: true },
+        });
+
+        if (!targetUser) {
+          throw errors.NOT_FOUND({ message: "Usuario no encontrado." });
+        }
+
+        const targetCurrentLevel = getRoleLevel(
+          (targetUser.role ?? "user") as Role
+        );
+
+        if (targetCurrentLevel >= actorLevel) {
+          logger?.warn(
+            `User ${session.user.id} (${actorRole}) attempted to change role of user ${input.userId} with role ${targetUser.role}`
+          );
+          throw errors.FORBIDDEN({
+            message:
+              "No puedes cambiar el rol de un usuario con rol igual o superior al tuyo.",
+          });
+        }
+
+        logger?.info(
+          `User ${session.user.id} setting role of ${input.userId} to ${input.role}`
+        );
+
+        await auth.api.setRole({
+          body: {
+            userId: input.userId,
+            role: input.role,
+          },
+          headers: ctx.headers,
+        });
+
+        return { success: true };
+      }),
+  },
 
   getDashboard: permissionProcedure({
     user: ["list"],

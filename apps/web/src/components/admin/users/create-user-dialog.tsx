@@ -1,5 +1,6 @@
 import { ROLE_LABELS } from "@repo/shared/constants";
 import type { Role } from "@repo/shared/permissions";
+import { getAllowedRoles } from "@repo/shared/permissions";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -10,14 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAppForm } from "@/hooks/use-app-form";
 import { authClient } from "@/lib/auth-client";
-
-const roleOptions = [
-  { value: "user", label: ROLE_LABELS.user },
-  { value: "uploader", label: ROLE_LABELS.uploader },
-  { value: "moderator", label: ROLE_LABELS.moderator },
-  { value: "admin", label: ROLE_LABELS.admin },
-  { value: "owner", label: ROLE_LABELS.owner },
-];
+import { orpcClient } from "@/lib/orpc";
 
 export function CreateUserDialog({
   open,
@@ -28,6 +22,13 @@ export function CreateUserDialog({
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }) {
+  const session = authClient.useSession();
+  const currentRole = (session.data?.user?.role ?? "user") as Role;
+  const roleOptions = getAllowedRoles(currentRole).map((role) => ({
+    value: role,
+    label: ROLE_LABELS[role] ?? role,
+  }));
+
   const form = useAppForm({
     defaultValues: {
       name: "",
@@ -38,11 +39,11 @@ export function CreateUserDialog({
     onSubmit: async ({ value }) => {
       await toast
         .promise(
-          authClient.admin.createUser({
+          orpcClient.user.admin.createUser({
             name: value.name,
             email: value.email,
             password: value.password,
-            role: value.role as Role,
+            role: value.role,
           }),
           {
             loading: "Creando usuario...",
