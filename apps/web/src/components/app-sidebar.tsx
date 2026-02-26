@@ -12,11 +12,9 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { SignedIn } from "@/components/auth/signed-in";
 import { SignedOut } from "@/components/auth/signed-out";
-import { ModeToggle } from "@/components/mode-toggle";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -67,7 +65,7 @@ export function AppSidebar() {
                 render={<Link to="/" />}
                 size="lg"
               >
-                <h1 className="line-clamp-2 text-center font-bold text-2xl">
+                <h1 className="line-clamp-2 text-center font-[Lexend] font-bold text-2xl tracking-wider">
                   N
                   <span className="transition-[opacity,transform] duration-300 group-data-[state=collapsed]:scale-x-0 group-data-[state=collapsed]:opacity-0">
                     eXusTC
@@ -131,10 +129,7 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-          <ModeToggle />
-        </SidebarFooter>
-        <SidebarRail />
+        <SidebarRail className="border-primary" />
       </Sidebar>
       <AuthDialog onOpenChange={setOpenAuth} open={openAuth}>
         <AuthDialogContent />

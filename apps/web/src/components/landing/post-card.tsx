@@ -33,7 +33,7 @@ export function PostCard({ post }: PostCardProps) {
       preload={false}
       to="/post/$id"
     >
-      <Card className="relative h-full gap-4 overflow-hidden pt-0 ring-primary group-hover:ring">
+      <Card className="relative h-full gap-4 overflow-hidden rounded-2xl pt-0">
         {/* Image */}
         {/* Tier indicator */}
         <div className="relative w-full">
@@ -42,64 +42,64 @@ export function PostCard({ post }: PostCardProps) {
             <div className="aspect-3/4 w-full">
               <img
                 alt={post.title}
-                className="h-full w-full rounded object-cover"
+                className="h-full w-full rounded border object-cover"
                 src={images[0]}
               />
             </div>
           )}
           {post.type === "post" && (
-            <div className="aspect-4/3 w-full">
+            <div className="aspect-video w-full">
               {count === 1 && (
                 <img
                   alt={post.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full border object-cover"
                   src={images[0]}
                 />
               )}
 
               {count === 2 && (
-                <div className="grid h-full w-full grid-cols-2 gap-1">
+                <div className="grid h-full w-full grid-cols-2">
                   <img
                     alt={post.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full border object-cover"
                     src={images[0]}
                   />
                   <img
                     alt={post.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full border object-cover"
                     src={images[1]}
                   />
                 </div>
               )}
 
               {count === 3 && (
-                <div className="grid h-full w-full grid-cols-2 gap-1">
-                  <div className="grid min-h-0 grid-rows-2 gap-1">
+                <div className="grid h-full w-full grid-cols-2">
+                  <div className="grid min-h-0 grid-rows-2">
                     <img
                       alt={post.title}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full border object-cover"
                       src={images[0]}
                     />
                     <img
                       alt={post.title}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full border object-cover"
                       src={images[1]}
                     />
                   </div>
                   <img
                     alt={post.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full border object-cover"
                     src={images[2]}
                   />
                 </div>
               )}
 
               {count === 4 && (
-                <div className="grid h-full w-full grid-cols-2 gap-1">
+                <div className="grid h-full w-full grid-cols-2">
                   {images.map((img) => (
                     <img
                       alt={post.title}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full border object-cover"
                       key={img}
                       src={img}
                     />
@@ -109,9 +109,9 @@ export function PostCard({ post }: PostCardProps) {
             </div>
           )}
         </div>
-        <CardContent className="flex flex-col items-center space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="line-clamp-2 font-semibold text-lg">{post.title}</h3>
+        <CardContent className="flex flex-col space-y-2">
+          <div className="flex flex-row items-center gap-1">
+            <h3 className="line-clamp-2 font-medium text-base">{post.title}</h3>
             {post.version && (
               <Badge
                 className="border-white/30 bg-white/20 text-white backdrop-blur-sm"
@@ -122,10 +122,10 @@ export function PostCard({ post }: PostCardProps) {
             )}
           </div>
           <Separator orientation="horizontal" />
-          <div className="bottom-2 left-2 flex flex-row items-center gap-3 rounded-lg leading-none">
+          <div className="bottom-2 left-2 flex flex-row items-center justify-around gap-3 rounded-lg text-base">
             <div className="items-center-safe inline-flex gap-1">
               <HugeiconsIcon
-                className="size-4 fill-red-500 text-red-500"
+                className="size-5 fill-red-500 text-red-500"
                 icon={FavouriteIcon}
               />
               <span className="translate-y-px text-white">{post.likes}</span>
@@ -133,7 +133,7 @@ export function PostCard({ post }: PostCardProps) {
             {post.averageRating !== 0 && (
               <div className="inline-flex items-center gap-1">
                 <HugeiconsIcon
-                  className="size-4 fill-amber-400 text-amber-400"
+                  className="size-5 fill-amber-400 text-amber-400"
                   icon={StarIcon}
                 />
                 <span className="translate-y-px text-white">
@@ -142,7 +142,7 @@ export function PostCard({ post }: PostCardProps) {
               </div>
             )}
             <div className="inline-flex items-center gap-1">
-              <HugeiconsIcon className="size-4 text-white" icon={ViewIcon} />
+              <HugeiconsIcon className="size-5 text-white" icon={ViewIcon} />
               <span className="translate-y-px text-white">{post.views}</span>
             </div>
           </div>

@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/outfit";
+@import "@fontsource/lexend";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -42,6 +43,7 @@
   --font-sans: Outfit, ui-sans-serif, sans-serif, system-ui;
   --font-serif: Playfair Display, ui-serif, serif;
   --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --font-lexend: Lexend, ui-sans-serif, sans-serif, system-ui;
   --radius: 0.625rem;
   --shadow-x: 0px;
   --shadow-y: 4.5px;
@@ -80,8 +82,8 @@
   --popover-foreground: oklch(0.9851 0 0);
   --primary: oklch(0.8278 0.1659 79.4259);
   --primary-foreground: oklch(0.2871 0.0662 54.5884);
-  --secondary: oklch(0.2686 0 0);
-  --secondary-foreground: oklch(0.9219 0 0);
+  --secondary: oklch(57.096% 0.29724 304.654);
+  --secondary-foreground: oklch(15.951% 0.07998 311.698);
   --muted: oklch(0.2686 0 0);
   --muted-foreground: oklch(0.709 0 0);
   --accent: oklch(0.6597 0.2275 21.0495);
@@ -96,7 +98,7 @@
   --chart-3: oklch(0.5495 0.2202 263.0917);
   --chart-4: oklch(0.4893 0.2202 264.0405);
   --chart-5: oklch(0.421 0.1792 266.0094);
-  --sidebar: oklch(0.2046 0 0);
+  --sidebar: oklch(17.271% 0.03528 89.788);
   --sidebar-foreground: oklch(0.9851 0 0);
   --sidebar-primary: oklch(0.4878 0.2432 264.4045);
   --sidebar-primary-foreground: oklch(0.9851 0 0);
@@ -107,7 +109,8 @@
   --font-sans: Outfit, ui-sans-serif, sans-serif, system-ui;
   --font-serif: Playfair Display, ui-serif, serif;
   --font-mono: JetBrains Mono, ui-monospace, monospace;
-  --radius: 0.625rem;
+  --font-lexend: Lexend, ui-sans-serif, sans-serif, system-ui;
+  --radius: 0px;
   --shadow-x: 0px;
   --shadow-y: 4.5px;
   --shadow-blur: 2px;

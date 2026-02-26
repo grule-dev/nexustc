@@ -13,10 +13,14 @@ export function TutorialCard({
 }) {
   return (
     <Card key={tutorial.title}>
-      <CardHeader>
-        <CardTitle>{tutorial.title}</CardTitle>
-        <CardDescription>{tutorial.description}</CardDescription>
-      </CardHeader>
+      {(tutorial.title || tutorial.description) && (
+        <CardHeader>
+          {tutorial.title && <CardTitle>{tutorial.title}</CardTitle>}
+          {tutorial.description && (
+            <CardDescription>{tutorial.description}</CardDescription>
+          )}
+        </CardHeader>
+      )}
       <CardContent className="mt-auto">
         <iframe
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
