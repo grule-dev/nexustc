@@ -16,8 +16,8 @@ import { SidebarTrigger } from "../ui/sidebar";
 
 export function Header() {
   return (
-    <header className="w-full px-2 pt-2">
-      <div className="flex w-full flex-col items-center gap-4 rounded-lg bg-linear-to-b from-primary to-primary/50 p-4">
+    <header className="w-full">
+      <div className="flex w-full flex-col items-center gap-4 bg-linear-to-b from-primary to-primary/50 p-3">
         <div className="flex w-full items-center justify-between">
           <div className="hidden md:block">
             <SidebarTrigger className="text-primary-foreground" />

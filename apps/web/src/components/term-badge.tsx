@@ -49,7 +49,7 @@ export function TermBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-xl border bg-primary px-2 py-0.5 font-semibold text-primary-foreground text-xs tracking-wide",
+        "inline-flex items-center rounded-full border bg-primary px-2 py-0.5 font-semibold text-primary-foreground text-xs tracking-wide",
         className
       )}
       key={tag.name}

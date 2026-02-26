@@ -52,7 +52,7 @@ function RouteComponent() {
   const post = Route.useLoaderData();
 
   return (
-    <main className="w-full px-2 py-4 md:px-8">
+    <main className="w-full">
       <div className="flex flex-col gap-12">
         {/* Main Post Content */}
         {post.type === "post" ? (

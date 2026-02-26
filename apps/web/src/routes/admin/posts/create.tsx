@@ -525,6 +525,7 @@ function RouteComponent() {
           post={{
             ...post,
             id: "0",
+            likes: 0,
             views: 0,
             imageObjectKeys: selectedFiles.map(URL.createObjectURL),
             createdAt: new Date(),

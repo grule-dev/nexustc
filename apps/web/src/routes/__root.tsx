@@ -42,19 +42,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="es" suppressHydrationWarning>
       <head>
         <HeadContent />
-        <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: necessary
-          dangerouslySetInnerHTML={{
-            __html: themeInitScript(),
-          }}
-        />
 
         <script
           crossOrigin="anonymous"
           src="https://tweakcn.com/live-preview.min.js"
         />
       </head>
-      <body>
+      <body className="dark">
         <ScriptOnce>{themeInitScript()}</ScriptOnce>
         <ConfirmDialogProvider
           defaultOptions={{

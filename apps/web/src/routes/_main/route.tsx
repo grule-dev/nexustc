@@ -72,10 +72,10 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
         <SidebarInset>
           <div
-            className="relative grid min-h-dvh grid-rows-[1fr_auto] gap-4 pb-20 md:pb-0"
+            className="relative grid min-h-dvh grid-rows-[1fr_auto]"
             id="main-scrollable-area"
           >
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center">
               <Header />
               {children}
             </div>

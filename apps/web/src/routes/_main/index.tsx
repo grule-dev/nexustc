@@ -60,25 +60,26 @@ export const Route = createFileRoute("/_main/")({
 });
 
 function HomeComponent() {
-  return (
-    <main className="grid w-full gap-4 px-2 md:grid-cols-4 md:px-4">
-      <MainContent />
-      <Sidebar />
-    </main>
-  );
-}
-
-function MainContent() {
   const { weeklyGames } = Route.useLoaderData();
 
   return (
-    <div className="flex w-full flex-col items-center gap-8 md:col-span-3">
+    <main className="flex w-full flex-col items-center gap-4 p-4 md:col-span-3">
       <HeroSection />
-      <h1 className="font-bold text-3xl leading-tight">Juegos de la Semana</h1>
-      <GamesCarousel games={weeklyGames.data ?? []} />
-      <h1 className="font-bold text-3xl leading-tight">Juegos Recientes</h1>
-      <RecentPosts />
-    </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Juegos de la Semana</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GamesCarousel games={weeklyGames.data ?? []} />
+        </CardContent>
+      </Card>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-2 flex flex-col">
+          <RecentPosts />
+        </div>
+        <Sidebar />
+      </div>
+    </main>
   );
 }
 
@@ -93,7 +94,7 @@ function Sidebar() {
       <Card className="w-full">
         <CardHeader className="flex items-center justify-between">
           <CardTitle className="inline-flex items-center gap-2">
-            <HugeiconsIcon className="size-5" icon={UserGroupIcon} /> Usuarios
+            <HugeiconsIcon className="size-6" icon={UserGroupIcon} /> Usuarios
             Recientes
           </CardTitle>
         </CardHeader>
@@ -116,7 +117,7 @@ function Sidebar() {
       <Card className="w-full">
         <CardHeader className="flex items-center justify-between">
           <CardTitle className="inline-flex items-center gap-2">
-            <HugeiconsIcon className="size-4" icon={Tag01Icon} />
+            <HugeiconsIcon className="size-6" icon={Tag01Icon} />
             Tags
           </CardTitle>
         </CardHeader>
@@ -148,14 +149,14 @@ function HeroSection() {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="grid h-96 w-full grid-cols-1 gap-4 md:grid-cols-3">
+    <div className="grid h-128 w-full grid-cols-1 gap-4 md:grid-cols-3">
       {main && (
         <div className="md:col-span-2">
           <FeaturedCard post={main} />
         </div>
       )}
       {secondary.length > 0 && (
-        <div className="hidden h-96 grid-rows-2 gap-4 md:grid">
+        <div className="hidden h-128 grid-rows-2 gap-4 md:grid">
           {secondary.map((post) => (
             <FeaturedCard key={post.id} post={post} />
           ))}
@@ -172,14 +173,19 @@ function FeaturedCard({
   post: { id: string; title: string; imageObjectKeys: string[] | null };
 }) {
   return (
-    <Link params={{ id: post.id }} preload={false} to="/post/$id">
-      <div className="relative h-full max-h-96">
+    <Link
+      className="group box-border overflow-hidden hover:ring-primary"
+      params={{ id: post.id }}
+      preload={false}
+      to="/post/$id"
+    >
+      <div className="relative h-full max-h-128">
         <motion.img
           alt={post.title}
-          className="h-full w-full rounded-xl object-cover outline-2 outline-primary outline-offset-2 transition-transform hover:scale-[1.02]"
+          className="h-full w-full object-cover ring ring-background transition-transform group-hover:scale-[1.05]"
           src={getBucketUrl(post.imageObjectKeys?.[0] ?? "")}
         />
-        <div className="group absolute inset-0 flex items-end justify-start overflow-clip rounded-xl bg-linear-to-t from-black/50 to-transparent p-4 opacity-100 transition-opacity">
+        <div className="group absolute inset-0 flex items-end justify-start overflow-clip bg-linear-to-t from-black/50 to-transparent p-4 opacity-100 transition-opacity">
           <div className="flex flex-col items-center">
             <span className="line-clamp-2 px-2 font-bold text-white text-xl transition-transform">
               {post.title}
@@ -257,7 +263,7 @@ function RecentPosts() {
 
   if (isLoading) {
     return (
-      <div className="grid w-full grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 md:gap-8">
+      <div className="grid w-full grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4 md:gap-8">
         {Array.from({ length: RECENT_POSTS_LIMIT }).map((_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
           <Skeleton className="aspect-video w-full rounded-lg" key={i} />
@@ -275,10 +281,15 @@ function RecentPosts() {
   }
 
   return (
-    <div className="grid w-full grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 md:gap-8">
-      {recentPosts?.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Juegos Recientes</CardTitle>
+      </CardHeader>
+      <CardContent className="grid w-full grid-cols-2 gap-2 px-4 sm:gap-4 md:grid-cols-3">
+        {recentPosts?.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </CardContent>
+    </Card>
   );
 }

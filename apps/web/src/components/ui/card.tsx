@@ -4,53 +4,58 @@ import { cn } from "@/lib/utils";
 
 function Card({
   className,
-  children,
   size = "default",
   ...props
 }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
   return (
-    <div className="w-full rounded-[calc(var(--radius-xl)+3px)] border border-white/60 text-card-foreground text-sm dark:border-border/30">
-      <div className="rounded-[calc(var(--radius-xl)+2px)] border border-black/10 dark:border-neutral-900/80">
-        <div className="rounded-[calc(var(--radius-xl)+1px)] border border-white/50 dark:border-neutral-950">
-          <div className="rounded-[calc(var(--radius-xl))] border border-neutral-950/20 dark:border-neutral-900/70">
-            <div
-              className={cn(
-                "group/card flex flex-col gap-6 overflow-hidden rounded-[calc(var(--radius-xl)-1px)] border border-white/50 bg-linear-to-b from-card/70 to-secondary/50 py-6 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 dark:border-neutral-700/50 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
-                className
-              )}
-              data-size={size}
-              data-slot="card"
-              {...props}
-            >
-              {children}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div
+      className={cn(
+        "group/card flex flex-col gap-6 overflow-hidden bg-linear-to-b from-card/80 to-card py-6 text-card-foreground text-sm ring-1 ring-foreground/10 has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        className
+      )}
+      data-size={size}
+      data-slot="card"
+      {...props}
+    />
   );
 }
 
-function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+function CardHeader({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-2 rounded-t-xl px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] group-data-[size=sm]/card:px-4 [.border-b]:pb-6 group-data-[size=sm]/card:[.border-b]:pb-4",
+        "group/card-header @container/card-header relative grid auto-rows-min items-start gap-2 rounded-t-xl pr-6 pl-10 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] group-data-[size=sm]/card:px-4 [.border-b]:pb-6 group-data-[size=sm]/card:[.border-b]:pb-4",
         className
       )}
       data-slot="card-header"
       {...props}
-    />
+    >
+      <div className="absolute left-6 h-full w-2 bg-secondary" />
+      {children}
+    </div>
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+function CardTitle({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("text-lg", className)}
+      className={cn(
+        "font-[Lexend] font-medium text-xl uppercase tracking-wide",
+        className
+      )}
       data-slot="card-title"
       {...props}
-    />
+    >
+      {children}
+    </div>
   );
 }
 

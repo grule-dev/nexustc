@@ -124,7 +124,7 @@ export function CommentSection({ post }: { post: PostProps }) {
   if (!commentsQuery.data) {
     return (
       <div
-        className="flex min-h-100 items-center justify-center rounded-3xl border bg-card p-6"
+        className="flex min-h-100 items-center justify-center border bg-card p-6"
         ref={ref}
       >
         <Spinner />
@@ -252,77 +252,92 @@ export function CommentSection({ post }: { post: PostProps }) {
           </div>
         </SignedOut>
         {/* Comments List */}
-        <ScrollArea className="max-h-96">
-          <div className="flex flex-col gap-4">
-            {commentCount === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                  <HugeiconsIcon
-                    className="size-6 text-muted-foreground"
-                    icon={Comment01Icon}
-                  />
-                </div>
-                <p className="text-muted-foreground">
-                  Aún no hay comentarios. ¡Sé el primero!
-                </p>
-              </div>
-            ) : (
-              commentsQuery.data
-                ?.filter(
-                  (
-                    comment
-                    // little workaround to convince TS that author is not null
-                  ): comment is typeof comment & {
-                    author: NonNullable<typeof comment.author>;
-                  } => comment.author !== null
-                )
-                .map((comment) => (
-                  <div
-                    className="group flex gap-4 rounded-2xl p-4 hover:bg-muted/30"
-                    key={comment.id}
-                  >
-                    <Link params={{ id: comment.author.id }} to="/user/$id">
-                      <Avatar className="size-10 rounded-full ring-2 ring-background transition-transform group-hover:scale-105">
-                        <AvatarImage
-                          src={
-                            comment.author.image
-                              ? getBucketUrl(comment.author.image)
-                              : undefined
-                          }
-                        />
-                        <AvatarFallback
-                          className="rounded-full"
-                          facehashProps={defaultFacehashProps}
-                          name={comment.author.name}
-                        />
-                      </Avatar>
-                    </Link>
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Link params={{ id: comment.author.id }} to="/user/$id">
-                          <UserLabel
-                            className="font-semibold transition-colors hover:text-primary"
-                            user={comment.author}
-                          />
-                        </Link>
-                        <span className="text-muted-foreground text-xs">•</span>
-                        <time className="text-muted-foreground text-xs">
-                          {format(comment.createdAt, "d MMM yyyy", {
-                            locale: es,
-                          })}
-                        </time>
-                      </div>
-                      <CommentContent
-                        content={comment.content}
-                        emojiMap={emojiMap}
-                        stickerMap={stickerMap}
-                      />
-                    </div>
-                  </div>
-                ))
-            )}
+        {!commentsQuery.data && (
+          <div
+            className="flex min-h-96 items-center justify-center border bg-card p-6"
+            ref={ref}
+          >
+            <Spinner />
           </div>
-        </ScrollArea>
+        )}
+        {commentsQuery.data && (
+          <ScrollArea className="max-h-150">
+            <div className="flex flex-col gap-4">
+              {commentCount === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                    <HugeiconsIcon
+                      className="size-6 text-muted-foreground"
+                      icon={Comment01Icon}
+                    />
+                  </div>
+                  <p className="text-muted-foreground">
+                    Aún no hay comentarios. ¡Sé el primero!
+                  </p>
+                </div>
+              ) : (
+                commentsQuery.data
+                  .filter(
+                    (
+                      comment
+                      // little workaround to convince TS that author is not null
+                    ): comment is typeof comment & {
+                      author: NonNullable<typeof comment.author>;
+                    } => comment.author !== null
+                  )
+                  .map((comment) => (
+                    <div
+                      className="group flex gap-4 rounded-2xl p-4 hover:bg-muted/30"
+                      key={comment.id}
+                    >
+                      <Link params={{ id: comment.author.id }} to="/user/$id">
+                        <Avatar className="size-10 rounded-full ring-2 ring-background transition-transform group-hover:scale-105">
+                          <AvatarImage
+                            src={
+                              comment.author.image
+                                ? getBucketUrl(comment.author.image)
+                                : undefined
+                            }
+                          />
+                          <AvatarFallback
+                            className="rounded-full"
+                            facehashProps={defaultFacehashProps}
+                            name={comment.author.name}
+                          />
+                        </Avatar>
+                      </Link>
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link
+                            params={{ id: comment.author.id }}
+                            to="/user/$id"
+                          >
+                            <UserLabel
+                              className="font-semibold transition-colors hover:text-primary"
+                              user={comment.author}
+                            />
+                          </Link>
+                          <span className="text-muted-foreground text-xs">
+                            •
+                          </span>
+                          <time className="text-muted-foreground text-xs">
+                            {format(comment.createdAt, "d MMM yyyy", {
+                              locale: es,
+                            })}
+                          </time>
+                        </div>
+                        <CommentContent
+                          content={comment.content}
+                          emojiMap={emojiMap}
+                          stickerMap={stickerMap}
+                        />
+                      </div>
+                    </div>
+                  ))
+              )}
+            </div>
+          </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );
