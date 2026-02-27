@@ -14,15 +14,13 @@ export type Context = {
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "error",
-  transport:
-    process.env.NODE_ENV === "development"
-      ? {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-          },
-        }
-      : undefined,
+  transport: {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+      depth: null,
+    },
+  },
 });
 
 export async function createContext(headers: Headers): Promise<Context> {
