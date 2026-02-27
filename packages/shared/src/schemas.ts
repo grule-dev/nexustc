@@ -26,8 +26,6 @@ export const termUpdateSchema = termCreateSchema
     taxonomy: true,
   });
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
 const contentBaseFields = {
   title: z
     .string()
@@ -41,12 +39,7 @@ const contentBaseFields = {
   documentStatus: z.enum(DOCUMENT_STATUSES),
   files: z
     .array(
-      z
-        .file()
-        .mime(["image/gif", "image/jpeg", "image/png", "image/webp"])
-        .refine((file) => file.size <= MAX_FILE_SIZE, {
-          message: "File size must be less than 10MB",
-        })
+      z.file().mime(["image/gif", "image/jpeg", "image/png", "image/webp"])
     )
     .optional(),
 };
@@ -145,12 +138,7 @@ export const contentEditImagesSchema = z.object({
   ),
   newFiles: z
     .array(
-      z
-        .file()
-        .mime(["image/gif", "image/jpeg", "image/png", "image/webp"])
-        .refine((file) => file.size <= MAX_FILE_SIZE, {
-          message: "File size must be less than 10MB",
-        })
+      z.file().mime(["image/gif", "image/jpeg", "image/png", "image/webp"])
     )
     .optional(),
 });
